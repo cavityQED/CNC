@@ -37,30 +37,31 @@ SpiClient::SpiClient() {
 	ready_pin_config.pull_up_en		= GPIO_PULLUP_DISABLE;
 	ready_pin_config.pin_bit_mask	= (1 << READY);
 	gpio_config(&ready_pin_config);
+	
+	sendbuf.resize(MAX_TRANSACTION_LENGTH);
 }
 	
-unsigned char* SpiClient::get_message() {
-	//Clear the receive buffer
-	memset(recvbuf, 0, sizeof(recvbuf));
-	
+void SpiClient::get_message(std::vector<int> &msg) {	
 	//Clear the transaction
 	memset(&spi_transaction, 0, sizeof(spi_transaction));
 	
 	//Set the buffers and transaction length
 	spi_transaction.length		= 8*MAX_TRANSACTION_LENGTH; //Max length in bits
-	spi_transaction.tx_buffer	= sendbuf;
-	spi_transaction.rx_buffer	= recvbuf;
+	spi_transaction.tx_buffer	= &sendbuf[0];
+	spi_transaction.rx_buffer	= &msg[0];
 	
 	//Wait for the message
 	esp_err_t err = spi_slave_transmit(SPI3_HOST, &spi_transaction, portMAX_DELAY);
 	
-	//If no errors, relay the message
-	//Otherwise report the error
+	//If no errors, return
 	if(err == ESP_OK)
-		return recvbuf;
+		return;
 	else {
 		std::cout << "SPI Transaction Error:\n";
 		std::cout << esp_err_to_name(err) << '\n';
-		return recvbuf;
 	}
+}
+
+void SpiClient::set_sendbuffer(int index, int value) {
+	sendbuf[index] = value;
 }

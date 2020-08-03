@@ -5,6 +5,7 @@
 #include <cstring>
 #include <cstdint>
 #include <iostream>
+#include <vector>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -51,7 +52,8 @@ enum AXIS_FUNCTION_CODE {
 	MOVE_TO,	
 	MOVE,
 	STOP,
-	RECEIVE
+	RECEIVE,
+	GET_SPI_DATA
 };
 
 //Struct to hold timer callback arguments
@@ -115,7 +117,7 @@ public:
 	void calculate_accel_params();
 	
 	/*	Getters	*/
-	void get_position_steps(unsigned char* sendbuf);
+	void get_position_steps(int &steps);
 	
 	/*	Set Jog Speed Steps
 	 * 		Set the jog speed in terms of steps

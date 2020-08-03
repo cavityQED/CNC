@@ -240,10 +240,8 @@ void axis::set_steps_per_revolution(int steps) {
 	SPR = steps;
 }
 
-void axis::get_position_steps(unsigned char* sendbuf) {
-	sendbuf[1] = position_steps%255;
-	sendbuf[2] = (position_steps/255)%255;
-	sendbuf[3] = position_steps/255/255;
+void axis::get_position_steps(int &steps) {
+	steps = position_steps;
 	std::cout << "Position: " << mm_per_step * position_steps << "mm\n";
 }	
 

@@ -11,7 +11,7 @@ public:
 		jog = new JogController;
 		pos = new PositionReadout;
 		controller.setup_x_axis(xparams);
-		controller.setup_y_axis(yparams);
+//		controller.setup_y_axis(yparams);
 		
 		jog->setMotorController(&controller);
 		pos->setMotorController(&controller);

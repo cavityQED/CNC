@@ -11,6 +11,8 @@
 #include <semaphore.h>
 #include <wiringPi.h>
 
+#include <vector>
+
 #define READY_PIN 5
 
 enum SPI_FUNCTION_CODE {
@@ -32,7 +34,8 @@ enum SPI_FUNCTION_CODE {
 	MOVE_TO,	
 	MOVE,
 	STOP,
-	RECEIVE
+	RECEIVE,
+	GET_SPI_DATA
 };
 
 struct motorParameters {
@@ -59,6 +62,7 @@ public:
 	
 	//Send a message to a particular device
 	void send(int device_pin);
+	void send_data(int device_pin, void* data, int len);
 	
 	//Functions that execute on all axes
 	void enable_jog_mode();
@@ -90,8 +94,9 @@ public:
 private:
 	//SPI
 	int spi_cs_fd;
-	unsigned char sendbuf[8] {0, 0, 0, 0, 0, 0, 0, 0};
-	unsigned char recvbuf[8] {0, 0, 0, 0, 0, 0, 0, 0};
+
+	std::vector<int> sendbuf;
+	std::vector<int> recvbuf;
 	struct spi_ioc_transfer spi;
 	
 	//Semaphore
