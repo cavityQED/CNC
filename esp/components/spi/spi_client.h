@@ -3,6 +3,7 @@
 
 #include <cstring>
 #include <iostream>
+#include <vector>
 
 #include "driver/gpio.h"
 #include "driver/spi_slave.h"
@@ -23,7 +24,9 @@ public:
 	SpiClient();
 	~SpiClient() {}
 	
-	unsigned char* get_message();
+	void get_message(std::vector<int> &msg);	
+	
+	void set_sendbuffer(int index, int value);
 	
 	/*	SPI Post Setup Callback
 	* 		Executes after spi transaction is set up to signal
@@ -41,11 +44,7 @@ public:
 	static void spi_post_trans_callback(spi_slave_transaction_t *t) {
 		WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1 << READY));	
 	}	
-	
-	unsigned char* get_sendbuf() {
-		return sendbuf;
-	}
-	
+		
 private:
 	spi_slave_interface_config_t	slave_config;
 	spi_bus_config_t				bus_config;
@@ -53,8 +52,7 @@ private:
 	
 	spi_slave_transaction_t			spi_transaction;
 	
-	WORD_ALIGNED_ATTR unsigned char recvbuf[MAX_TRANSACTION_LENGTH];
-	WORD_ALIGNED_ATTR unsigned char sendbuf[MAX_TRANSACTION_LENGTH];
+	std::vector<int> sendbuf;
 };
 
 #endif

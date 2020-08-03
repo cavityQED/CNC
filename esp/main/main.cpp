@@ -41,17 +41,17 @@ void IRAM_ATTR msg_ready(void* arg) {
 }
 
 void get_message() {
-	unsigned char* msg;
-	msg = spi.get_message();
+	std::vector<int> msg(MAX_TRANSACTION_LENGTH);
+	spi.get_message(msg);
 	switch((AXIS_FUNCTION_CODE) msg[0]) {
 		case SET_SPEED:
-			gen_axis.set_speed_rpm(msg[1] + 255*msg[2]);
+			gen_axis.set_speed_rpm(msg[1]);
 			break;
 		case SET_DIRECTION:
 			gen_axis.set_direction((bool) msg[1]);
 			break;
 		case SET_STEPS_TO_MOVE:
-			gen_axis.set_steps_to_move(msg[1] + 255*(msg[2] + 255*msg[3]));
+			gen_axis.set_steps_to_move(msg[1]);
 			break;
 		case SET_JOG_SPEED_STEPS:
 			gen_axis.set_jog_speed_steps(msg[1]);
@@ -72,7 +72,9 @@ void get_message() {
 			gen_axis.enable_step_mode(false);
 			break;
 		case GET_POSITION:
-			gen_axis.get_position_steps(spi.get_sendbuf());
+			int steps;
+			gen_axis.get_position_steps(steps);
+			spi.set_sendbuffer(1, steps);
 			break;
 		case MOVE:
 			gen_axis.move();
@@ -82,11 +84,12 @@ void get_message() {
 			break;
 		case RECEIVE:
 			break;
+		case GET_SPI_DATA:
+			break;
 		default:
 			break;
 		}
 }
-	
 
 static void main_task(void* arg) {
 	event_info_t evt;

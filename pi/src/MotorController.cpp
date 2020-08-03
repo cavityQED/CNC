@@ -25,13 +25,14 @@ void MotorController::setup_spi() {
 	ioctl(spi_cs_fd, SPI_IOC_WR_MAX_SPEED_HZ, &spi_speed);
 	ioctl(spi_cs_fd, SPI_IOC_RD_MAX_SPEED_HZ, &spi_speed);
 	
-	memset(&spi, 0, sizeof(spi));
-	memset(&sendbuf, 0, sizeof(sendbuf));
-	memset(&recvbuf, 0, sizeof(recvbuf));
+	sendbuf.resize(8);
+	recvbuf.resize(8);
 	
-	spi.tx_buf = (unsigned long)sendbuf;
-	spi.rx_buf = (unsigned long)recvbuf;
-	spi.len = sizeof(sendbuf);
+	memset(&spi, 0, sizeof(spi));
+	
+//	spi.tx_buf = (unsigned long)sendbuf;
+//	spi.rx_buf = (unsigned long)recvbuf;
+//	spi.len = sizeof(sendbuf);
 	spi.delay_usecs = 0;
 	spi.speed_hz = spi_speed;
 	spi.bits_per_word = spi_bitsPerWord;
@@ -71,6 +72,10 @@ void MotorController::setup_y_axis(motorParameters &params) {
 }
 
 void MotorController::send(int device_pin) {
+	spi.tx_buf = (unsigned long)(&sendbuf[0]);
+	spi.rx_buf = (unsigned long)(&recvbuf[0]);
+	spi.len = sizeof(sendbuf);
+	
 	std::cout << "Sending Function: " << (SPI_FUNCTION_CODE) sendbuf[0] << '\n';
 	
 	//Trigger the interrupt on the correct device to signal a message is ready to be sent
@@ -84,6 +89,24 @@ void MotorController::send(int device_pin) {
 	
 	//Reset the trigger line for the device
 	digitalWrite(device_pin, 0);
+}
+
+void MotorController::send_data(int device_pin, void* data, int len) {
+	sendbuf[0] = GET_SPI_DATA;
+	send(device_pin);
+	
+	spi.tx_buf = (unsigned long)data;
+	spi.len = len;
+	std::cout << "Sending Data...\n";
+	
+	digitalWrite(device_pin, 1);
+	
+	sem_wait(sem);
+	
+	ioctl(spi_cs_fd, SPI_IOC_MESSAGE(1), &spi);
+	
+	digitalWrite(device_pin, 0);
+	
 }
 
 void MotorController::enable_jog_mode() {
@@ -157,7 +180,7 @@ void MotorController::get_position(double &x_steps, double &y_steps) {
 		sendbuf[0] = RECEIVE;
 		send(x_params.pin_num);
 		
-		x_steps = x_params.mm_per_step * (recvbuf[1] + 255*(recvbuf[2] + 255*recvbuf[3]));
+		x_steps = x_params.mm_per_step * recvbuf[1];
 	}
 	
 	if(y_connected) {
@@ -166,7 +189,7 @@ void MotorController::get_position(double &x_steps, double &y_steps) {
 		sendbuf[0] = RECEIVE;
 		send(y_params.pin_num);
 		
-		y_steps = y_params.mm_per_step * (recvbuf[1] + 255*(recvbuf[2] + 255*recvbuf[3]));
+		y_steps = y_params.mm_per_step * recvbuf[1];
 	}
 }
 
@@ -179,7 +202,7 @@ double MotorController::x_get_position() {
 	sendbuf[0] = RECEIVE;
 	send(x_params.pin_num);
 	
-	return x_params.mm_per_step * (recvbuf[1] + 255*(recvbuf[2] + 255*recvbuf[3]));
+	return x_params.mm_per_step * recvbuf[1];
 }
 
 double MotorController::y_get_position() {
@@ -191,7 +214,7 @@ double MotorController::y_get_position() {
 	sendbuf[0] = RECEIVE;
 	send(y_params.pin_num);
 	
-	return y_params.mm_per_step * (recvbuf[1] + 255*(recvbuf[2] + 255*recvbuf[3]));
+	return y_params.mm_per_step * recvbuf[1];
 }
 
 void MotorController::x_move() {

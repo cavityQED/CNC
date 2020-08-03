@@ -17,5 +17,3 @@ target_link_libraries(cncLib Qt5::Core Qt5::Widgets wiringPi pthread rt)
  
 add_executable(cnc testing_main.cpp)
 target_link_libraries(cnc cncLib)
-
-add_executable(math_test math_test.cpp)
