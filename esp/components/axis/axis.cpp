@@ -1,12 +1,9 @@
 #include "axis.h"
 
 /*	Initialize static variables	*/
-xQueueHandle axis::timer_event_queue = xQueueCreate(10, sizeof(bool));
-bool axis::motor_direction = false;
-bool axis::motor_in_motion = false;
-int axis::position_steps = 0;
-
-timer_info_t axis::static_info = {STEP_ONCE, PULSE};
+bool	axis::motor_direction	= false;
+bool	axis::motor_in_motion	= false;
+int		axis::position_steps	= 0;
 
 axis::axis() {
 	setup_gpio();
@@ -55,13 +52,7 @@ void axis::setup_timers() {
 //	timer_config.intr_type		= TIMER_INTR_MAX;
 	timer_init(ONE_SHOT, PULSE, &timer_config);
 	timer_init(ONE_SHOT, ACCEL, &timer_config);
-	
-	pulse_args.type = STEP_ONCE;
-	pulse_args.timer = PULSE;
-	
-	stop_args.type = STOP_MOTOR;
-	stop_args.timer = ACCEL;
-			
+				
 	//Setup Timer Argument Structs
 	memset(&accel_args, 0, sizeof(accel_args));
 		
@@ -85,19 +76,8 @@ void axis::periodic_pulse_callback(void* arg) {
 	gpio_set_level(STEP, 1);
 	gpio_set_level(STEP, 0);
 
-//	WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1 << STEP));
 	(motor_direction)? position_steps += 1 : position_steps -= 1;
-//	WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1 << STEP));
-/*		
-	static_info.type = STEP_ONCE;
-	bool x = true;
-	xQueueSendFromISR(timer_event_queue, &x, NULL);
-	
-	if(*(bool*)arg) {
-		timer_group_set_counter_enable_in_isr(PERIODIC, PULSE, TIMER_PAUSE);
-		motor_in_motion = false;
-	}
-*/	
+
 	timer_group_clr_intr_status_in_isr(PERIODIC, PULSE);
 	timer_group_enable_alarm_in_isr(PERIODIC, PULSE);
 	timer_spinlock_give(PERIODIC);
@@ -106,12 +86,11 @@ void axis::periodic_pulse_callback(void* arg) {
 void axis::periodic_accel_callback(void* arg) {
 	timer_spinlock_take(PERIODIC);
 	
-	accel_args_t* a = (accel_args_t*) arg;
+	timer_args_t* a = (timer_args_t*) arg;
 	
 	timer_group_set_alarm_value_in_isr(PERIODIC, PULSE, (a->pulseAlarmTimes[a->accelStep]) / PERIOD_uS);
 	a->accelStep = a->accelStep - 1;
 	
-//	timer_group_clr_intr_status_in_isr(PERIODIC, PULSE);
 	timer_group_clr_intr_status_in_isr(PERIODIC, ACCEL);
 	timer_group_enable_alarm_in_isr(PERIODIC, ACCEL);
 	timer_spinlock_give(PERIODIC);
@@ -122,10 +101,6 @@ void axis::one_shot_pulse_callback(void* arg) {
 	
 	timer_group_set_counter_enable_in_isr(PERIODIC, PULSE, TIMER_PAUSE);
 	timer_group_set_counter_enable_in_isr(ONE_SHOT, PULSE, TIMER_PAUSE);
-	
-//	static_info.type = (TIMER_EVENT) arg;
-//	bool x = true;
-//	xQueueSendFromISR(timer_event_queue, &x, NULL);
 	
 	motor_in_motion = false;
 		
@@ -403,21 +378,3 @@ void axis::reset_timer_counters() {
 	timer_set_alarm(ONE_SHOT, ACCEL, TIMER_ALARM_EN);	
 
 }
-
-void axis::run() {
-	xTaskCreatePinnedToCore(axis::timer_task, "Timer Task", 2048, NULL, 5, NULL, 1);
-}
-
-void axis::timer_task(void* arg) {
-	bool x;
-	while(1) {
-		xQueueReceive(timer_event_queue, &x, portMAX_DELAY);
-//			WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1 << STEP));
-			gpio_set_level(STEP, 1);
-			gpio_set_level(STEP, 0);
-			(motor_direction)? position_steps += 1 : position_steps -= 1;
-//			WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1 << STEP));	
-
-	}
-}
-		

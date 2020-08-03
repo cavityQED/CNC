@@ -3,7 +3,7 @@
 
 #include "freertos/queue.h"
 
-#define DEVICE_SELECT 	(gpio_num_t) 21
+#define DEVICE_SELECT	(gpio_num_t) 21
 #define MOVE_BUTTON		(gpio_num_t) 26
 #define ZERO_INTERLOCK	(gpio_num_t) 32
 
@@ -133,6 +133,5 @@ extern "C" void app_main(void) {
 	gpio_set_intr_type(DEVICE_SELECT, GPIO_INTR_POSEDGE);
 	gpio_isr_handler_add(DEVICE_SELECT, msg_ready, NULL);
 	
-//	gen_axis.run();
 	xTaskCreate(main_task, "main_task", 4096, NULL, 1, NULL);
 }

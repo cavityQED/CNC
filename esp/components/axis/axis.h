@@ -18,7 +18,7 @@
 #include "esp_types.h"
 
 //GPIO numbers motor driver connections
-#define STEP 	(gpio_num_t) 12
+#define STEP	(gpio_num_t) 12
 #define DIR		(gpio_num_t) 14
 #define EN		(gpio_num_t) 27
 
@@ -54,21 +54,11 @@ enum AXIS_FUNCTION_CODE {
 	RECEIVE
 };
 
-enum TIMER_EVENT {
-	STEP_ONCE,
-	STOP_MOTOR
-};
-
-typedef struct {
-	TIMER_EVENT type;
-	timer_idx_t timer;
-} timer_info_t;
-
-//Struct to hold accel callback arguments
+//Struct to hold timer callback arguments
 typedef struct {
 	uint64_t pulseAlarmTimes[10];	//Times to update the pulse alarm
 	int accelStep;					//What step of the accel the timer is on
-} accel_args_t;
+} timer_args_t;
 
 class axis {
 public:
@@ -143,24 +133,12 @@ public:
 	void enable_jog_mode(bool enable);
 	void enable_step_mode(bool enable);
 	
-	/* 	Timer Callbacks	
-	 * 		returns a bool to tell isr whether to yield or not (will be false)
-	 */
+	/* 	Timer Callbacks	*/
 	static void IRAM_ATTR periodic_pulse_callback(void* arg);
 	static void IRAM_ATTR periodic_accel_callback(void* arg);
 	static void IRAM_ATTR one_shot_pulse_callback(void* arg);
 	static void IRAM_ATTR one_shot_accel_callback(void* arg);
-		
-	/*	Timer Callback Arguments	*/
-	accel_args_t accel_args;
-	
-	/* 	Timer Event Queue	*/	
-	static xQueueHandle timer_event_queue;
-	
-	/*	Functions to create and handle event queues	*/
-	void run();
-	static void timer_task(void* arg);
-	 
+			 
 private:				
 	//Motor Move Variables
 	int 		SPR;				//Steps per revolution
@@ -201,10 +179,8 @@ private:
 	esp_err_t error = ESP_OK;
 		
 	//Timer Arguments
-	timer_info_t pulse_args;
-	timer_info_t stop_args;
-	
-	static timer_info_t static_info;
+	timer_args_t pulse_args;
+	timer_args_t accel_args;
 	
 };
 
