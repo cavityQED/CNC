@@ -132,6 +132,9 @@ void MotorController::send_circle_ops(int device_pin, int ops) {
 }
 
 void MotorController::circle_move() {
+	if(in_motion)
+		return;
+		
 	digitalWrite(SYNC_PIN, 0);
 	
 	bool x_ready = false;
@@ -168,6 +171,7 @@ void MotorController::circle_move() {
 		send(y_params.pin_num);
 		sem_wait(sem);	
 		digitalWrite(SYNC_PIN, 1);
+		in_motion = true;
 	}
 }
 
@@ -289,6 +293,9 @@ double MotorController::y_get_position() {
 }
 
 void MotorController::sync_move() {
+	if(in_motion)
+		return;
+		
 	digitalWrite(SYNC_PIN, 0);
 	sendbuf[0] = MOVE;	
 	if(x_connected) {
@@ -301,44 +308,49 @@ void MotorController::sync_move() {
 		sem_wait(sem);
 	}
 	
-	digitalWrite(SYNC_PIN, 1);	
+	digitalWrite(SYNC_PIN, 1);
+	in_motion = true;
 }
 		
 
 void MotorController::x_move() {
-	if(!x_connected)
+	if(!x_connected || in_motion)
 		return;
 		
 	sendbuf[0] = MOVE;
 	send(x_params.pin_num);
+	in_motion = true;
 }
 
 void MotorController::y_move() {
-	if(!y_connected)
+	if(!y_connected || in_motion)
 		return;
 		
 	sendbuf[0] = MOVE;
 	send(y_params.pin_num);
+	in_motion = true;
 }
 
 void MotorController::x_zero() {
-	if(!x_connected)
+	if(!x_connected || in_motion)
 		return;
 		
 	sendbuf[0] = ZERO;
 	send(x_params.pin_num);
+	in_motion = true;
 }
 
 void MotorController::y_zero() {
-	if(!y_connected)
+	if(!y_connected || in_motion)
 		return;
 		
 	sendbuf[0] = ZERO;
 	send(y_params.pin_num);
+	in_motion = true;
 }
 
 void MotorController::x_set_dir(bool dir) {
-	if(!x_connected)
+	if(!x_connected || in_motion)
 		return;
 		
 	sendbuf[0] = SET_DIRECTION;
@@ -347,7 +359,7 @@ void MotorController::x_set_dir(bool dir) {
 }
 
 void MotorController::y_set_dir(bool dir) {
-	if(!y_connected)
+	if(!y_connected || in_motion)
 		return;
 		
 	sendbuf[0] = SET_DIRECTION;
