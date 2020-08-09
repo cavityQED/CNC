@@ -13,7 +13,13 @@
 
 #include <vector>
 
-#define READY_PIN 5
+#include <QWidget>
+#include <QAction>
+
+#include "Curve.h"
+
+#define READY_PIN 	24
+#define SYNC_PIN	18
 
 enum SPI_FUNCTION_CODE {
 	SET_SPEED, 			
@@ -25,7 +31,9 @@ enum SPI_FUNCTION_CODE {
 	ENA_JOG_MODE,		
 	DIS_JOG_MODE,		
 	ENA_STEP_MODE,
-	DIS_STEP_MODE,	
+	DIS_STEP_MODE,
+	ENA_SYNC_MODE,
+	DIS_SYNC_MODE,	
 	GET_POSITION, 		
 	SET_MM_PER_STEP,
 	SET_STEPS_PER_REVOLUTION,
@@ -33,9 +41,17 @@ enum SPI_FUNCTION_CODE {
 	ZERO_INTERLOCK_STOP,
 	MOVE_TO,	
 	MOVE,
+	CIRCLE_MOVE,
 	STOP,
 	RECEIVE,
-	GET_SPI_DATA
+	SETUP_CIRCLE_MOVE,
+	SET_CIRCLE_OPS,
+	GET_CIRCLE_STEPS,
+	GET_CIRCLE_TIMES,
+	GET_CIRCLE_DIRS,
+	PRINT_CIRCLE_INFO,
+	MOTOR_READY,
+	MOTOR_NOT_READY
 };
 
 struct motorParameters {
@@ -44,10 +60,11 @@ struct motorParameters {
 	double mm_per_step;	//Millimeters traveled in one step
 };	
 
-class MotorController {
+class MotorController : public QWidget {
+	Q_OBJECT;
 public:
-	MotorController();
-	~MotorController() {sem_unlink("sem_ready");}
+	MotorController(QWidget *parent = 0);
+	~MotorController() {sem_unlink("sem_ready"); std::cout << "MotorController destroyed\n";}
 	
 	void setup_spi();
 	void setup_gpio();
@@ -62,15 +79,23 @@ public:
 	
 	//Send a message to a particular device
 	void send(int device_pin);
-	void send_data(int device_pin, void* data, int len);
+	void send_data(int device_pin, std::vector<int> &data, SPI_FUNCTION_CODE type);
+	void send_circle_ops(int device_pin, int ops);
+	void print_circle_info(int device_pin) {
+		sendbuf[0] = PRINT_CIRCLE_INFO;
+		send(device_pin);
+	}
 	
 	//Functions that execute on all axes
-	void enable_jog_mode();
-	void disable_jog_mode();
-	void enable_step_mode();
+	void enable_jog_mode(bool enable);
+	void enable_step_mode(bool enable);
+	void enable_sync_mode(bool enable);
 	void set_jog_speed_steps(int steps);
 	void set_jog_speed_mm(double mm);
 	void get_position(double &x_steps, double &y_steps);
+	
+	void sync_move();
+	void circle_move();
 	
 	//Axis-specific functions	
 	void x_move();
@@ -90,6 +115,29 @@ public:
 	
 	double x_get_position();
 	double y_get_position();
+	
+	void copy_circle_ops(curve::motor_ops_t &ops);
+	
+public slots:
+	void calc_circle() {
+		curve::calculate_circle(circle_params, circle_ops);
+	}
+	
+	void send_circle() {
+		send_circle_ops(x_params.pin_num, circle_ops.num_ops);
+		send_circle_ops(y_params.pin_num, circle_ops.num_ops);
+		
+		send_data(x_params.pin_num, circle_ops.x_steps, GET_CIRCLE_STEPS);
+		send_data(x_params.pin_num, circle_ops.x_times, GET_CIRCLE_TIMES);
+		send_data(x_params.pin_num, circle_ops.x_dirs, GET_CIRCLE_DIRS);
+		
+		send_data(y_params.pin_num, circle_ops.y_steps, GET_CIRCLE_STEPS);
+		send_data(y_params.pin_num, circle_ops.y_times, GET_CIRCLE_TIMES);
+		send_data(y_params.pin_num, circle_ops.y_dirs, GET_CIRCLE_DIRS);
+		
+		print_circle_info(x_params.pin_num);
+		print_circle_info(y_params.pin_num);
+	}
 		
 private:
 	//SPI
@@ -108,6 +156,9 @@ private:
 	
 	motorParameters x_params;
 	motorParameters y_params;
+	
+	curve::motor_ops_t circle_ops;
+	curve::circle_params_t circle_params;
 };
 
 #endif

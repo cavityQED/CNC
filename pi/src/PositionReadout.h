@@ -18,18 +18,11 @@ class PositionReadout : public QWidget {
 	Q_OBJECT
 public:
 	PositionReadout(QWidget *parent = 0);
+	~PositionReadout() {std::cout << "PositionReadout destroyed\n";}
 	
 	void createWidgets();
 	void setStyleSheets();
-	
-	void setMotorController(MotorController *controller) {
-		motorController = controller;
-	}
-	
-	void timerEvent(QTimerEvent *e) override {
-		std::cout << "Timer Event\n";
-	}
-	
+			
 	void setPosition(double xpos, double ypos) {
 		x_lineEdit->setText(QString::number(xpos, 'f', 2));
 		y_lineEdit->setText(QString::number(ypos, 'f', 2));
@@ -56,11 +49,7 @@ private:
 	//Axis-Specific Layouts
 	QHBoxLayout *x_pos_layout;
 	QHBoxLayout *y_pos_layout;
-	QHBoxLayout *z_pos_layout;
-	
-	//Motor Controller
-	MotorController *motorController;
-	
+	QHBoxLayout *z_pos_layout;	
 };
 
 #endif

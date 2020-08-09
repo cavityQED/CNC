@@ -12,12 +12,13 @@
 #include <QAction>
 
 #include "MotorController.h"
+#include "Curve.h"
 
 class JogController : public QWidget {
 	Q_OBJECT
 public:
 	JogController(QWidget *parent = 0);
-	~JogController() {}
+	~JogController() {std::cout << "JogController destroyed\n";}
 	
 	void createButtons();
 	void setupBoxes();
@@ -31,10 +32,7 @@ public:
 		
 public slots:
 	void en_jog_mode(bool ena) {
-		if(ena)
-			motorController->enable_jog_mode();
-		else
-			motorController->disable_jog_mode();
+		motorController->enable_jog_mode(ena);
 	}
 	
 	void xJogPos() {
@@ -73,10 +71,11 @@ public slots:
 			motorController->set_jog_speed_mm(1);
 	}
 	
+	//Connect action to jog mode box so it can be un/checked with keystroke
 	void enableJogMode(bool b) {
 		jog_mode_box->setChecked(!jog_mode_box->isChecked());
 	}
-
+	
 private:
 	//Jog Controller Layout
 	QVBoxLayout *jogController_layout;
