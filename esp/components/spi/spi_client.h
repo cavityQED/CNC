@@ -25,8 +25,8 @@ public:
 	~SpiClient() {}
 	
 	void get_message(std::vector<int> &msg);	
-	
-	void set_sendbuffer(int index, int value);
+	void get_data(std::vector<int> &data);
+	void set_sendbuffer_value(int index, int value);
 	
 	/*	SPI Post Setup Callback
 	* 		Executes after spi transaction is set up to signal
@@ -43,7 +43,12 @@ public:
 	*/
 	static void spi_post_trans_callback(spi_slave_transaction_t *t) {
 		WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1 << READY));	
-	}	
+	}
+	
+	void toggle_ready() {
+		gpio_set_level(READY, 1);
+		gpio_set_level(READY, 0);
+	}
 		
 private:
 	spi_slave_interface_config_t	slave_config;
