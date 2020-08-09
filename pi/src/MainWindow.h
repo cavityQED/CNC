@@ -44,8 +44,10 @@ public:
 		
 		controller->get_position(xpos, ypos);
 		pos->setPosition(xpos, ypos);
-		if(xpos == cur_xpos && ypos == cur_ypos)
+		if(xpos == cur_xpos && ypos == cur_ypos) {
 			killTimer(e->timerId());
+			controller->set_motion(false);
+		}
 		else {
 			cur_xpos = xpos;
 			cur_ypos = ypos;

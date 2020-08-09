@@ -116,6 +116,11 @@ public:
 	double x_get_position();
 	double y_get_position();
 	
+	//Set the in_motion bool
+	void set_motion(bool m) {
+		in_motion = m;
+	}
+	
 	void copy_circle_ops(curve::motor_ops_t &ops);
 	
 public slots:
@@ -153,6 +158,7 @@ private:
 	//Axis Info
 	bool x_connected = false;
 	bool y_connected = false;
+	bool in_motion = false;
 	
 	motorParameters x_params;
 	motorParameters y_params;
