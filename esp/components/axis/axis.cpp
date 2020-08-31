@@ -116,7 +116,7 @@ void axis::curv_step_isr(void* arg) {
 	gpio_set_level(STEP, step_vec[step_num]);
 	gpio_set_level(STEP, 0);
 		
-	(motor_direction)? position_steps += 1 : position_steps -= 1;
+	(motor_direction)? position_steps += (int)step_vec[step_num] : position_steps -= (int)step_vec[step_num];
 	
 	motor_direction = dirs_vec[++step_num];
 	gpio_set_level(DIR, motor_direction);
@@ -251,7 +251,7 @@ void axis::move() {
 }
 
 void axis::move_jog_mode() {
-	if(!jog_mode || motor_in_motion)
+	if(!jog_mode || motor_in_motion || jog_steps == 0)
 		return;
 		
 //	if(motor_direction && (position_steps + jog_once_steps) > max_travel_steps)
@@ -443,7 +443,7 @@ void axis::setup_curve(std::vector<int> &info) {
 		}
 		
 		if(x2 == 0 && abs(y2) == r && step_vec.size() != 0) {
-			std::cout << "Adding backlash steps in y at position: " << x2 << ", " << y2 << '\n';
+			std::cout << "Adding " << backlash << " backlash steps in y at position: " << x2 << ", " << y2 << '\n';
 			if(!x_axis) {
 				step_vec.insert(step_vec.end(), backlash, 1);
 				dirs_vec.insert(dirs_vec.end(), backlash, (y2 < 0)? 1 : 0);
@@ -454,7 +454,7 @@ void axis::setup_curve(std::vector<int> &info) {
 			}
 		}
 		else if(y2 == 0 && abs(x2) == r && step_vec.size() != 0) {
-			std::cout << "Adding backlash steps in x at position: " << x2 << ", " << y2 << '\n';
+			std::cout << "Adding " << backlash << " backlash steps in x at position: " << x2 << ", " << y2 << '\n';
 			if(x_axis) {
 				step_vec.insert(step_vec.end(), backlash, 1);
 				dirs_vec.insert(dirs_vec.end(), backlash, (x2 < 0)? 1 : 0);
@@ -478,6 +478,27 @@ void axis::setup_curve(std::vector<int> &info) {
 		y2 += yo;
 		
 	}while(abs(x2 - x3) > 1 || abs(y2 - y3) > 1 || step_vec.size() < 2);
+	
+	if(x2 != x3) {
+		if(x_axis){
+			step_vec.push_back(1);
+			dirs_vec.push_back(std::signbit(x2-x3));
+		}
+		else {
+			step_vec.push_back(0);
+			dirs_vec.push_back(dirs_vec[dirs_vec.size() - 1]);
+		}
+	}
+	if(y2 != y3) {
+		if(!x_axis){
+			step_vec.push_back(1);
+			dirs_vec.push_back(std::signbit(y2-y3));
+		}
+		else {
+			step_vec.push_back(0);
+			dirs_vec.push_back(dirs_vec[dirs_vec.size() - 1]);
+		}
+	}
 	
 	std::cout << "Curve Steps: " << step_vec.size() << '\n';
 	spi->toggle_ready();

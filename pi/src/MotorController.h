@@ -142,6 +142,14 @@ public slots:
 	void zero_x();
 	void zero_y();
 	
+	void print_pos() {
+		sendbuf[0] = SPI::RECEIVE;
+		send(x_params.pin_num);
+		std::cout << "X Steps: " << recvbuf[1] << '\n';
+		send(y_params.pin_num);
+		std::cout << "Y Steps: " << recvbuf[1] << '\n';
+	}
+	
 private:
 	//SPI
 	int spi_cs_fd;

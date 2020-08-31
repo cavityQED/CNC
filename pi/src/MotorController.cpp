@@ -20,12 +20,17 @@ MotorController::MotorController(QWidget *parent) : QWidget(parent){
 	circle->setShortcut(Qt::Key_F5);
 	connect(circle, SIGNAL(triggered()), this , SLOT(run_p()));
 	addAction(circle);
+	
+	QAction *print = new QAction;
+	print->setShortcut(Qt::Key_F11);
+	connect(print, SIGNAL(triggered()), this, SLOT(print_pos()));
+	addAction(print);
 }
 
 void MotorController::test_lines() {
 	program_moves.clear();
 	
-	gcode::get_program("test.nc", program_moves);
+	gcode::get_program("cnc.nc", program_moves);
 }
 	
 void MotorController::setup_spi() {
