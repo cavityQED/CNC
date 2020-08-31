@@ -36,8 +36,8 @@ void axis::setup_gpio() {
 	error = gpio_set_direction(EN, GPIO_MODE_OUTPUT);
 	check_error("enable pin set direction");
 	
-	//Make sure the motor is not enabled to run initially
-	gpio_set_level(EN, 1);
+	//Enable the motor to get holding torque on startup
+	gpio_set_level(EN, 0);
 	
 	//Setup the Sync Pin
 	gpio_config_t io_conf;
@@ -263,7 +263,7 @@ void axis::move_jog_mode() {
 	
 	timer_set_alarm_value(LINE_GROUP, STEP_TIMER, jog_wait_time / PERIOD_uS);
 	timer_set_alarm_value(LINE_GROUP, STOP_TIMER, jog_wait_time * jog_steps / PERIOD_uS);
-	gpio_set_level(EN, 0);
+	
 	timer_start(LINE_GROUP, STEP_TIMER);
 	timer_start(LINE_GROUP, STOP_TIMER);
 	motor_in_motion = true;
@@ -283,7 +283,6 @@ void axis::move_line_mode() {
 				
 	timer_set_alarm_value(LINE_GROUP, STEP_TIMER, pulse_period_us / PERIOD_uS);
 	timer_set_alarm_value(LINE_GROUP, STOP_TIMER, pulse_period_us * steps_to_move / PERIOD_uS);
-	gpio_set_level(EN, 0);
 	
 	if(sync_mode) {
 		spi->toggle_ready();
@@ -300,7 +299,6 @@ void axis::move_curv_mode() {
 		return;
 		
 	reset_timer_counters();
-	gpio_set_level(EN, 0);
 	
 	step_num = 0;
 	
@@ -340,7 +338,6 @@ void axis::stop_zero_interlock() {
 	timer_set_alarm_value(LINE_GROUP, STOP_TIMER, jog_wait_time * zero_steps / PERIOD_uS);
 	
 	set_direction(1);
-	gpio_set_level(EN, 0);
 	
 	timer_start(LINE_GROUP, STEP_TIMER);
 	timer_start(LINE_GROUP, STOP_TIMER);
