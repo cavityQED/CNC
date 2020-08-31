@@ -63,8 +63,8 @@ private:
 	PositionReadout *pos;
 	MotorController *controller;
 	
-	motor::params_t xparams = {25, 200, 400*200, 0, SPI::X_AXIS};
-	motor::params_t yparams = {23, 200, 400*200, 0, SPI::Y_AXIS};
+	motor::params_t xparams = {25, 60, 400*200, 0, SPI::X_AXIS};
+	motor::params_t yparams = {23, 60, 400*200, 0, SPI::Y_AXIS};
 	
 	double cur_xpos;
 	double cur_ypos;
