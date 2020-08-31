@@ -4,6 +4,7 @@
 #include <cstring>
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 #include "driver/gpio.h"
 #include "driver/spi_slave.h"
@@ -17,7 +18,7 @@
 #define SPI_MODE				2
 #define DMA_CHANNEL				1
 #define QUEUE_SIZE				1
-#define MAX_TRANSACTION_LENGTH	8
+#define MAX_TRANSACTION_LENGTH	12
 
 class SpiClient {
 public:
@@ -26,6 +27,7 @@ public:
 	
 	void get_message(std::vector<int> &msg);	
 	void get_data(std::vector<int> &data);
+	
 	void set_sendbuffer_value(int index, int value);
 	
 	/*	SPI Post Setup Callback

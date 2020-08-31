@@ -5,8 +5,29 @@ sem_t* MotorController::sem = sem_open("sem_ready",O_CREAT, 0, 0);
 MotorController::MotorController(QWidget *parent) : QWidget(parent){
 	setup_spi();
 	setup_gpio();
+	
+	QAction *x_z = new QAction;
+	x_z->setShortcut(Qt::Key_F9);
+	connect(x_z, SIGNAL(triggered()), this, SLOT(zero_x()));
+	addAction(x_z);
+	
+	QAction *y_z = new QAction;
+	y_z->setShortcut(Qt::Key_F10);
+	connect(y_z, SIGNAL(triggered()), this, SLOT(zero_y()));
+	addAction(y_z);
+	
+	QAction *circle = new QAction;
+	circle->setShortcut(Qt::Key_F5);
+	connect(circle, SIGNAL(triggered()), this , SLOT(run_p()));
+	addAction(circle);
 }
 
+void MotorController::test_lines() {
+	program_moves.clear();
+	
+	gcode::get_program("test.nc", program_moves);
+}
+	
 void MotorController::setup_spi() {
 	unsigned char spi_mode = SPI_MODE_2;
 	unsigned char spi_bitsPerWord = 8;
@@ -25,8 +46,8 @@ void MotorController::setup_spi() {
 	ioctl(spi_cs_fd, SPI_IOC_WR_MAX_SPEED_HZ, &spi_speed);
 	ioctl(spi_cs_fd, SPI_IOC_RD_MAX_SPEED_HZ, &spi_speed);
 	
-	sendbuf.resize(8);
-	recvbuf.resize(8);
+	sendbuf.resize(12);
+	recvbuf.resize(12);
 	
 	memset(&spi, 0, sizeof(spi));
 	
@@ -34,23 +55,6 @@ void MotorController::setup_spi() {
 	spi.speed_hz = spi_speed;
 	spi.bits_per_word = spi_bitsPerWord;
 	spi.cs_change = 1;
-	
-	circle_params.r = 50;
-	circle_params.s = 16;
-	circle_params.theta_i = 0;
-	circle_params.theta_f = 360;
-	circle_params.x_spmm = 200;
-	circle_params.y_spmm = 200;
-	
-	QAction *calc = new QAction;
-	calc->setShortcut(Qt::Key_F9);
-	connect(calc, SIGNAL(triggered()), this, SLOT(calc_circle()));
-	addAction(calc);
-	
-	QAction *send = new QAction;
-	send->setShortcut(Qt::Key_F10);
-	connect(send, SIGNAL(triggered()), this, SLOT(send_circle()));
-	addAction(send);
 }
 
 void MotorController::setup_gpio() {
@@ -65,26 +69,37 @@ void MotorController::setup_gpio() {
 	pinMode(SYNC_PIN, OUTPUT);
 }
 
-void MotorController::setup_x_axis(motorParameters &params) {
-	x_params.SPR 			= params.SPR;
-	x_params.mm_per_step	= params.mm_per_step;
-	x_params.pin_num		= params.pin_num;
+void MotorController::setup_axis(motor::params_t &params) {
+	motor::params_t *p;
+	int x_axis;
 	
-	pinMode(x_params.pin_num, OUTPUT);
-	digitalWrite(x_params.pin_num, 0);
+	if(params.a == SPI::X_AXIS) {
+		p = &x_params;
+		x_axis = 1;
+		x_connected = true;
+	}
+	else if(params.a == SPI::Y_AXIS) {
+		p = &y_params;
+		x_axis = 0;
+		y_connected = true;
+	}
+		
+	p->pin_num		= params.pin_num;
+	p->spmm			= params.spmm;
+	p->max_steps	= params.max_steps;
+	p->backlash		= params.backlash;
+	p->a			= params.a;
 	
-	x_connected = true;
-}
-
-void MotorController::setup_y_axis(motorParameters &params) {
-	y_params.SPR 			= params.SPR;
-	y_params.mm_per_step	= params.mm_per_step;
-	y_params.pin_num		= params.pin_num;
+	pinMode(params.pin_num, OUTPUT);
+	digitalWrite(params.pin_num, 0);
 	
-	pinMode(y_params.pin_num, OUTPUT);
-	digitalWrite(y_params.pin_num, 0);
+	sendbuf[0] = SPI::SET_X_AXIS;
+	sendbuf[1] = x_axis;
+	send(params.pin_num);
 	
-	y_connected = true;
+	set_steps_per_mm(params.a, params.spmm);
+	set_max_steps(params.a, params.max_steps);
+	set_backlash(params.a, params.backlash);
 }
 
 void MotorController::send(int device_pin) {
@@ -92,9 +107,9 @@ void MotorController::send(int device_pin) {
 	
 	spi.tx_buf = (unsigned long)(&sendbuf[0]);
 	spi.rx_buf = (unsigned long)(&recvbuf[0]);
-	spi.len = 4*sendbuf.size();
+	spi.len = sizeof(int)*sendbuf.size();
 	
-	std::cout << "Sending Function: " << (SPI_FUNCTION_CODE) sendbuf[0] << '\n';
+	std::cout << "Sending Function: " << SPI::function_code_to_string((SPI::FUNCTION_CODE)sendbuf[0]) << '\n';
 	
 	//Trigger the interrupt on the correct device to signal a message is ready to be sent
 	digitalWrite(device_pin, 1);
@@ -110,291 +125,292 @@ void MotorController::send(int device_pin) {
 	digitalWrite(device_pin, 0);
 }
 
-void MotorController::send_data(int device_pin, std::vector<int> &data, SPI_FUNCTION_CODE type) {
-	sendbuf[0] = type;
-	send(device_pin);
+void MotorController::send_curve_data(curve::esp_params_t &data) {	
+	sendbuf[0] = SPI::SETUP_CURVE;
+	sendbuf[1] = data.dir;
+	sendbuf[2] = data.r;
+	sendbuf[3] = data.x_i;
+	sendbuf[4] = data.y_i;
+	sendbuf[5] = data.x_f;
+	sendbuf[6] = data.y_f;
+	sendbuf[7] = data.feed_rate;
 	
-	spi.tx_buf = (unsigned long)(&data[0]);
-	spi.rx_buf = NULL;
-	spi.len = 4*data.size();
-	std::cout << "Sending " << 4*data.size() << " Bytes of Data...\n";
-	
-	sem_wait(sem);
-	
-	ioctl(spi_cs_fd, SPI_IOC_MESSAGE(1), &spi);
-	std::cout << "Data Sent\n";
+	if(x_connected) {
+		send(x_params.pin_num);
+		sem_wait(sem);
+	}
+		
+	if(y_connected) {
+		send(y_params.pin_num);
+		sem_wait(sem);
+	}
 }
 
-void MotorController::send_circle_ops(int device_pin, int ops) {
-	sendbuf[0] = SET_CIRCLE_OPS;
-	sendbuf[1] = ops;
-	send(device_pin);
+void MotorController::send_line_data(line::ops_t &data) {
+	std::cout << "Sending line data\n";
+	
+	sendbuf[0] = SPI::SET_STEPS_TO_MOVE;
+	sendbuf[1] = data.x_steps;
+	send(x_params.pin_num);
+	sendbuf[1] = data.y_steps;
+	send(y_params.pin_num);
+		
+	sendbuf[0] = SPI::SET_STEP_TIME;
+	sendbuf[1] = data.x_time;
+	send(x_params.pin_num);
+	sendbuf[1] = data.y_time;
+	send(y_params.pin_num);
+		
+	sendbuf[0] = SPI::SET_DIRECTION;
+	sendbuf[1] = data.x_dir;
+	send(x_params.pin_num);
+	sendbuf[1] = data.y_dir;
+	send(y_params.pin_num);		
 }
 
-void MotorController::circle_move() {
+void MotorController::start_program(std::vector<motor::move_t> &moves) {
+	program_moves = moves;
+	start_program();
+}
+
+void MotorController::start_program() {
 	if(in_motion)
 		return;
 		
-	digitalWrite(SYNC_PIN, 0);
+	cur_program_move = 0;
+	enable_sync_mode(true);
 	
-	bool x_ready = false;
-	bool y_ready = false;
+	if(program_moves[0].line_op) {
+		enable_line_mode(true);
+		send_line_data(program_moves[0].l);
+		sync_move();
+	}
 	
-	if(x_connected) {
-		sendbuf[0] = SETUP_CIRCLE_MOVE;
-		send(x_params.pin_num);
-		sem_wait(sem);
-		sendbuf[0] = RECEIVE;
-		send(x_params.pin_num);
-		if(recvbuf[1] == MOTOR_READY) {
-			std::cout << "X Axis Ready\n";
-			x_ready = true;
+	else if(!program_moves[0].line_op) {
+		enable_curv_mode(true);
+		send_curve_data(program_moves[0].c);
+		sync_move();
+	}
+}
+
+void MotorController::next_move() {
+	if(cur_program_move == program_moves.size()) {
+		in_program = false;
+		cur_program_move = 0;
+		std::cout << "End of Moves\n";
+		enable_jog_mode(true);
+		return;
+	}
+	else {
+		std::cout << "Move " << cur_program_move << ":\n";
+		if(program_moves[cur_program_move].line_op) {
+			enable_line_mode(true);
+			send_line_data(program_moves[cur_program_move].l);
+			sync_move();
+		}
+		
+		else if(!program_moves[cur_program_move].line_op) {
+			enable_curv_mode(true);
+			send_curve_data(program_moves[cur_program_move].c);
+			sync_move();
 		}
 	}
-		
-	if(y_connected) {
-		sendbuf[0] = SETUP_CIRCLE_MOVE;
-		send(y_params.pin_num);
-		sem_wait(sem);
-		sendbuf[0] = RECEIVE;
-		send(x_params.pin_num);
-		if(recvbuf[1] = MOTOR_READY) {
-			std::cout << "Y Axis Ready\n";
-			y_ready = true;
-		}
-	}
-	
-	if(x_ready && y_ready) {
-		sendbuf[0] = CIRCLE_MOVE;
-		send(x_params.pin_num);
-		sem_wait(sem);
-		send(y_params.pin_num);
-		sem_wait(sem);	
-		digitalWrite(SYNC_PIN, 1);
-		in_motion = true;
-	}
-}
-
-void MotorController::enable_jog_mode(bool enable) {
-	SPI_FUNCTION_CODE en;
-	(enable)? en = ENA_JOG_MODE : en = DIS_JOG_MODE;
-	
-	if(x_connected) {
-		sendbuf[0] = en;
-		send(x_params.pin_num);
-	}
-	
-	if(y_connected) {
-		sendbuf[0] = en;
-		send(y_params.pin_num);
-	}
-}
-
-void MotorController::enable_step_mode(bool enable) {
-	SPI_FUNCTION_CODE en;
-	(enable)? en = ENA_STEP_MODE : en = DIS_STEP_MODE;
-	
-	if(x_connected) {
-		sendbuf[0] = en;
-		send(x_params.pin_num);
-	}
-	
-	if(y_connected) {
-		sendbuf[0] = en;
-		send(y_params.pin_num);
-	}
-}
-
-void MotorController::enable_sync_mode(bool enable) {
-	SPI_FUNCTION_CODE en;
-	(enable)? en = ENA_SYNC_MODE : en = DIS_SYNC_MODE;
-	
-	if(x_connected) {
-		sendbuf[0] = en;
-		send(x_params.pin_num);
-	}
-	
-	if(y_connected) {
-		sendbuf[0] = en;
-		send(y_params.pin_num);
-	}
-}
-
-void MotorController::set_jog_speed_steps(int steps) {
-	if(x_connected) {
-		sendbuf[0] = SET_JOG_SPEED_STEPS;
-		sendbuf[1] = steps;
-		send(x_params.pin_num);
-	}
-	
-	if(y_connected) {
-		sendbuf[0] = SET_JOG_SPEED_STEPS;
-		sendbuf[1] = steps;
-		send(y_params.pin_num);
-	}
-}
-
-void MotorController::set_jog_speed_mm(double mm) {
-	if(x_connected) {
-		sendbuf[0] = SET_JOG_SPEED_MM;
-		sendbuf[1] = 100 * mm;
-		send(x_params.pin_num);
-	}
-	
-	if(y_connected) {
-		sendbuf[0] = SET_JOG_SPEED_MM;
-		sendbuf[1] = 100 * mm;
-		send(y_params.pin_num);
-	}
-}
-
-void MotorController::get_position(double &x_steps, double &y_steps) {
-	if(x_connected) {
-		sendbuf[0] = GET_POSITION;
-		send(x_params.pin_num);
-		sendbuf[0] = RECEIVE;
-		send(x_params.pin_num);
-		
-		x_steps = x_params.mm_per_step * recvbuf[1];
-	}
-	
-	if(y_connected) {
-		sendbuf[0] = GET_POSITION;
-		send(y_params.pin_num);
-		sendbuf[0] = RECEIVE;
-		send(y_params.pin_num);
-		
-		y_steps = y_params.mm_per_step * recvbuf[1];
-	}
-}
-
-double MotorController::x_get_position() {
-	if(!x_connected)
-		return -1;
-		
-	sendbuf[0] = GET_POSITION;
-	send(x_params.pin_num);
-	sendbuf[0] = RECEIVE;
-	send(x_params.pin_num);
-	
-	return x_params.mm_per_step * recvbuf[1];
-}
-
-double MotorController::y_get_position() {
-	if(!y_connected)
-		return -1;
-		
-	sendbuf[0] = GET_POSITION;
-	send(y_params.pin_num);
-	sendbuf[0] = RECEIVE;
-	send(y_params.pin_num);
-	
-	return y_params.mm_per_step * recvbuf[1];
 }
 
 void MotorController::sync_move() {
-	if(in_motion)
-		return;
-		
 	digitalWrite(SYNC_PIN, 0);
-	sendbuf[0] = MOVE;	
+	
+	sendbuf[0] = SPI::MOVE;
+	
 	if(x_connected) {
 		send(x_params.pin_num);
 		sem_wait(sem);
 	}
-	
 	if(y_connected) {
 		send(y_params.pin_num);
 		sem_wait(sem);
 	}
 	
 	digitalWrite(SYNC_PIN, 1);
+	startTimer(TIMER_PERIOD);
+	parent()->startTimer(2*TIMER_PERIOD);
+	in_program = true;
 	in_motion = true;
-}
-		
+}	
 
-void MotorController::x_move() {
-	if(!x_connected || in_motion)
-		return;
-		
-	sendbuf[0] = MOVE;
-	send(x_params.pin_num);
-	in_motion = true;
-}
-
-void MotorController::y_move() {
-	if(!y_connected || in_motion)
-		return;
-		
-	sendbuf[0] = MOVE;
-	send(y_params.pin_num);
-	in_motion = true;
-}
-
-void MotorController::x_zero() {
-	if(!x_connected || in_motion)
-		return;
-		
-	sendbuf[0] = ZERO;
-	send(x_params.pin_num);
-	in_motion = true;
-}
-
-void MotorController::y_zero() {
-	if(!y_connected || in_motion)
-		return;
-		
-	sendbuf[0] = ZERO;
-	send(y_params.pin_num);
-	in_motion = true;
-}
-
-void MotorController::x_set_dir(bool dir) {
-	if(!x_connected || in_motion)
-		return;
-		
-	sendbuf[0] = SET_DIRECTION;
-	sendbuf[1] = (int) dir;
-	send(x_params.pin_num);
-}
-
-void MotorController::y_set_dir(bool dir) {
-	if(!y_connected || in_motion)
-		return;
-		
-	sendbuf[0] = SET_DIRECTION;
-	sendbuf[1] = (int) dir;
-	send(y_params.pin_num);
-}
-
-void MotorController::x_set_steps_to_move(int steps) {
-	if(!x_connected)
-		return;
-		
-	sendbuf[0] = SET_STEPS_TO_MOVE;
-	sendbuf[1] = steps;
-	send(x_params.pin_num);
-}
-
-void MotorController::y_set_steps_to_move(int steps) {
-	if(!y_connected)
-		return;
-		
-	sendbuf[0] = SET_STEPS_TO_MOVE;
-	sendbuf[1] = steps;
-	send(y_params.pin_num);
-}
-
-void MotorController::copy_circle_ops(curve::motor_ops_t &ops) {
-	circle_ops.num_ops = ops.num_ops;
+void MotorController::enable_jog_mode(bool enable) {
+	sendbuf[0] = (enable)? SPI::ENA_JOG_MODE : SPI::DIS_JOG_MODE;
 	
-	for(int i = 0; i < circle_ops.num_ops; i++) {
-		circle_ops.x_steps.push_back(ops.x_steps[i]);
-		circle_ops.x_times.push_back(ops.x_times[i]);
-		circle_ops.x_dirs.push_back(ops.x_dirs[i]);
-		
-		circle_ops.y_steps.push_back(ops.y_steps[i]);
-		circle_ops.y_times.push_back(ops.y_times[i]);
-		circle_ops.y_dirs.push_back(ops.y_dirs[i]);
+	if(x_connected)
+		send(x_params.pin_num);
+	
+	if(y_connected)
+		send(y_params.pin_num);
+}
+
+void MotorController::enable_line_mode(bool enable) {
+	sendbuf[0] = (enable)? SPI::ENA_LINE_MODE : SPI::DIS_LINE_MODE;
+	
+	if(x_connected)
+		send(x_params.pin_num);
+	
+	if(y_connected)
+		send(y_params.pin_num);
+}
+
+void MotorController::enable_curv_mode(bool enable) {
+	sendbuf[0] = (enable)? SPI::ENA_CURV_MODE : SPI::DIS_CURV_MODE;
+	
+	if(x_connected)
+		send(x_params.pin_num);
+	
+	if(y_connected)
+		send(y_params.pin_num);
+}
+
+void MotorController::enable_sync_mode(bool enable) {
+	sendbuf[0] = (enable)? SPI::ENA_SYNC_MODE : SPI::DIS_SYNC_MODE;
+	
+	if(x_connected)
+		send(x_params.pin_num);
+	
+	if(y_connected)
+		send(y_params.pin_num);
+}
+
+void MotorController::set_jog_steps(int steps) {
+	if(x_connected) {
+		sendbuf[0] = SPI::SET_JOG_STEPS;
+		sendbuf[1] = steps;
+		send(x_params.pin_num);
 	}
+	
+	if(y_connected) {
+		sendbuf[0] = SPI::SET_JOG_STEPS;
+		sendbuf[1] = steps;
+		send(y_params.pin_num);
+	}
+}
+
+void MotorController::set_jog_speed_mm(double mm) {
+	sendbuf[0] = SPI::SET_JOG_STEPS;
+
+	if(x_connected) {
+		sendbuf[1] = mm*x_params.spmm;
+		send(x_params.pin_num);
+	}
+	
+	if(y_connected) {
+		sendbuf[1] = mm*y_params.spmm;
+		send(y_params.pin_num);
+	}
+}
+
+void MotorController::set_step_time(int period) {
+	sendbuf[0] = SPI::SET_STEP_TIME;
+	sendbuf[1] = period;
+	
+	if(x_connected)
+		send(x_params.pin_num);
+	if(y_connected)
+		send(y_params.pin_num);
+}
+
+void MotorController::zero_x() {
+	x_offset = 0;
+	get_position_spi();
+	x_offset = x_pos;
+	std::cout << "X Offset: " << x_offset << '\n';
+	x_pos = 0;
+	parent()->startTimer(20);
+}
+
+void MotorController::zero_y() {
+	y_offset = 0;
+	get_position_spi();
+	y_offset = y_pos;
+	std::cout << "Y Offset: " << y_offset << '\n';
+	y_pos = 0;
+	parent()->startTimer(20);
+}
+
+void MotorController::get_position_spi() {
+	if(x_connected) {
+		sendbuf[0] = SPI::RECEIVE;
+		send(x_params.pin_num);
+		
+		x_pos = (recvbuf[1]/(double)x_params.spmm) - x_offset;
+		x_motion = (bool)recvbuf[2];
+	}
+	
+	if(y_connected) {
+		sendbuf[0] = SPI::RECEIVE;
+		send(y_params.pin_num);
+		
+		y_pos = (recvbuf[1]/(double)y_params.spmm) - y_offset;
+		y_motion = (bool)recvbuf[2];
+	}
+	
+	if(!x_motion && !y_motion)
+		in_motion = false;
+}
+
+void MotorController::move(SPI::AXIS a) {
+	if(in_motion)
+		return;
+		
+	sendbuf[0] = SPI::MOVE;
+	send(get_pin(a));
+	in_motion = true;
+	startTimer(TIMER_PERIOD);
+}
+
+void MotorController::home(SPI::AXIS a) {
+	if(in_motion)
+		return;
+		
+	sendbuf[0] = SPI::FIND_ZERO;
+	send(get_pin(a));
+	in_motion = true;
+	x_offset = 0;
+	startTimer(TIMER_PERIOD);
+}
+
+void MotorController::set_dir(SPI::AXIS a, bool dir) {
+	if(in_motion)
+		return;
+		
+	sendbuf[0] = SPI::SET_DIRECTION;
+	sendbuf[1] = (int) dir;
+	send(get_pin(a));
+}
+
+void MotorController::set_feed_rate(SPI::AXIS a, int feed_rate) {
+	sendbuf[0] = SPI::SET_FEED_RATE;
+	sendbuf[1] = feed_rate;
+	send(get_pin(a));
+}
+
+void MotorController::set_steps_to_move(SPI::AXIS a, int steps) {		
+	sendbuf[0] = SPI::SET_STEPS_TO_MOVE;
+	sendbuf[1] = steps;
+	send(get_pin(a));
+}
+
+void MotorController::set_steps_per_mm(SPI::AXIS a, int spmm) {
+	sendbuf[0] = SPI::SET_STEPS_PER_MM;
+	sendbuf[1] = spmm;
+	send(get_pin(a));
+}
+
+void MotorController::set_max_steps(SPI::AXIS a, int max_steps) {
+	sendbuf[0] = SPI::SET_MAX_STEPS;
+	sendbuf[1] = max_steps;
+	send(get_pin(a));
+}
+
+void MotorController::set_backlash(SPI::AXIS a, int backlash) {
+	sendbuf[0] = SPI::SET_BACKLASH;
+	sendbuf[1] = backlash;
+	send(get_pin(a));
 }

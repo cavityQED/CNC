@@ -46,7 +46,7 @@ void SpiClient::get_message(std::vector<int> &msg) {
 	memset(&spi_transaction, 0, sizeof(spi_transaction));
 	
 	//Set the buffers and transaction length
-	spi_transaction.length		= 8*MAX_TRANSACTION_LENGTH; //Max length in bits
+	spi_transaction.length		= 8*sizeof(int)*MAX_TRANSACTION_LENGTH;
 	spi_transaction.tx_buffer	= &sendbuf[0];
 	spi_transaction.rx_buffer	= &msg[0];
 	
@@ -54,8 +54,9 @@ void SpiClient::get_message(std::vector<int> &msg) {
 	esp_err_t err = spi_slave_transmit(SPI3_HOST, &spi_transaction, portMAX_DELAY);
 	
 	//If no errors, return
-	if(err == ESP_OK) 
+	if(err == ESP_OK) {
 		return;
+	}
 	else {
 		std::cout << "SPI Transaction Error:\n";
 		std::cout << esp_err_to_name(err) << '\n';
@@ -66,7 +67,7 @@ void SpiClient::get_data(std::vector<int> &data) {
 	std::cout << "Getting " << 8*4*data.size() << " Bits of Data...\n";
 	memset(&spi_transaction, 0, sizeof(spi_transaction));
 	
-	spi_transaction.length		= 8*4*data.size();
+	spi_transaction.length		= 8*sizeof(int)*data.size();
 	spi_transaction.tx_buffer	= &sendbuf[0];
 	spi_transaction.rx_buffer	= &data[0];
 	

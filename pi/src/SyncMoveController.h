@@ -28,7 +28,6 @@ public:
 public slots:
 	void enable_sync_mode(bool enable) {
 		motorController->enable_sync_mode(enable);
-		motorController->enable_step_mode(enable);
 	}
 	
 	void send_x_steps() {
@@ -43,7 +42,7 @@ public slots:
 	
 	void sync_move() {
 		motorController->sync_move();
-		parent()->startTimer(25);
+		parent()->startTimer(50);
 	}
 	
 	void circle_move() {

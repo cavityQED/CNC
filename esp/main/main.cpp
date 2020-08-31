@@ -7,6 +7,7 @@
 #define ZERO_INTERLOCK	(gpio_num_t) 32
 
 static xQueueHandle evt_queue;
+static std::vector<int> msg;
 axis gen_axis;
 SpiClient spi;
 
@@ -32,24 +33,37 @@ void IRAM_ATTR zero_interlock(void* arg) {
 }
 
 void get_message() {
-	std::vector<int> msg(MAX_TRANSACTION_LENGTH);
+	spi.set_sendbuffer_value(1, gen_axis.get_position_steps());
+	spi.set_sendbuffer_value(2, gen_axis.in_motion());
 	std::cout << "Getting Message....\n";
 	spi.get_message(msg);
 	switch((AXIS_FUNCTION_CODE) msg[0]) {
-		case SET_SPEED:
-			gen_axis.set_speed_rpm(msg[1]);
+		case SET_FEED_RATE:
+			gen_axis.set_feed_rate(msg[1]);
 			break;
 		case SET_DIRECTION:
 			gen_axis.set_direction((bool) msg[1]);
 			break;
+		case SET_STEP_TIME:
+			gen_axis.set_step_time(msg[1]);
+			break;
 		case SET_STEPS_TO_MOVE:
 			gen_axis.set_steps_to_move(msg[1]);
 			break;
-		case SET_JOG_SPEED_STEPS:
-			gen_axis.set_jog_speed_steps(msg[1]);
+		case SET_JOG_STEPS:
+			gen_axis.set_jog_steps(msg[1]);
 			break;
-		case SET_JOG_SPEED_MM:
-			gen_axis.set_jog_speed_mm(msg[1]);
+		case SET_BACKLASH:
+			gen_axis.set_backlash(msg[1]);
+			break;
+		case SET_X_AXIS:
+			gen_axis.set_x_axis((bool)msg[1]);
+			break;
+		case SET_STEPS_PER_MM:
+			gen_axis.set_steps_per_mm(msg[1]);
+			break;
+		case SET_MAX_STEPS:
+			gen_axis.set_max_travel_steps(msg[1]);
 			break;
 		case ENA_JOG_MODE:
 			gen_axis.enable_jog_mode(true);
@@ -57,11 +71,17 @@ void get_message() {
 		case DIS_JOG_MODE:
 			gen_axis.enable_jog_mode(false);
 			break;
-		case ENA_STEP_MODE:
-			gen_axis.enable_step_mode(true);
+		case ENA_LINE_MODE:
+			gen_axis.enable_line_mode(true);
 			break;
-		case DIS_STEP_MODE:
-			gen_axis.enable_step_mode(false);
+		case DIS_LINE_MODE:
+			gen_axis.enable_line_mode(false);
+			break;
+		case ENA_CURV_MODE:
+			gen_axis.enable_curv_mode(true);
+			break;
+		case DIS_CURV_MODE:
+			gen_axis.enable_curv_mode(false);
 			break;
 		case ENA_SYNC_MODE:
 			gen_axis.enable_sync_mode(true);
@@ -69,39 +89,19 @@ void get_message() {
 		case DIS_SYNC_MODE:
 			gen_axis.enable_sync_mode(false);
 			break;
-		case GET_POSITION:
-			int steps;
-			gen_axis.get_position_steps(steps);
-			spi.set_sendbuffer_value(1, steps);
-			break;
 		case MOVE:
 			gen_axis.move();
 			break;
-		case CIRCLE_MOVE:
-			gen_axis.circle_move();
+		case FIND_ZERO:
+			gen_axis.find_zero();
 			break;
-		case ZERO:
-			gen_axis.zero();
+		case STOP:
+			gen_axis.stop();
 			break;
 		case RECEIVE:
 			break;
-		case SETUP_CIRCLE_MOVE:
-			gen_axis.setup_circle_move();
-			break;
-		case SET_CIRCLE_OPS:
-			gen_axis.set_circle_ops(msg[1]);
-			break;
-		case GET_CIRCLE_STEPS:
-			spi.get_data(gen_axis.get_circle_steps());
-			break;
-		case GET_CIRCLE_TIMES:
-			spi.get_data(gen_axis.get_circle_times());
-			break;
-		case GET_CIRCLE_DIRS:
-			spi.get_data(gen_axis.get_circle_dirs());
-			break;
-		case PRINT_CIRCLE_INFO:
-			gen_axis.print_circle_info();
+		case SETUP_CURVE:
+			gen_axis.setup_curve(msg);
 			break;
 		default:
 			break;
@@ -118,7 +118,7 @@ static void main_task(void* arg) {
 				get_message();
 				break;
 			case ZERO_STOP:
-				gen_axis.zero_interlock_stop();
+				gen_axis.stop_zero_interlock();
 				break;
 			default:
 				break;
@@ -128,6 +128,7 @@ static void main_task(void* arg) {
 				
 extern "C" void app_main(void) {
 	evt_queue = xQueueCreate(10, sizeof(event_info_t));
+	msg.resize(MAX_TRANSACTION_LENGTH);
 	
 	gpio_config_t io_conf;
 	memset(&io_conf, 0, sizeof(io_conf));
