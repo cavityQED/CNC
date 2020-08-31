@@ -36,24 +36,24 @@ public slots:
 	}
 	
 	void xJogPos() {
-		motorController->x_set_dir(1);
-		motorController->x_move();
-		parent()->startTimer(25);
+		motorController->set_dir(SPI::X_AXIS, 1);
+		motorController->move(SPI::X_AXIS);
+		parent()->startTimer(50);
 	}
 	void xJogNeg() {
-		motorController->x_set_dir(0);
-		motorController->x_move();
-		parent()->startTimer(25);
+		motorController->set_dir(SPI::X_AXIS, 0);
+		motorController->move(SPI::X_AXIS);
+		parent()->startTimer(50);
 	}
 	void yJogPos() {
-		motorController->y_set_dir(1);
-		motorController->y_move();
-		parent()->startTimer(25);
+		motorController->set_dir(SPI::Y_AXIS, 1);
+		motorController->move(SPI::Y_AXIS);
+		parent()->startTimer(50);
 	}
 	void yJogNeg() {
-		motorController->y_set_dir(0);
-		motorController->y_move();
-		parent()->startTimer(25);
+		motorController->set_dir(SPI::Y_AXIS, 0);
+		motorController->move(SPI::Y_AXIS);
+		parent()->startTimer(50);
 	}
 	void zJogPos() {}
 	void zJogNeg() {}
@@ -74,6 +74,7 @@ public slots:
 	//Connect action to jog mode box so it can be un/checked with keystroke
 	void enableJogMode(bool b) {
 		jog_mode_box->setChecked(!jog_mode_box->isChecked());
+		jog_mode_box->emit clicked(jog_mode_box->isChecked());
 	}
 	
 private:
