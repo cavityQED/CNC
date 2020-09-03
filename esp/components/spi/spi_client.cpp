@@ -83,3 +83,34 @@ void SpiClient::get_data(std::vector<int> &data) {
 void SpiClient::set_sendbuffer_value(int index, int value) {
 	sendbuf[index] = value;
 }
+
+void SpiClient::printFunction(AXIS_FUNCTION_CODE code) {
+	std::cout << "Message: ";
+	switch(code) {
+		case SET_FEED_RATE:			std::cout << "Set Feed Rate";				break;		
+		case SET_DIRECTION:			std::cout << "Set Direction";				break;
+		case SET_STEP_TIME:			std::cout << "Set Step Time";				break;
+		case SET_STEPS_TO_MOVE:		std::cout << "Set Steps to Move";			break;
+		case SET_JOG_STEPS:			std::cout << "Set Jog Steps";				break;
+		case SET_BACKLASH:			std::cout << "Set Backlash";				break;
+		case SET_X_AXIS:			std::cout << "Set X Axis";					break;
+		case SET_STEPS_PER_MM:		std::cout << "Set steps/mm";				break;
+		case SET_MAX_STEPS:			std::cout << "Set Max Steps";				break;
+		case SETUP_CURVE:			std::cout << "Setup Curve";					break;
+		case ENA_JOG_MODE:			std::cout << "Enable Jog Mode";				break;
+		case DIS_JOG_MODE:			std::cout << "Disable Jog Mode";			break;
+		case ENA_LINE_MODE:			std::cout << "Enable Line Mode";			break;
+		case DIS_LINE_MODE:			std::cout << "Disable Line Mode";			break;
+		case ENA_CURV_MODE:			std::cout << "Enable Curve Mode";			break;
+		case DIS_CURV_MODE:			std::cout << "Disable Curve Mode";			break;
+		case ENA_SYNC_MODE:			std::cout << "Enable Sync Mode";			break;
+		case DIS_SYNC_MODE:			std::cout << "Disable Sync Mode";			break;
+		case FIND_ZERO:				std::cout << "Find Zero";					break;
+		case MOVE:					std::cout << "Move";						break;
+		case STOP:					std::cout << "Stop";						break;
+		case RECEIVE:				std::cout << "Receive";						break;
+		default:					std::cout << "Unrecognized Function";		break;
+	}
+	std::cout << '\n';
+}
+	 
