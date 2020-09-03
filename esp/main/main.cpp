@@ -35,8 +35,8 @@ void IRAM_ATTR zero_interlock(void* arg) {
 void get_message() {
 	spi.set_sendbuffer_value(1, gen_axis.get_position_steps());
 	spi.set_sendbuffer_value(2, gen_axis.in_motion());
-	std::cout << "Getting Message....\n";
 	spi.get_message(msg);
+	spi.printFunction((AXIS_FUNCTION_CODE)msg[0]);
 	switch((AXIS_FUNCTION_CODE) msg[0]) {
 		case SET_FEED_RATE:
 			gen_axis.set_feed_rate(msg[1]);

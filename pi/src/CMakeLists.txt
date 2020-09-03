@@ -23,6 +23,3 @@ target_compile_options(cncLib PRIVATE "-Wno-psabi")
 add_executable(cnc testing_main.cpp)
 target_link_libraries(cnc cncLib)
 target_compile_options(cnc PRIVATE "-Wno-psabi")
-
-add_executable(math_test math_test.cpp)
-target_link_libraries(math_test cncLib)

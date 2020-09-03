@@ -26,6 +26,10 @@ public:
 		
 		controller->setup_axis(xparams);
 		controller->setup_axis(yparams);
+		
+		double x, y;
+		controller->get_position(x, y);
+		pos->setPosition(x, y);
 						
 		QHBoxLayout *layout = new QHBoxLayout;
 		layout->addWidget(pos);

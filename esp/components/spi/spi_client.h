@@ -20,6 +20,32 @@
 #define QUEUE_SIZE				1
 #define MAX_TRANSACTION_LENGTH	12
 
+//Function codes for spi transmission
+enum AXIS_FUNCTION_CODE {
+	SET_FEED_RATE, 			
+	SET_DIRECTION,
+	SET_STEP_TIME,
+	SET_STEPS_TO_MOVE,
+	SET_JOG_STEPS,
+	SET_BACKLASH,
+	SET_X_AXIS,
+	SET_STEPS_PER_MM,
+	SET_MAX_STEPS,
+	SETUP_CURVE,
+	ENA_JOG_MODE,		
+	DIS_JOG_MODE,		
+	ENA_LINE_MODE,
+	DIS_LINE_MODE,
+	ENA_CURV_MODE,
+	DIS_CURV_MODE,
+	ENA_SYNC_MODE,
+	DIS_SYNC_MODE,
+	FIND_ZERO,
+	MOVE,
+	STOP,
+	RECEIVE,
+};
+
 class SpiClient {
 public:
 	SpiClient();
@@ -51,6 +77,8 @@ public:
 		gpio_set_level(READY, 1);
 		gpio_set_level(READY, 0);
 	}
+	
+	void printFunction(AXIS_FUNCTION_CODE code);
 		
 private:
 	spi_slave_interface_config_t	slave_config;
