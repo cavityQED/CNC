@@ -118,9 +118,8 @@ public:
 	}
 	
 	void timerEvent(QTimerEvent *e) {
-		double prev_x = x_pos;
-		double prev_y = y_pos;
 		get_position_spi();
+		emit positionChanged(x_pos, y_pos);
 		if(!in_motion) {
 			killTimer(e->timerId());
 			if(in_program) {
@@ -149,6 +148,23 @@ public slots:
 		send(y_params.pin_num);
 		std::cout << "Y Steps: " << recvbuf[1] << '\n';
 	}
+	
+	void jog(SPI::AXIS a, bool dir) {
+		set_dir(a, dir);
+		in_program = false;
+		move(a);
+	}
+	
+	void setJog(double mm) {
+		set_jog_speed_mm(mm);
+	}
+	
+	void enableJog(bool en) {
+		enable_jog_mode(en);
+	}
+	
+signals:
+	void positionChanged(double x, double y);
 	
 private:
 	//SPI

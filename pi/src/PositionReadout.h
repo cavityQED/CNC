@@ -28,6 +28,11 @@ public:
 		y_lineEdit->setText(QString::number(ypos, 'f', 2));
 	}
 	
+public slots:
+	void updatePosition(double x, double y) {
+		setPosition(x, y);
+	}
+	
 private:	
 	//Main Group Box
 	QGroupBox *axis_position_box;

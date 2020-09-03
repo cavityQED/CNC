@@ -19,11 +19,14 @@ public:
 		pos = new PositionReadout;
 		controller = new MotorController(this);
 		
+		connect(controller, &MotorController::positionChanged, pos, &PositionReadout::updatePosition);
+		connect(jog, &JogController::jog, controller, &MotorController::jog);
+		connect(jog, &JogController::setJog, controller, &MotorController::setJog);
+		connect(jog, &JogController::enableJog, controller, &MotorController::enableJog);
+		
 		controller->setup_axis(xparams);
 		controller->setup_axis(yparams);
-		
-		jog->setMotorController(controller);
-				
+						
 		QHBoxLayout *layout = new QHBoxLayout;
 		layout->addWidget(pos);
 		layout->addWidget(jog);
@@ -34,29 +37,7 @@ public:
 	}
 	
 	~MainWindow() {std::cout << "MainWindow destroyed\n";}
-	
-	void timerEvent(QTimerEvent *e) {
-		double xpos;
-		double ypos;
-		
-		controller->get_position(xpos, ypos);
-		pos->setPosition(xpos, ypos);
-		if(xpos == cur_xpos && ypos == cur_ypos) {
-			killTimer(e->timerId());
-		}
-		else {
-			cur_xpos = xpos;
-			cur_ypos = ypos;
-		}
-	}
-	
-	void getPosition() {
-		double x;
-		double y;
-		controller->get_position(x, y);
-		pos->setPosition(x, y);
-	}
-		
+			
 			
 private:
 	JogController *jog;

@@ -14,6 +14,8 @@
 #include "MotorController.h"
 #include "Curve.h"
 
+#define TIMER_PERIOD 25
+
 class JogController : public QWidget {
 	Q_OBJECT
 public:
@@ -25,50 +27,38 @@ public:
 	void setShortcuts();
 	void connectButtons();
 	void setStyleSheets();
-	
-	void setMotorController(MotorController *controller) {
-		motorController = controller;
-	}
-		
+			
 public slots:
 	void en_jog_mode(bool ena) {
-		motorController->enable_jog_mode(ena);
+		emit enableJog(ena);
 	}
 	
 	void xJogPos() {
-		motorController->set_dir(SPI::X_AXIS, 1);
-		motorController->move(SPI::X_AXIS);
-		parent()->startTimer(50);
+		emit jog(SPI::X_AXIS, 1);
 	}
 	void xJogNeg() {
-		motorController->set_dir(SPI::X_AXIS, 0);
-		motorController->move(SPI::X_AXIS);
-		parent()->startTimer(50);
+		emit jog(SPI::X_AXIS, 0);
 	}
 	void yJogPos() {
-		motorController->set_dir(SPI::Y_AXIS, 1);
-		motorController->move(SPI::Y_AXIS);
-		parent()->startTimer(50);
+		emit jog(SPI::Y_AXIS, 1);
 	}
 	void yJogNeg() {
-		motorController->set_dir(SPI::Y_AXIS, 0);
-		motorController->move(SPI::Y_AXIS);
-		parent()->startTimer(50);
+		emit jog(SPI::Y_AXIS, 0);
 	}
 	void zJogPos() {}
 	void zJogNeg() {}
 	
 	void setJogSpeedp01mm(bool checked) {
 		if(checked)
-			motorController->set_jog_speed_mm(.01);
+			emit setJog(.01);
 	}
 	void setJogSpeedp1mm(bool checked) {
 		if(checked)
-			motorController->set_jog_speed_mm(0.1);
+			emit setJog(.1);
 	}
 	void setJogSpeed1mm(bool checked) {
 		if(checked)
-			motorController->set_jog_speed_mm(1);
+			emit setJog(1);
 	}
 	
 	//Connect action to jog mode box so it can be un/checked with keystroke
@@ -76,6 +66,12 @@ public slots:
 		jog_mode_box->setChecked(!jog_mode_box->isChecked());
 		jog_mode_box->emit clicked(jog_mode_box->isChecked());
 	}
+	
+signals:
+	void positionChanged(double xpos, double ypos);
+	void jog(SPI::AXIS a, bool dir);
+	void setJog(double mm);
+	void enableJog(bool en);
 	
 private:
 	//Jog Controller Layout
@@ -118,6 +114,9 @@ private:
 	
 	//MotorController
 	MotorController *motorController;
+	
+	double xPos;
+	double yPos;
 	
 };
 

@@ -71,11 +71,13 @@ void PositionReadout::setStyleSheets() {
 						"min-width: 80px;"
 						"min-height: 40px;"
 						"background-color: #234D58;"
-						"font: DSEG 22px;"
+						"font: bold 20px;"
 						"color: white;}"
 						
 					"QLabel{"
-						"font: bold 20px;}"
+						"font: bold 25px;"
+						"min-height: 40px;"
+						"min-width: 30px;}"
 						
 					"QGroupBox{"
 						"border-style: inset;"
