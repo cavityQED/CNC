@@ -131,7 +131,7 @@ private:
 	static std::vector<bool> dirs_vec;		//Direction of each step during a curve move
 	static int step_num;					//Step number for accessing curve vectors
 	static const int zero_steps = 200;		//Number of steps to move once zero position is found
-	static const int jog_wait_time = 250;	//Time between steps in microseconds (300rpm) during jog
+	static const int jog_wait_time = 250;	//Time between steps in microseconds during jog
 		
 	//Jog Mode Variables
 	int jog_steps = 0;					//Number of steps to move in one jog step

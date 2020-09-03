@@ -27,6 +27,11 @@ MotorController::MotorController(QWidget *parent) : QWidget(parent){
 	addAction(print);
 }
 
+MotorController::~MotorController() {
+	sem_unlink("sem_ready"); 
+	std::cout << "MotorController destroyed\n";
+}
+
 void MotorController::test_lines() {
 	program_moves.clear();
 	
@@ -107,7 +112,22 @@ void MotorController::setup_axis(motor::params_t &params) {
 	set_backlash(params.a, params.backlash);
 }
 
+void MotorController::timerEvent(QTimerEvent *e) {
+	get_position_spi();
+	emit positionChanged(x_pos, y_pos);
+	if(!in_motion) {
+		killTimer(e->timerId());
+		if(in_program) {
+			cur_program_move += 1;
+			std::cout << "Next Move....\n";
+			next_move();
+		}
+	}
+}
 void MotorController::send(int device_pin) {
+	if(device_pin == -1)
+		return;
+		
 	memset(&recvbuf[0], 0, sizeof(recvbuf));
 	
 	spi.tx_buf = (unsigned long)(&sendbuf[0]);
@@ -358,6 +378,15 @@ void MotorController::get_position_spi() {
 	
 	if(!x_motion && !y_motion)
 		in_motion = false;
+}
+
+int MotorController::get_pin(SPI::AXIS a) {
+		if(a == SPI::X_AXIS)
+			return x_params.pin_num;
+		else if(a == SPI::Y_AXIS)
+			return y_params.pin_num;
+		else
+			return -1;
 }
 
 void MotorController::move(SPI::AXIS a) {

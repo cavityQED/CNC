@@ -30,30 +30,17 @@
 
 #define TIMER_PERIOD 25
 
-typedef struct {
-	int pin_num;		//GPIO pin number of axis device select
-	int SPR;			//Steps per revolution
-	double mm_per_step;	//Millimeters traveled in one step
-} motorParameters;
-
-typedef struct {
-	bool line_move; 	//True for line move, false for curve move
-	line::ops_t l;	
-	curve::esp_params_t c;
-} move_params_t;
-
 class MotorController : public QWidget {
 	Q_OBJECT;
 public:
 	MotorController(QWidget *parent = 0);
-	~MotorController() {sem_unlink("sem_ready"); std::cout << "MotorController destroyed\n";}
+	~MotorController();
 	
 	void setup_spi();
 	void setup_gpio();
 	void test_lines();
 	
 	static void release_sem_interrupt() {
-	//	std::cout << "Semaphore Unlocked\n";
 		sem_post(sem);
 	}
 	
@@ -63,12 +50,8 @@ public:
 	void start_program(std::vector<motor::move_t> &moves);
 	void start_program();
 	void next_move();
-	void add_move(motor::move_t &move) {
-		program_moves.push_back(move);
-	}
-	void clear_program() {
-		program_moves.clear();
-	}
+	void add_move(motor::move_t &move) {program_moves.push_back(move);}
+	void clear_program() {program_moves.clear();}
 	
 	//Send a message to a particular device
 	void send(int device_pin);
@@ -103,32 +86,12 @@ public:
 	void set_backlash(SPI::AXIS a, int b);
 	
 	//Set the in_motion bool
-	void set_motion(bool m) {
-		in_motion = m;
-	}
+	void set_motion(bool m) {in_motion = m;}
 	
 	//Get pin number for particular axis
-	int get_pin(SPI::AXIS a) {
-		if(a == SPI::X_AXIS)
-			return x_params.pin_num;
-		else if(a == SPI::Y_AXIS)
-			return y_params.pin_num;
-		else
-			return -1;
-	}
+	int get_pin(SPI::AXIS a);
 	
-	void timerEvent(QTimerEvent *e) {
-		get_position_spi();
-		emit positionChanged(x_pos, y_pos);
-		if(!in_motion) {
-			killTimer(e->timerId());
-			if(in_program) {
-				cur_program_move += 1;
-				std::cout << "Next Move....\n";
-				next_move();
-			}
-		}
-	}		
+	void timerEvent(QTimerEvent *e) override;		
 	
 public slots:
 	
