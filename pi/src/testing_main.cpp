@@ -6,6 +6,7 @@
 
 int main(int argc, char* argv[]) {
 	QApplication a(argc, argv);
+	sem_unlink("sem_ready");
 	MainWindow main;
 	main.show();
 

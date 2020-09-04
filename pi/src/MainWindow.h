@@ -6,15 +6,18 @@
 #include "Curve.h"
 
 #include <QAction>
+#include <QMenu>
+#include <QMenuBar>
+#include <QMainWindow>
 
 #include <vector>
 #include <cmath>
 #include <iostream>
 
-class MainWindow : public QWidget {
+class MainWindow : public QMainWindow {
 	Q_OBJECT
 public:
-	MainWindow(QWidget *parent = 0) : QWidget(parent){
+	MainWindow(QWidget *parent = 0) : QMainWindow(parent){
 		jog = new JogController;
 		pos = new PositionReadout;
 		controller = new MotorController(this);
@@ -34,15 +37,18 @@ public:
 		QHBoxLayout *layout = new QHBoxLayout;
 		layout->addWidget(pos);
 		layout->addWidget(jog);
-		setLayout(layout);
+		
+		QWidget *central = new QWidget;
+		central->setLayout(layout);
+		setCentralWidget(central);
 				
 		setStyleSheet("QWidget{background-color: #DDEFF2;}");
-		
 	}
 	
 	~MainWindow() {std::cout << "MainWindow destroyed\n";}
 			
-			
+public slots:
+	
 private:
 	JogController *jog;
 	PositionReadout *pos;

@@ -57,6 +57,7 @@ void PositionReadout::createWidgets() {
 	axis_position_box_layout->addWidget(x_pos);
 	axis_position_box_layout->addWidget(y_pos);
 	axis_position_box_layout->addWidget(z_pos);
+	axis_position_box->setFlat(true);
 	axis_position_box->setLayout(axis_position_box_layout);
 	
 	//Position Readout Layout
@@ -83,7 +84,7 @@ void PositionReadout::setStyleSheets() {
 						"border-style: inset;"
 						"border: 3px solid gray;"
 						"margin-top: 10px;"
-						"padding-left: 5px;"
+						"padding-left: 0px;"
 						"padding-top: 5px;"
 						"outline: 0;"
 						"font: bold 16px;}"

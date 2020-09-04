@@ -93,6 +93,8 @@ void MotorController::setup_axis(motor::params_t &params) {
 		x_axis = 0;
 		y_connected = true;
 	}
+	else
+		return;
 		
 	p->pin_num		= params.pin_num;
 	p->spmm			= params.spmm;

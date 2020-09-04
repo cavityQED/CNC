@@ -23,9 +23,10 @@ public:
 	void createWidgets();
 	void setStyleSheets();
 			
-	void setPosition(double xpos, double ypos) {
+	void setPosition(double xpos, double ypos, double zpos = 0) {
 		x_lineEdit->setText(QString::number(xpos, 'f', 2));
 		y_lineEdit->setText(QString::number(ypos, 'f', 2));
+		z_lineEdit->setText(QString::number(zpos, 'f', 2));
 	}
 	
 public slots:

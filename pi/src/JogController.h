@@ -29,7 +29,7 @@ public:
 	void setStyleSheets();
 			
 public slots:
-	void en_jog_mode(bool ena) {
+	void enableJogMode(bool ena) {
 		emit enableJog(ena);
 	}
 	
@@ -48,25 +48,47 @@ public slots:
 	void zJogPos() {}
 	void zJogNeg() {}
 	
-	void setJogSpeedp01mm(bool checked) {
-		if(checked)
+	void setJogSpeedMin(bool checked) {
+		if(checked) {
 			emit setJog(.01);
+			jog_low->setChecked(false);
+			jog_med->setChecked(false);
+			jog_high->setChecked(false);
+		}
+		else
+			emit setJog(0);
 	}
-	void setJogSpeedp1mm(bool checked) {
-		if(checked)
+	void setJogSpeedLow(bool checked) {
+		if(checked) {
 			emit setJog(.1);
+			jog_min->setChecked(false);
+			jog_med->setChecked(false);
+			jog_high->setChecked(false);
+		}
+		else
+			emit setJog(0);
 	}
-	void setJogSpeed1mm(bool checked) {
-		if(checked)
+	void setJogSpeedMed(bool checked) {
+		if(checked) {
 			emit setJog(1);
+			jog_min->setChecked(false);
+			jog_low->setChecked(false);
+			jog_high->setChecked(false);
+		}
+		else
+			emit setJog(0);
 	}
-	
-	//Connect action to jog mode box so it can be un/checked with keystroke
-	void enableJogMode(bool b) {
-		jog_mode_box->setChecked(!jog_mode_box->isChecked());
-		jog_mode_box->emit clicked(jog_mode_box->isChecked());
+	void setJogSpeedHigh(bool checked) {
+		if(checked) {
+			emit setJog(2.5);
+			jog_min->setChecked(false);
+			jog_low->setChecked(false);
+			jog_med->setChecked(false);
+		}
+		else
+			emit setJog(0);
 	}
-	
+		
 signals:
 	void positionChanged(double xpos, double ypos);
 	void jog(SPI::AXIS a, bool dir);
@@ -99,9 +121,10 @@ private:
 	QGridLayout *axis_control_box_layout;
 	
 	//Jog Speed Buttons
-	QPushButton *jog_p01mm;
-	QPushButton *jog_p1mm;
-	QPushButton *jog_1mm;
+	QPushButton *jog_min;
+	QPushButton *jog_low;
+	QPushButton *jog_med;
+	QPushButton *jog_high;
 	
 	//Jog Speed Group Box
 	QGroupBox *jog_speed_box;
