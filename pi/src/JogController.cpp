@@ -73,12 +73,12 @@ void JogController::setupBoxes() {
 }
 
 void JogController::setShortcuts() {
-	x_pos->setShortcut(Qt::Key_6 | Qt::Key_Right);
-	x_neg->setShortcut(Qt::Key_4 | Qt::Key_Left);
-	y_pos->setShortcut(Qt::Key_8 | Qt::Key_Up);
-	y_neg->setShortcut(Qt::Key_2 | Qt::Key_Down);
-	z_pos->setShortcut(Qt::Key_9 | Qt::Key_PageUp);
-	z_neg->setShortcut(Qt::Key_1 | Qt::Key_PageDown);
+	x_pos->setShortcut(Qt::Key_6);
+	x_neg->setShortcut(Qt::Key_4);
+	y_pos->setShortcut(Qt::Key_8);
+	y_neg->setShortcut(Qt::Key_2);
+	z_pos->setShortcut(Qt::Key_9);
+	z_neg->setShortcut(Qt::Key_1);
 		
 	jog_high->setShortcut(Qt::Key_F2);
 	jog_med->setShortcut(Qt::Key_F3);
