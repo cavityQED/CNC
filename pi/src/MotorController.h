@@ -127,7 +127,7 @@ public slots:
 	}
 	
 signals:
-	void positionChanged(double x, double y);
+	void positionChanged(double x, double y, double z = 0);
 	
 private:
 	//SPI

@@ -22,17 +22,9 @@ public:
 	
 	void createWidgets();
 	void setStyleSheets();
-			
-	void setPosition(double xpos, double ypos, double zpos = 0) {
-		x_lineEdit->setText(QString::number(xpos, 'f', 2));
-		y_lineEdit->setText(QString::number(ypos, 'f', 2));
-		z_lineEdit->setText(QString::number(zpos, 'f', 2));
-	}
-	
+		
 public slots:
-	void updatePosition(double x, double y) {
-		setPosition(x, y);
-	}
+	void setPosition(double x, double y, double z = 0);
 	
 private:	
 	//Main Group Box
@@ -55,7 +47,9 @@ private:
 	//Axis-Specific Layouts
 	QHBoxLayout *x_pos_layout;
 	QHBoxLayout *y_pos_layout;
-	QHBoxLayout *z_pos_layout;	
+	QHBoxLayout *z_pos_layout;
+	
+	QString unit;
 };
 
 #endif

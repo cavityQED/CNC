@@ -140,7 +140,6 @@ private:
 	
 	double xPos;
 	double yPos;
-	
 };
 
 #endif

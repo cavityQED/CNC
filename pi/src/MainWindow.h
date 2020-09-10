@@ -22,7 +22,7 @@ public:
 		pos = new PositionReadout;
 		controller = new MotorController(this);
 		
-		connect(controller, &MotorController::positionChanged, pos, &PositionReadout::updatePosition);
+		connect(controller, &MotorController::positionChanged, pos, &PositionReadout::setPosition);
 		connect(jog, &JogController::jog, controller, &MotorController::jog);
 		connect(jog, &JogController::setJog, controller, &MotorController::setJog);
 		connect(jog, &JogController::enableJog, controller, &MotorController::enableJog);
@@ -42,6 +42,14 @@ public:
 		central->setLayout(layout);
 		setCentralWidget(central);
 				
+		popup = new QWidget;
+		popup->setFixedSize(300,300);
+		
+		QMenu *config = menuBar()->addMenu("Configure");
+		QAction *axes = new QAction("Axes");
+		config->addAction(axes);
+		connect(axes, &QAction::triggered, popup, &QWidget::show);
+		
 		setStyleSheet("QWidget{background-color: #DDEFF2;}");
 	}
 	
@@ -59,6 +67,8 @@ private:
 	
 	double cur_xpos;
 	double cur_ypos;
+	
+	QWidget *popup;
 };
 
 #endif

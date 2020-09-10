@@ -1,6 +1,7 @@
 #include "PositionReadout.h"
 
 PositionReadout::PositionReadout(QWidget *parent) : QWidget(parent) {
+	unit = "mm";
 	createWidgets();
 	setStyleSheets();
 }
@@ -8,13 +9,11 @@ PositionReadout::PositionReadout(QWidget *parent) : QWidget(parent) {
 void PositionReadout::createWidgets() {
 	//X Axis
 	QLabel	*x_label	= new QLabel("X:");
-	QLabel	*x_unit		= new QLabel("mm");
 	x_lineEdit			= new QLineEdit;
 	x_pos				= new QWidget;
 	x_pos_layout		= new QHBoxLayout;
 	x_pos_layout->addWidget(x_label);
 	x_pos_layout->addWidget(x_lineEdit);
-	x_pos_layout->addWidget(x_unit);
 	x_pos_layout->setAlignment(Qt::AlignVCenter);
 	x_pos->setLayout(x_pos_layout);
 	x_lineEdit->setAlignment(Qt::AlignRight);
@@ -23,13 +22,11 @@ void PositionReadout::createWidgets() {
 	
 	//Y Axis
 	QLabel	*y_label	= new QLabel("Y:");
-	QLabel	*y_unit		= new QLabel("mm");
 	y_lineEdit			= new QLineEdit;
 	y_pos				= new QWidget;
 	y_pos_layout		= new QHBoxLayout;
 	y_pos_layout->addWidget(y_label);
 	y_pos_layout->addWidget(y_lineEdit);
-	y_pos_layout->addWidget(y_unit);
 	y_pos_layout->setAlignment(Qt::AlignVCenter);
 	y_pos->setLayout(y_pos_layout);
 	y_lineEdit->setAlignment(Qt::AlignRight);
@@ -38,13 +35,11 @@ void PositionReadout::createWidgets() {
 	
 	//Z Axis
 	QLabel	*z_label	= new QLabel("Z:");
-	QLabel	*z_unit		= new QLabel("mm");
 	z_lineEdit			= new QLineEdit;
 	z_pos				= new QWidget;
 	z_pos_layout		= new QHBoxLayout;
 	z_pos_layout->addWidget(z_label);
 	z_pos_layout->addWidget(z_lineEdit);
-	z_pos_layout->addWidget(z_unit);
 	z_pos_layout->setAlignment(Qt::AlignVCenter);
 	z_pos->setLayout(z_pos_layout);
 	z_lineEdit->setAlignment(Qt::AlignRight);
@@ -52,7 +47,7 @@ void PositionReadout::createWidgets() {
 	z_lineEdit->setText(QString::number(0, 'f', 2));
 
 	//Main Box and Layout
-	axis_position_box			= new QGroupBox("Axis Positions");
+	axis_position_box			= new QGroupBox("Position");
 	axis_position_box_layout	= new QVBoxLayout;
 	axis_position_box_layout->addWidget(x_pos);
 	axis_position_box_layout->addWidget(y_pos);
@@ -95,4 +90,8 @@ void PositionReadout::setStyleSheets() {
 						"top: 0; left: 8px;}");
 }
 	
-	
+void PositionReadout::setPosition(double x, double y, double z) {
+	x_lineEdit->setText(QString::number(x, 'f', 2) + ' ' + unit);
+	y_lineEdit->setText(QString::number(y, 'f', 2) + ' ' + unit);
+	z_lineEdit->setText(QString::number(z, 'f', 2) + ' ' + unit);
+}
