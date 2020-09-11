@@ -29,6 +29,7 @@ public:
 		
 		controller->setup_axis(xparams);
 		controller->setup_axis(yparams);
+		controller->set_jog_steps(0);
 		
 		double x, y;
 		controller->get_position(x, y);
