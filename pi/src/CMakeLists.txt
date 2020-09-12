@@ -7,17 +7,20 @@ set(CMAKE_AUTOMOC ON)
 
 find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
 
+add_subdirectory(utilities)
+
 set(libdocs	MainWindow.h
 			JogController.cpp
 			PositionReadout.cpp
 			MotorController.cpp
+			ConfigureAxes.cpp
 			Curve.cpp
 			Line.cpp
 			GCode.cpp
 			SPI.cpp)
 
 add_library(cncLib ${libdocs})
-target_link_libraries(cncLib Qt5::Core Qt5::Widgets wiringPi pthread rt)
+target_link_libraries(cncLib Qt5::Core Qt5::Widgets wiringPi pthread rt utilities)
 target_compile_options(cncLib PRIVATE "-Wno-psabi")
  
 add_executable(cnc testing_main.cpp)

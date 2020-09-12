@@ -4,6 +4,8 @@
 #include "JogController.h"
 #include "PositionReadout.h"
 #include "Curve.h"
+#include "ConfigureAxes.h"
+#include "utilities/ConfigureUtility.h"
 
 #include <QAction>
 #include <QMenu>
@@ -27,6 +29,10 @@ public:
 		connect(jog, &JogController::setJog, controller, &MotorController::setJog);
 		connect(jog, &JogController::enableJog, controller, &MotorController::enableJog);
 		
+		ConfigureUtility configure;
+		configure.get_axis_params(SPI::X_AXIS, xparams);
+		configure.get_axis_params(SPI::Y_AXIS, yparams);
+		
 		controller->setup_axis(xparams);
 		controller->setup_axis(yparams);
 		controller->set_jog_steps(0);
@@ -43,33 +49,41 @@ public:
 		central->setLayout(layout);
 		setCentralWidget(central);
 				
-		popup = new QWidget;
-		popup->setFixedSize(300,300);
+		popup = new ConfigureAxes(this);
+		popup->setWindowFlags(Qt::Window);
+		popup->setWindowModality(Qt::WindowModal);
+		popup->setWindowTitle("Configure Axes");
+		connect(popup, &ConfigureAxes::axisConfigChange, controller, &MotorController::updateAxisConfig);
 		
 		QMenu *config = menuBar()->addMenu("Configure");
 		QAction *axes = new QAction("Axes");
 		config->addAction(axes);
-		connect(axes, &QAction::triggered, popup, &QWidget::show);
+		connect(axes, &QAction::triggered, this, &MainWindow::displayConfigureWindow);
 		
-		setStyleSheet("QWidget{background-color: #DDEFF2;}");
+		setStyleSheet("QWidget{background-color: #DDEFF2;}");	
+		
 	}
 	
 	~MainWindow() {std::cout << "MainWindow destroyed\n";}
 			
 public slots:
+	void displayConfigureWindow() {
+		popup->show();
+		popup->move(this->geometry().center() - popup->rect().center());
+	}
 	
 private:
 	JogController *jog;
 	PositionReadout *pos;
 	MotorController *controller;
 	
-	motor::params_t xparams = {25, 60, 400*200, 0, SPI::X_AXIS};
-	motor::params_t yparams = {23, 60, 400*200, 0, SPI::Y_AXIS};
+	motor::params_t xparams;
+	motor::params_t yparams;
 	
 	double cur_xpos;
 	double cur_ypos;
 	
-	QWidget *popup;
+	ConfigureAxes *popup;
 };
 
 #endif

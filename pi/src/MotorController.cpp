@@ -450,3 +450,13 @@ void MotorController::set_backlash(SPI::AXIS a, int backlash) {
 	sendbuf[1] = backlash;
 	send(get_pin(a));
 }
+
+void MotorController::updateAxisConfig() {
+	ConfigureUtility config;
+	config.get_axis_params(SPI::X_AXIS, x_params);
+	if(x_params.pin_num)
+		setup_axis(x_params);
+	config.get_axis_params(SPI::Y_AXIS, y_params);
+	if(y_params.pin_num)
+		setup_axis(y_params);
+}

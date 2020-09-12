@@ -24,6 +24,7 @@
 #include "Types.h"
 #include "GCode.h"
 #include "SPI.h"
+#include "utilities/ConfigureUtility.h"
 
 #define READY_PIN 	24
 #define SYNC_PIN	18
@@ -31,7 +32,7 @@
 #define TIMER_PERIOD 25
 
 class MotorController : public QWidget {
-	Q_OBJECT;
+	Q_OBJECT
 public:
 	MotorController(QWidget *parent = 0);
 	~MotorController();
@@ -118,13 +119,10 @@ public slots:
 		move(a);
 	}
 	
-	void setJog(double mm) {
-		set_jog_speed_mm(mm);
-	}
+	void setJog(double mm) {set_jog_speed_mm(mm);}
+	void enableJog(bool en) {enable_jog_mode(en);}
 	
-	void enableJog(bool en) {
-		enable_jog_mode(en);
-	}
+	void updateAxisConfig();
 	
 signals:
 	void positionChanged(double x, double y, double z = 0);

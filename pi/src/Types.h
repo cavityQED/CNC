@@ -32,7 +32,8 @@ enum FUNCTION_CODE {
 
 enum AXIS {
 	X_AXIS,
-	Y_AXIS
+	Y_AXIS,
+	Z_AXIS
 };
 
 }//SPI namespace
