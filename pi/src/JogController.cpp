@@ -31,23 +31,25 @@ void JogController::createButtons() {
 void JogController::setupBoxes() {
 	
 	//Setup the Jog Button Box
-	axis_control_box 			= new QGroupBox("Axis Control");
-	axis_control_box_layout 	= new QGridLayout;
-	axis_control_box_layout->addWidget(x_pos, 1, 3);
-	axis_control_box_layout->addWidget(x_neg, 1, 1);
-	axis_control_box_layout->addWidget(y_pos, 0, 2);
-	axis_control_box_layout->addWidget(y_neg, 2, 2);
-	axis_control_box_layout->addWidget(z_pos, 0, 3);
-	axis_control_box_layout->addWidget(z_neg, 2, 1);
+	QGridLayout *axis_control_box_layout 	= new QGridLayout;
+	axis_control_box			 			= new QGroupBox("Axis Control");
+	axis_control_box_layout->addWidget(x_pos, 2, 3);
+	axis_control_box_layout->addWidget(x_neg, 2, 1);
+	axis_control_box_layout->addWidget(y_pos, 1, 2);
+	axis_control_box_layout->addWidget(y_neg, 3, 2);
+	axis_control_box_layout->addWidget(z_pos, 1, 3);
+	axis_control_box_layout->addWidget(z_neg, 3, 1);
 	axis_control_box_layout->setSpacing(5);
 	axis_control_box_layout->setColumnStretch(0, 1);
 	axis_control_box_layout->setColumnStretch(4, 1);
+	axis_control_box_layout->setRowStretch(0, 1);
+	axis_control_box_layout->setRowStretch(4, 1);
 	axis_control_box->setFlat(true);
 	axis_control_box->setLayout(axis_control_box_layout);
 	
 	//Setup the Jog Speed Box
-	jog_speed_box 		= new QGroupBox("Jog Speed (mm)");
-	jog_speed_layout	= new QHBoxLayout;
+	QVBoxLayout *jog_speed_layout	= new QVBoxLayout;
+	jog_speed_box			 		= new QGroupBox("Jog Speed");
 	jog_speed_layout->addWidget(jog_high);
 	jog_speed_layout->addWidget(jog_med);
 	jog_speed_layout->addWidget(jog_low);
@@ -56,8 +58,8 @@ void JogController::setupBoxes() {
 	jog_speed_box->setLayout(jog_speed_layout);
 	
 	//Setup the Main Box
-	jog_mode_box 		= new QGroupBox("Jog Mode");
-	jog_mode_box_layout	= new QVBoxLayout;
+	QHBoxLayout *jog_mode_box_layout	= new QHBoxLayout;
+	jog_mode_box 						= new QGroupBox("Jog Mode");
 	jog_mode_box_layout->addWidget(axis_control_box);
 	jog_mode_box_layout->addWidget(jog_speed_box);
 	jog_mode_box->setFlat(true);
@@ -66,9 +68,8 @@ void JogController::setupBoxes() {
 	jog_mode_box->setChecked(false);
 	jog_mode_box->setObjectName("mainBox");
 	
-	jogController_layout = new QVBoxLayout;
+	QVBoxLayout *jogController_layout = new QVBoxLayout;
 	jogController_layout->addWidget(jog_mode_box);
-	
 	setLayout(jogController_layout);
 }
 

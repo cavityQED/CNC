@@ -96,15 +96,9 @@ signals:
 	void enableJog(bool en);
 	
 private:
-	//Jog Controller Layout
-	QVBoxLayout *jogController_layout;
-	
 	//Main Group Box
 	//Will be a checkable box to activate/deactivate jog mode
 	QGroupBox *jog_mode_box;
-	
-	//Main Group Box Layout
-	QVBoxLayout *jog_mode_box_layout;
 	
 	//Jog Buttons
 	QPushButton *x_pos;
@@ -117,9 +111,6 @@ private:
 	//Jog Button Group Box
 	QGroupBox *axis_control_box;
 	
-	//Jog Button Layout
-	QGridLayout *axis_control_box_layout;
-	
 	//Jog Speed Buttons
 	QPushButton *jog_min;
 	QPushButton *jog_low;
@@ -128,9 +119,6 @@ private:
 	
 	//Jog Speed Group Box
 	QGroupBox *jog_speed_box;
-	
-	//Jog Speed Button Layout
-	QHBoxLayout *jog_speed_layout;
 	
 	//Action to Toggle Jog Mode
 	QAction *jog_toggle;
