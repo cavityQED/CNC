@@ -66,6 +66,7 @@ public:
 	void enable_line_mode(bool enable);
 	void enable_curv_mode(bool enable);
 	void enable_sync_mode(bool enable);
+	void enable_travel_limits(bool enable);
 	
 	void set_jog_steps(int steps);
 	void set_jog_speed_mm(double mm);

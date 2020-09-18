@@ -15,13 +15,10 @@ const std::string function_code_to_string(FUNCTION_CODE code) {
 		case SET_MAX_STEPS:			return "Set Max Steps";	
 		case SETUP_CURVE:			return "Setup Curve";
 		case ENA_JOG_MODE:			return "Enable Jog Mode";		
-		case DIS_JOG_MODE:			return "Disable Jog Mode";
 		case ENA_LINE_MODE:			return "Enable Line Mode";
-		case DIS_LINE_MODE:			return "Disable Line Mode";
 		case ENA_CURV_MODE:			return "Enable Curve Mode";
-		case DIS_CURV_MODE:			return "Disable Curve Mode";
-		case ENA_SYNC_MODE:			return "Enable Sync Mode";		
-		case DIS_SYNC_MODE:			return "Disable Sync Mode";
+		case ENA_SYNC_MODE:			return "Enable Sync Mode";
+		case ENA_TRAVEL_LIMITS:		return "Enable Travel Limits";
 		case FIND_ZERO:				return "Find Zero";
 		case MOVE:					return "Move";
 		case STOP:					return "Stop";

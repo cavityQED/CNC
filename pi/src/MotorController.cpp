@@ -266,7 +266,8 @@ void MotorController::sync_move() {
 }	
 
 void MotorController::enable_jog_mode(bool enable) {
-	sendbuf[0] = (enable)? SPI::ENA_JOG_MODE : SPI::DIS_JOG_MODE;
+	sendbuf[0] = SPI::ENA_JOG_MODE;
+	sendbuf[1] = (int)enable;
 	
 	if(x_connected)
 		send(x_params.pin_num);
@@ -276,7 +277,8 @@ void MotorController::enable_jog_mode(bool enable) {
 }
 
 void MotorController::enable_line_mode(bool enable) {
-	sendbuf[0] = (enable)? SPI::ENA_LINE_MODE : SPI::DIS_LINE_MODE;
+	sendbuf[0] = SPI::ENA_LINE_MODE;
+	sendbuf[1] = (int)enable;
 	
 	if(x_connected)
 		send(x_params.pin_num);
@@ -286,7 +288,8 @@ void MotorController::enable_line_mode(bool enable) {
 }
 
 void MotorController::enable_curv_mode(bool enable) {
-	sendbuf[0] = (enable)? SPI::ENA_CURV_MODE : SPI::DIS_CURV_MODE;
+	sendbuf[0] = SPI::ENA_CURV_MODE;
+	sendbuf[1] = (int)enable;
 	
 	if(x_connected)
 		send(x_params.pin_num);
@@ -296,11 +299,22 @@ void MotorController::enable_curv_mode(bool enable) {
 }
 
 void MotorController::enable_sync_mode(bool enable) {
-	sendbuf[0] = (enable)? SPI::ENA_SYNC_MODE : SPI::DIS_SYNC_MODE;
+	sendbuf[0] = SPI::ENA_SYNC_MODE;
+	sendbuf[1] = (int)enable;
 	
 	if(x_connected)
 		send(x_params.pin_num);
 	
+	if(y_connected)
+		send(y_params.pin_num);
+}
+
+void MotorController::enable_travel_limits(bool enable) {
+	sendbuf[0] = SPI::ENA_TRAVEL_LIMITS;
+	sendbuf[1] = (int)enable;
+	
+	if(x_connected)
+		send(x_params.pin_num);
 	if(y_connected)
 		send(y_params.pin_num);
 }

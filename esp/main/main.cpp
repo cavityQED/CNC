@@ -66,28 +66,19 @@ void get_message() {
 			gen_axis.set_max_travel_steps(msg[1]);
 			break;
 		case ENA_JOG_MODE:
-			gen_axis.enable_jog_mode(true);
-			break;
-		case DIS_JOG_MODE:
-			gen_axis.enable_jog_mode(false);
+			gen_axis.enable_jog_mode((bool)msg[1]);
 			break;
 		case ENA_LINE_MODE:
-			gen_axis.enable_line_mode(true);
-			break;
-		case DIS_LINE_MODE:
-			gen_axis.enable_line_mode(false);
+			gen_axis.enable_line_mode((bool)msg[1]);
 			break;
 		case ENA_CURV_MODE:
-			gen_axis.enable_curv_mode(true);
-			break;
-		case DIS_CURV_MODE:
-			gen_axis.enable_curv_mode(false);
+			gen_axis.enable_curv_mode((bool)msg[1]);
 			break;
 		case ENA_SYNC_MODE:
-			gen_axis.enable_sync_mode(true);
+			gen_axis.enable_sync_mode((bool)msg[1]);
 			break;
-		case DIS_SYNC_MODE:
-			gen_axis.enable_sync_mode(false);
+		case ENA_TRAVEL_LIMITS:
+			gen_axis.enable_travel_limits((bool)msg[1]);
 			break;
 		case MOVE:
 			gen_axis.move();

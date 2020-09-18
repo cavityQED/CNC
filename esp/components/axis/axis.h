@@ -106,6 +106,7 @@ public:
 	void enable_line_mode(bool enable);
 	void enable_curv_mode(bool enable);
 	void enable_sync_mode(bool enable);
+	void enable_travel_limits(bool enable);
 	
 	/* 	Timer Callbacks	*/
 	static void IRAM_ATTR line_step_isr(void* arg);
@@ -147,6 +148,7 @@ private:
 	bool line_mode = false;
 	bool curv_mode = false;
 	bool sync_mode = false;
+	bool travel_limits = false;
 
 	//ESP Error
 	esp_err_t error = ESP_OK;

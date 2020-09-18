@@ -230,6 +230,10 @@ void axis::enable_sync_mode(bool enable) {
 		std::cout << "Sync Mode Disabled\n";
 }
 
+void axis::enable_travel_limits(bool enable) {
+	travel_limits = enable;
+}
+
 void axis::move() {
 	if(motor_in_motion) {
 		std::cout << "Motor in motion already!\n";
@@ -253,11 +257,13 @@ void axis::move() {
 void axis::move_jog_mode() {
 	if(!jog_mode || motor_in_motion || jog_steps == 0)
 		return;
-		
-//	if(motor_direction && (position_steps + jog_once_steps) > max_travel_steps)
-//		return;
-//	if(!motor_direction && jog_once_steps > position_steps)
-//		return;
+	
+	if(travel_limits) {	
+		if(motor_direction && (position_steps + jog_steps) > max_travel_steps)
+			return;
+		if(!motor_direction && jog_steps > position_steps)
+			return;
+	}
 		
 	reset_timer_counters();
 	
@@ -270,7 +276,7 @@ void axis::move_jog_mode() {
 }
 
 void axis::move_line_mode() {
-	if(!line_mode || motor_in_motion || (steps_to_move == 0 && !sync_mode))
+	if(motor_in_motion || (steps_to_move == 0 && !sync_mode))
 		return;
 	
 	if(sync_mode && steps_to_move == 0) {
@@ -278,7 +284,14 @@ void axis::move_line_mode() {
 		xSemaphoreTake(syncSem, portMAX_DELAY);
 		return;
 	}
-		
+	
+	if(travel_limits) {	
+		if(motor_direction && (position_steps + steps_to_move) > max_travel_steps)
+			return;
+		if(!motor_direction && steps_to_move > position_steps)
+			return;
+	}
+	
 	reset_timer_counters();
 				
 	timer_set_alarm_value(LINE_GROUP, STEP_TIMER, pulse_period_us / PERIOD_uS);
@@ -295,7 +308,7 @@ void axis::move_line_mode() {
 }
 
 void axis::move_curv_mode() {
-	if(!curv_mode || motor_in_motion)
+	if(motor_in_motion)
 		return;
 		
 	reset_timer_counters();
