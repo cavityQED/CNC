@@ -71,6 +71,7 @@ public:
 	void set_jog_steps(int steps);
 	void set_jog_speed_mm(double mm);
 	void set_step_time(int period);
+	void set_feed_rate(int feed_rate);
 	
 	void get_position_spi();
 	void get_position(double &x, double &y) {get_position_spi(); x = x_pos; y = y_pos;}
@@ -121,9 +122,26 @@ public slots:
 	}
 	
 	void setJog(double mm) {set_jog_speed_mm(mm);}
+	void setFeedrate(int feedrate) {set_feed_rate(feedrate);}
 	void enableJog(bool en) {enable_jog_mode(en);}
+	void enableContinuousJog(bool en) {
+		sendbuf[0] = SPI::ENA_JOG_CONTINUOUS;
+		sendbuf[1] = (int)en;
+		if(x_connected)
+			send(x_params.pin_num);
+		if(y_connected)
+			send(y_params.pin_num);
+	}
 	
 	void updateAxisConfig();
+	
+	void stop() {
+		sendbuf[0] = SPI::STOP;
+		if(x_connected)
+			send(x_params.pin_num);
+		if(y_connected)
+			send(y_params.pin_num);
+	}
 	
 signals:
 	void positionChanged(double x, double y, double z = 0);

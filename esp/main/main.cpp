@@ -33,6 +33,7 @@ void IRAM_ATTR zero_interlock(void* arg) {
 }
 
 void get_message() {
+	std::cout << "Getting Message\n";
 	spi.set_sendbuffer_value(1, gen_axis.get_position_steps());
 	spi.set_sendbuffer_value(2, gen_axis.in_motion());
 	spi.get_message(msg);
@@ -76,6 +77,9 @@ void get_message() {
 			break;
 		case ENA_SYNC_MODE:
 			gen_axis.enable_sync_mode((bool)msg[1]);
+			break;
+		case ENA_JOG_CONTINUOUS:
+			gen_axis.enable_continuous_jog((bool)msg[1]);
 			break;
 		case ENA_TRAVEL_LIMITS:
 			gen_axis.enable_travel_limits((bool)msg[1]);

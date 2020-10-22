@@ -16,8 +16,8 @@ namespace gcode {
 	static double prev_y = 0;
 	static double feed_rate = 0;
 	
-	static int x_spmm = 60;
-	static int y_spmm = 60;
+	static int x_spmm = 100;
+	static int y_spmm = 200;
 
 	void translate_gcode_to_params(const char* filename, std::vector<params_t> &params);
 

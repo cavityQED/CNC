@@ -18,6 +18,7 @@ const std::string function_code_to_string(FUNCTION_CODE code) {
 		case ENA_LINE_MODE:			return "Enable Line Mode";
 		case ENA_CURV_MODE:			return "Enable Curve Mode";
 		case ENA_SYNC_MODE:			return "Enable Sync Mode";
+		case ENA_JOG_CONTINUOUS:	return "Enable Continuous Jog";
 		case ENA_TRAVEL_LIMITS:		return "Enable Travel Limits";
 		case FIND_ZERO:				return "Find Zero";
 		case MOVE:					return "Move";

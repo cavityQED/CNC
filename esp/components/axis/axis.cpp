@@ -230,6 +230,12 @@ void axis::enable_sync_mode(bool enable) {
 		std::cout << "Sync Mode Disabled\n";
 }
 
+void axis::enable_continuous_jog(bool enable) {
+	if(!jog_mode && enable)
+		enable_jog_mode(true);
+	jog_continuous = enable;
+}
+
 void axis::enable_travel_limits(bool enable) {
 	travel_limits = enable;
 }
@@ -264,11 +270,21 @@ void axis::move_jog_mode() {
 		if(!motor_direction && jog_steps > position_steps)
 			return;
 	}
+	
+	int wait_time;
+	if(jog_continuous) {
+		jog_steps = motor_direction? max_travel_steps - position_steps : position_steps;
+		wait_time = pulse_period_us;
+	}
+	else
+		wait_time = jog_wait_time;
+	
+	std::cout << "Jogging " << jog_steps << " steps\n";
 		
 	reset_timer_counters();
 	
-	timer_set_alarm_value(LINE_GROUP, STEP_TIMER, jog_wait_time / PERIOD_uS);
-	timer_set_alarm_value(LINE_GROUP, STOP_TIMER, jog_wait_time * jog_steps / PERIOD_uS);
+	timer_set_alarm_value(LINE_GROUP, STEP_TIMER, wait_time / PERIOD_uS);
+	timer_set_alarm_value(LINE_GROUP, STOP_TIMER, wait_time * jog_steps / PERIOD_uS);
 	
 	timer_start(LINE_GROUP, STEP_TIMER);
 	timer_start(LINE_GROUP, STOP_TIMER);

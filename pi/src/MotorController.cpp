@@ -79,7 +79,7 @@ void MotorController::setup_gpio() {
 	pinMode(SYNC_PIN, OUTPUT);
 }
 
-void MotorController::setup_axis(motor::params_t &params) {
+void MotorController::setup_axis(motor::params_t &params) {	
 	motor::params_t *p;
 	int x_axis;
 	
@@ -101,6 +101,8 @@ void MotorController::setup_axis(motor::params_t &params) {
 	p->max_steps	= params.max_steps;
 	p->backlash		= params.backlash;
 	p->a			= params.a;
+	
+	if(!p->pin_num) return;
 	
 	pinMode(params.pin_num, OUTPUT);
 	digitalWrite(params.pin_num, 0);
@@ -127,7 +129,7 @@ void MotorController::timerEvent(QTimerEvent *e) {
 	}
 }
 void MotorController::send(int device_pin) {
-	if(device_pin == -1)
+	if(!device_pin)
 		return;
 		
 	memset(&recvbuf[0], 0, sizeof(recvbuf));
@@ -439,6 +441,15 @@ void MotorController::set_feed_rate(SPI::AXIS a, int feed_rate) {
 	sendbuf[0] = SPI::SET_FEED_RATE;
 	sendbuf[1] = feed_rate;
 	send(get_pin(a));
+}
+
+void MotorController::set_feed_rate(int feed_rate) {
+	sendbuf[0] = SPI::SET_FEED_RATE;
+	sendbuf[1] = feed_rate;
+	if(x_connected)
+		send(x_params.pin_num);
+	if(y_connected)
+		send(y_params.pin_num);
 }
 
 void MotorController::set_steps_to_move(SPI::AXIS a, int steps) {		

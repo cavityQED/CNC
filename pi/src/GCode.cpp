@@ -6,13 +6,13 @@ void translate_gcode_to_params(const char* filename, std::vector<params_t> &para
 	std::string g_line {""};
 	std::ifstream file;
 	file.open(filename);
+	params_t p;
 	
 	while(!file.eof()) {
 		std::getline(file, g_line);
 		g_line.push_back(' ');
 		std::cout << "Got line: " << g_line << '\n';
 		if(g_line[1] == '0') {
-			params_t p;
 			gcode_line_to_params(g_line, p);
 			params.push_back(p);			
 		}

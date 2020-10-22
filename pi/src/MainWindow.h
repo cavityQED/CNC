@@ -28,6 +28,9 @@ public:
 		connect(jog, &JogController::jog, controller, &MotorController::jog);
 		connect(jog, &JogController::setJog, controller, &MotorController::setJog);
 		connect(jog, &JogController::enableJog, controller, &MotorController::enableJog);
+		connect(jog, &JogController::stopContinuousJog, controller, &MotorController::stop);
+		connect(jog, &JogController::enableContinuousJog, controller, &MotorController::enableContinuousJog);
+		connect(jog, &JogController::setFeedrate, controller, &MotorController::setFeedrate);
 		
 		ConfigureUtility configure;
 		configure.get_axis_params(SPI::X_AXIS, xparams);

@@ -33,6 +33,11 @@ public slots:
 		emit enableJog(ena);
 	}
 	
+	void enableJogContinuous() {
+		jogContinuous = !jogContinuous;
+		emit enableContinuousJog(jogContinuous);
+	}
+	
 	void xJogPos() {
 		emit jog(SPI::X_AXIS, 1);
 	}
@@ -50,6 +55,7 @@ public slots:
 	
 	void setJogSpeedMin(bool checked) {
 		if(checked) {
+			emit setFeedrate(10);
 			emit setJog(.01);
 			jog_low->setChecked(false);
 			jog_med->setChecked(false);
@@ -60,6 +66,7 @@ public slots:
 	}
 	void setJogSpeedLow(bool checked) {
 		if(checked) {
+			emit setFeedrate(20);
 			emit setJog(.1);
 			jog_min->setChecked(false);
 			jog_med->setChecked(false);
@@ -70,6 +77,7 @@ public slots:
 	}
 	void setJogSpeedMed(bool checked) {
 		if(checked) {
+			emit setFeedrate(30);
 			emit setJog(1);
 			jog_min->setChecked(false);
 			jog_low->setChecked(false);
@@ -80,6 +88,7 @@ public slots:
 	}
 	void setJogSpeedHigh(bool checked) {
 		if(checked) {
+			emit setFeedrate(40);
 			emit setJog(2.5);
 			jog_min->setChecked(false);
 			jog_low->setChecked(false);
@@ -88,12 +97,21 @@ public slots:
 		else
 			emit setJog(0);
 	}
+	
+	void stop() {
+		if(jogContinuous)
+			emit stopContinuousJog();
+	}
 		
 signals:
 	void positionChanged(double xpos, double ypos);
 	void jog(SPI::AXIS a, bool dir);
+	void jogContinuously(SPI::AXIS a, bool dir);
 	void setJog(double mm);
+	void setFeedrate(int feedrate);
 	void enableJog(bool en);
+	void enableContinuousJog(bool en);
+	void stopContinuousJog();
 	
 private:
 	//Main Group Box
@@ -128,6 +146,8 @@ private:
 	
 	double xPos;
 	double yPos;
+	
+	bool jogContinuous = false;
 };
 
 #endif

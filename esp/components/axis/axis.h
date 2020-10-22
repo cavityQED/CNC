@@ -106,6 +106,7 @@ public:
 	void enable_line_mode(bool enable);
 	void enable_curv_mode(bool enable);
 	void enable_sync_mode(bool enable);
+	void enable_continuous_jog(bool enable);
 	void enable_travel_limits(bool enable);
 	
 	/* 	Timer Callbacks	*/
@@ -135,7 +136,7 @@ private:
 		
 	//Jog Mode Variables
 	int jog_steps = 0;						//Number of steps to move in one jog step
-	static const int jog_wait_time = 250;	//Time between steps in microseconds during jog
+	static const int jog_wait_time = 500;	//Time between steps in microseconds during jog
 	
 	//Position and Direction Variables
 	bool zeroing = false;					//True if motor is trying to find machine zero
@@ -148,6 +149,7 @@ private:
 	bool line_mode = false;
 	bool curv_mode = false;
 	bool sync_mode = false;
+	bool jog_continuous = false;
 	bool travel_limits = false;
 
 	//ESP Error
