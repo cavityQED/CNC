@@ -1,10 +1,11 @@
 #include "axis.h"
 #include "spi_client.h"
+#include "move_timer.h"
 
 #include "freertos/queue.h"
 
 #define DEVICE_SELECT	(gpio_num_t) 21
-#define ZERO_INTERLOCK	(gpio_num_t) 32
+#define ZERO_INTERLOCK	(gpio_num_t) 33
 
 static xQueueHandle evt_queue;
 static std::vector<int> msg;
@@ -85,6 +86,7 @@ void get_message() {
 			gen_axis.enable_travel_limits((bool)msg[1]);
 			break;
 		case MOVE:
+			gen_axis.print_pos_steps();
 			gen_axis.move();
 			break;
 		case FIND_ZERO:
@@ -97,6 +99,9 @@ void get_message() {
 			break;
 		case SETUP_CURVE:
 			gen_axis.setup_curve(msg);
+			break;
+		case TEST_FUNCTION:
+			gen_axis.test_function(msg);
 			break;
 		default:
 			break;
@@ -141,6 +146,8 @@ extern "C" void app_main(void) {
 	gpio_isr_handler_add(ZERO_INTERLOCK, zero_interlock, NULL);
 	gpio_set_intr_type(DEVICE_SELECT, GPIO_INTR_POSEDGE);
 	gpio_isr_handler_add(DEVICE_SELECT, msg_ready, NULL);
+	
+	timer::setup();
 	
 	gen_axis.set_spi(&spi);
 	xTaskCreate(main_task, "main_task", 4096, NULL, 1, NULL);

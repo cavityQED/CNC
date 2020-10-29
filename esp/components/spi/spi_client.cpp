@@ -38,6 +38,10 @@ SpiClient::SpiClient() {
 	ready_pin_config.pin_bit_mask	= (1 << READY);
 	gpio_config(&ready_pin_config);
 	
+	//Configure the Signal GPIO. Used to signal the pi that a move has ocurred
+	ready_pin_config.pin_bit_mask	= (1ULL << SIGNAL);
+	gpio_config(&ready_pin_config);
+	
 	sendbuf.resize(MAX_TRANSACTION_LENGTH);
 }
 	
@@ -107,6 +111,7 @@ void SpiClient::printFunction(AXIS_FUNCTION_CODE code) {
 		case MOVE:					std::cout << "Move";						break;
 		case STOP:					std::cout << "Stop";						break;
 		case RECEIVE:				std::cout << "Receive";						break;
+		case TEST_FUNCTION:			std::cout << "Test Function";				break;
 		default:					std::cout << "Unrecognized Function";		break;
 	}
 	std::cout << '\n';

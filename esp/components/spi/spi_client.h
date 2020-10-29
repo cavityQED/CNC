@@ -14,6 +14,7 @@
 #define SCLK	(gpio_num_t) 18
 #define CS		(gpio_num_t) 5
 #define READY	(gpio_num_t) 22	//Signal host we're ready to receive message
+#define SIGNAL	(gpio_num_t) 32
 
 #define SPI_MODE				2
 #define DMA_CHANNEL				1
@@ -42,6 +43,7 @@ enum AXIS_FUNCTION_CODE {
 	MOVE,
 	STOP,
 	RECEIVE,
+	TEST_FUNCTION
 };
 
 class SpiClient {
@@ -51,6 +53,11 @@ public:
 	
 	void get_message(std::vector<int> &msg);	
 	void get_data(std::vector<int> &data);
+	
+	void signal_pi() {
+		gpio_set_level(SIGNAL, 1);
+		gpio_set_level(SIGNAL, 0);
+	}
 	
 	void set_sendbuffer_value(int index, int value);
 	

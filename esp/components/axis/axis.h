@@ -20,6 +20,7 @@
 #include "esp_types.h"
 
 #include "spi_client.h"
+#include "move_timer.h"
 
 //GPIO numbers motor driver connections
 #define STEP	(gpio_num_t) 12
@@ -117,6 +118,9 @@ public:
 	
 	/* Sync Semaphore Release Interrupt	*/
 	static void IRAM_ATTR syncSem_release_isr(void* arg);
+	
+	/* Test Function */
+	void test_function(std::vector<int> args);
 			 
 private:				
 	//Motor Variables
@@ -134,6 +138,8 @@ private:
 	static int step_num;					//Step number for accessing curve vectors
 	static const int zero_steps = 200;		//Number of steps to move once zero position is found
 		
+	std::vector<bool> jog_step_vec;
+	
 	//Jog Mode Variables
 	int jog_steps = 0;						//Number of steps to move in one jog step
 	static const int jog_wait_time = 500;	//Time between steps in microseconds during jog

@@ -26,6 +26,7 @@ enum FUNCTION_CODE {
 	MOVE,
 	STOP,
 	RECEIVE,
+	TEST_FUNCTION
 };
 
 enum AXIS {

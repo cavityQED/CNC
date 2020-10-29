@@ -16,6 +16,8 @@
 #include <cmath>
 #include <iostream>
 
+#define ESP_MOVED_SIGNAL 25
+
 class MainWindow : public QMainWindow {
 	Q_OBJECT
 public:
@@ -65,9 +67,13 @@ public:
 		
 		setStyleSheet("QWidget{background-color: #DDEFF2;}");	
 		
+		wiringPiISR(ESP_MOVED_SIGNAL, INT_EDGE_RISING, esp_moved_isr);
+		
 	}
 	
 	~MainWindow() {std::cout << "MainWindow destroyed\n";}
+	
+	static void esp_moved_isr() {}
 			
 public slots:
 	void displayConfigureWindow() {

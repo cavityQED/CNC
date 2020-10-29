@@ -12,7 +12,7 @@ std::vector<bool> axis::dirs_vec = {0};
 
 axis::axis() {
 	//setup_gpio();
-	setup_timers();
+	//setup_timers();
 	set_defaults();
 }
 		
@@ -184,7 +184,33 @@ void axis::set_steps_to_move(int steps) {
 
 void axis::set_jog_steps(int steps) {
 	jog_steps = steps;
+	jog_step_vec.clear();
+	
+	if(steps < 101)
+		return;
+	
+	for(int i = 10; i > 0; i--) {
+		for(int j = 0; j < 5; j++) {
+			jog_step_vec.push_back(1);
+			for(int k = 0; k < i; k++) {
+				jog_step_vec.push_back(0);
+			}
+		}
+	}
+	
+	jog_step_vec.insert(jog_step_vec.end(), steps-100, 1);
+	
+	for(int i = 0; i < 10; i++) {
+		for(int j = 0; j < 5; j++) {
+			jog_step_vec.push_back(1);
+			for(int k = 0; k < i; k++) {
+				jog_step_vec.push_back(0);
+			}
+		}
+	}
+			
 	std::cout << "Jog Steps: " << jog_steps << '\n';
+	std::cout << "Jog Vec Size: " << jog_step_vec.size() << '\n';
 }
 
 void axis::enable_jog_mode(bool enable) {
@@ -280,7 +306,7 @@ void axis::move_jog_mode() {
 		wait_time = jog_wait_time;
 	
 	std::cout << "Jogging " << jog_steps << " steps\n";
-		
+					
 	reset_timer_counters();
 	
 	timer_set_alarm_value(LINE_GROUP, STEP_TIMER, wait_time / PERIOD_uS);
@@ -528,4 +554,38 @@ void axis::setup_curve(std::vector<int> &info) {
 	
 	std::cout << "Curve Steps: " << step_vec.size() << '\n';
 	spi->toggle_ready();
+}
+
+void axis::test_function(std::vector<int> args) {
+	int total_steps = args[1];
+	if(total_steps < 101)
+		total_steps = 101;
+	std::cout << "Total Steps: " << total_steps << '\n';
+	bool dir = (bool)args[2];
+	int final_speed = args[3];
+	
+	std::vector<bool> accel_steps;
+	std::vector<bool> accel_dirs;
+	
+	for(int i = 9; i >= 0; i--) {
+		for(int j = 0; j < 5; j++) {
+			accel_steps.push_back(1);
+			accel_steps.insert(accel_steps.end(), i, 0);
+		}
+	}
+	accel_steps.insert(accel_steps.end(), total_steps - 100, 1);
+	for(int i = 0; i <= 9; i++) {
+		for(int j = 0; j < 5; j++) {
+			accel_steps.insert(accel_steps.end(), i, 0);
+			accel_steps.push_back(1);
+		}
+	}
+
+	std::cout << "Step Vector Size: " << accel_steps.size() << '\n';
+	
+	accel_dirs.clear();
+	accel_dirs.insert(accel_dirs.end(), accel_steps.size(), dir);
+
+	timer::setup_move(accel_steps, accel_dirs, final_speed, &position_steps, &motor_in_motion);
+	timer::start_move();
 }

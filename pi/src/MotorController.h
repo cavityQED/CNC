@@ -26,10 +26,10 @@
 #include "SPI.h"
 #include "utilities/ConfigureUtility.h"
 
-#define READY_PIN 	24
-#define SYNC_PIN	18
+#define READY_PIN 		24
+#define SYNC_PIN		18
 
-#define TIMER_PERIOD 25
+#define TIMER_PERIOD 50
 
 class MotorController : public QWidget {
 	Q_OBJECT
@@ -76,6 +76,10 @@ public:
 	void get_position_spi();
 	void get_position(double &x, double &y) {get_position_spi(); x = x_pos; y = y_pos;}
 	void get_position_abs(double &x, double &y) {x = x_pos + x_offset; y = y_pos + y_offset;}
+	void update_position() {
+		in_motion = true;
+		startTimer(TIMER_PERIOD);
+	}
 			
 	//Axis-specific functions
 	void move(SPI::AXIS a);	
@@ -94,8 +98,8 @@ public:
 	//Get pin number for particular axis
 	int get_pin(SPI::AXIS a);
 	
-	void timerEvent(QTimerEvent *e) override;		
-	
+	void timerEvent(QTimerEvent *e) override;
+		
 public slots:
 	
 	void run_p() {
@@ -118,7 +122,15 @@ public slots:
 	void jog(SPI::AXIS a, bool dir) {
 		set_dir(a, dir);
 		in_program = false;
-		move(a);
+		sendbuf[0] = SPI::TEST_FUNCTION;
+		sendbuf[1] = 1000;
+		sendbuf[2] = (int)dir;
+		sendbuf[3] = 100;
+		if(!in_motion)
+			send(get_pin(a));
+		in_motion = true;
+		startTimer(TIMER_PERIOD);
+		//move(a);
 	}
 	
 	void setJog(double mm) {set_jog_speed_mm(mm);}

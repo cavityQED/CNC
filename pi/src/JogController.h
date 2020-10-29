@@ -14,8 +14,6 @@
 #include "MotorController.h"
 #include "Curve.h"
 
-#define TIMER_PERIOD 25
-
 class JogController : public QWidget {
 	Q_OBJECT
 public:
