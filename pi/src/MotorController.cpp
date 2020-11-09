@@ -186,8 +186,10 @@ void MotorController::send_line_data(line::ops_t &data) {
 		
 	sendbuf[0] = SPI::SET_STEP_TIME;
 	sendbuf[1] = data.x_time;
+	std::cout << "X Step Time: " << data.x_time << '\n';
 	send(x_params.pin_num);
 	sendbuf[1] = data.y_time;
+	std::cout << "Y Step Time: " << data.y_time << '\n';
 	send(y_params.pin_num);
 		
 	sendbuf[0] = SPI::SET_DIRECTION;

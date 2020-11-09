@@ -21,6 +21,7 @@
 
 #include "spi_client.h"
 #include "move_timer.h"
+#include "step_calculator.h"
 
 //GPIO numbers motor driver connections
 #define STEP	(gpio_num_t) 12
@@ -137,12 +138,22 @@ private:
 	static std::vector<bool> dirs_vec;		//Direction of each step during a curve move
 	static int step_num;					//Step number for accessing curve vectors
 	static const int zero_steps = 200;		//Number of steps to move once zero position is found
+	
+	static bool neg;
+	static bool pos;
 		
-	std::vector<bool> jog_step_vec;
+	std::vector<bool>	jog_step_vec;
+	std::vector<bool*>	jog_dirs_vec;
+	
+	std::vector<bool>	line_step_vec;
+	std::vector<bool*>	line_dirs_vec;
+	
+	std::vector<bool>	curv_step_vec;
+	std::vector<bool*>	curv_dirs_vec;
 	
 	//Jog Mode Variables
 	int jog_steps = 0;						//Number of steps to move in one jog step
-	static const int jog_wait_time = 500;	//Time between steps in microseconds during jog
+	static const int jog_wait_time = 200;	//Time between steps in microseconds during jog
 	
 	//Position and Direction Variables
 	bool zeroing = false;					//True if motor is trying to find machine zero
@@ -166,6 +177,9 @@ private:
 	
 	//SPI Client to Toggle Ready Pin
 	SpiClient *spi;
+	
+	//Timer to send step signals to motor driver
+	Timer step_timer;
 };
 
 #endif	

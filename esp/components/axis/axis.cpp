@@ -3,6 +3,8 @@
 /*	Initialize static variables	*/
 bool			axis::motor_direction	= false;
 bool			axis::motor_in_motion	= false;
+bool			axis::neg				= false;
+bool			axis::pos				= true;
 int				axis::position_steps	= 0;
 int				axis::step_num			= 0;
 xQueueHandle	axis::syncSem			= xSemaphoreCreateBinary();
@@ -162,9 +164,8 @@ void axis::set_feed_rate(int speed) {
 }
 
 void axis::set_step_time(int time) {
-	if(time < 250)
+	if(time <= 0)
 		return;
-		
 	pulse_period_us = time;
 	set_feed_rate(1000000/(pulse_period_us*steps_per_mm));
 }
@@ -185,29 +186,11 @@ void axis::set_steps_to_move(int steps) {
 void axis::set_jog_steps(int steps) {
 	jog_steps = steps;
 	jog_step_vec.clear();
+	jog_dirs_vec.clear();
 	
-	if(steps < 101)
-		return;
-	
-	for(int i = 10; i > 0; i--) {
-		for(int j = 0; j < 5; j++) {
-			jog_step_vec.push_back(1);
-			for(int k = 0; k < i; k++) {
-				jog_step_vec.push_back(0);
-			}
-		}
-	}
-	
-	jog_step_vec.insert(jog_step_vec.end(), steps-100, 1);
-	
-	for(int i = 0; i < 10; i++) {
-		for(int j = 0; j < 5; j++) {
-			jog_step_vec.push_back(1);
-			for(int k = 0; k < i; k++) {
-				jog_step_vec.push_back(0);
-			}
-		}
-	}
+	std::cout << "Setting Jog Step Vector\n";
+	calculator::get_linear_steps_with_accel(jog_step_vec, steps, jog_wait_time);
+	jog_dirs_vec.insert(jog_dirs_vec.end(), jog_step_vec.size(), &motor_direction);
 			
 	std::cout << "Jog Steps: " << jog_steps << '\n';
 	std::cout << "Jog Vec Size: " << jog_step_vec.size() << '\n';
@@ -297,6 +280,9 @@ void axis::move_jog_mode() {
 			return;
 	}
 	
+	step_timer.move_setup(jog_step_vec, jog_dirs_vec, jog_wait_time, &position_steps, &motor_in_motion);
+	step_timer.start_move();
+	/*
 	int wait_time;
 	if(jog_continuous) {
 		jog_steps = motor_direction? max_travel_steps - position_steps : position_steps;
@@ -315,6 +301,7 @@ void axis::move_jog_mode() {
 	timer_start(LINE_GROUP, STEP_TIMER);
 	timer_start(LINE_GROUP, STOP_TIMER);
 	motor_in_motion = true;
+	*/
 }
 
 void axis::move_line_mode() {
@@ -334,51 +321,45 @@ void axis::move_line_mode() {
 			return;
 	}
 	
-	reset_timer_counters();
-				
-	timer_set_alarm_value(LINE_GROUP, STEP_TIMER, pulse_period_us / PERIOD_uS);
-	timer_set_alarm_value(LINE_GROUP, STOP_TIMER, pulse_period_us * steps_to_move / PERIOD_uS);
+	calculator::get_linear_steps_with_accel(line_step_vec, steps_to_move, pulse_period_us);
+	line_dirs_vec.clear();
+	line_dirs_vec.insert(line_dirs_vec.end(), line_step_vec.size(), &motor_direction);
+	
+	step_timer.move_setup(line_step_vec, line_dirs_vec, pulse_period_us, &position_steps, &motor_in_motion, true);
 	
 	if(sync_mode) {
 		spi->toggle_ready();
 		xSemaphoreTake(syncSem, portMAX_DELAY);
 	}
+	
+	step_timer.start_move();
+	/*
+	reset_timer_counters();
+			
+	timer_set_alarm_value(LINE_GROUP, STEP_TIMER, pulse_period_us / PERIOD_uS);
+	timer_set_alarm_value(LINE_GROUP, STOP_TIMER, pulse_period_us * steps_to_move / PERIOD_uS);
 		
 	timer_start(LINE_GROUP, STEP_TIMER);
 	timer_start(LINE_GROUP, STOP_TIMER);
 	motor_in_motion = true;
+	*/
 }
 
 void axis::move_curv_mode() {
 	if(motor_in_motion)
 		return;
 		
-	reset_timer_counters();
-	
-	step_num = 0;
-	
-	timer_set_alarm_value(CURV_GROUP, STEP_TIMER, pulse_period_us / PERIOD_uS);
-	timer_set_alarm_value(CURV_GROUP, STOP_TIMER, pulse_period_us * step_vec.size() / PERIOD_uS);
-	
-	set_direction(dirs_vec[0]);
+	step_timer.move_setup(step_vec, curv_dirs_vec, pulse_period_us, &position_steps, &motor_in_motion, true);
 	
 	if(sync_mode) {
 		spi->toggle_ready();
 		xSemaphoreTake(syncSem, portMAX_DELAY);
 	}
 	
-	timer_start(CURV_GROUP, STEP_TIMER);
-	timer_start(CURV_GROUP, STOP_TIMER);
-	motor_in_motion = true;
+	step_timer.start_move();
 }
-		
 
-void axis::stop() {
-	timer_pause(LINE_GROUP, STEP_TIMER);
-	timer_pause(CURV_GROUP, STEP_TIMER);
-	timer_pause(LINE_GROUP, STOP_TIMER);
-	timer_pause(CURV_GROUP, STOP_TIMER);
-	
+void axis::stop() {	
 	motor_in_motion = false;
 }
 
@@ -386,9 +367,7 @@ void axis::stop_zero_interlock() {
 	stop();
 	
 	position_steps = -zero_steps;
-	
-	reset_timer_counters();
-	
+		
 	timer_set_alarm_value(LINE_GROUP, STEP_TIMER, jog_wait_time / PERIOD_uS);
 	timer_set_alarm_value(LINE_GROUP, STOP_TIMER, jog_wait_time * zero_steps / PERIOD_uS);
 	
@@ -401,37 +380,10 @@ void axis::stop_zero_interlock() {
 
 void axis::find_zero() {
 	set_direction(0);
-	
-	reset_timer_counters();
-	
+		
 	timer_set_alarm_value(LINE_GROUP, STEP_TIMER, (jog_wait_time * 4) / PERIOD_uS);
 	timer_start(LINE_GROUP, STEP_TIMER);
 	motor_in_motion = true;
-}
-
-void axis::reset_timer_counters() {
-	timer_pause(LINE_GROUP, STEP_TIMER);
-	timer_pause(LINE_GROUP, STOP_TIMER);
-	timer_pause(CURV_GROUP, STEP_TIMER);
-	timer_pause(CURV_GROUP, STOP_TIMER);
-		
-	timer_set_counter_value(LINE_GROUP, STEP_TIMER, 0);
-	timer_set_counter_value(LINE_GROUP, STOP_TIMER, 0);
-	
-	timer_set_counter_value(CURV_GROUP, STEP_TIMER, 0);
-	timer_set_counter_value(CURV_GROUP, STOP_TIMER, 0);	
-	
-	timer_enable_intr(LINE_GROUP, STEP_TIMER);
-	timer_enable_intr(LINE_GROUP, STOP_TIMER);	
-	
-	timer_enable_intr(CURV_GROUP, STEP_TIMER);
-	timer_enable_intr(CURV_GROUP, STOP_TIMER);
-	
-	timer_set_alarm(LINE_GROUP, STEP_TIMER, TIMER_ALARM_EN);
-	timer_set_alarm(LINE_GROUP, STOP_TIMER, TIMER_ALARM_EN);
-	
-	timer_set_alarm(CURV_GROUP, STEP_TIMER, TIMER_ALARM_EN);
-	timer_set_alarm(CURV_GROUP, STOP_TIMER, TIMER_ALARM_EN);	
 }
 
 void axis::setup_curve(std::vector<int> &info) {	
@@ -553,39 +505,15 @@ void axis::setup_curve(std::vector<int> &info) {
 	}
 	
 	std::cout << "Curve Steps: " << step_vec.size() << '\n';
+	
+	curv_dirs_vec.clear();
+	curv_dirs_vec.resize(step_vec.size());
+	for(int i = 0; i < dirs_vec.size(); i++)
+		dirs_vec[i]? curv_dirs_vec[i] = &pos : curv_dirs_vec[i] = &neg;
+		
 	spi->toggle_ready();
 }
 
 void axis::test_function(std::vector<int> args) {
-	int total_steps = args[1];
-	if(total_steps < 101)
-		total_steps = 101;
-	std::cout << "Total Steps: " << total_steps << '\n';
-	bool dir = (bool)args[2];
-	int final_speed = args[3];
 	
-	std::vector<bool> accel_steps;
-	std::vector<bool> accel_dirs;
-	
-	for(int i = 9; i >= 0; i--) {
-		for(int j = 0; j < 5; j++) {
-			accel_steps.push_back(1);
-			accel_steps.insert(accel_steps.end(), i, 0);
-		}
-	}
-	accel_steps.insert(accel_steps.end(), total_steps - 100, 1);
-	for(int i = 0; i <= 9; i++) {
-		for(int j = 0; j < 5; j++) {
-			accel_steps.insert(accel_steps.end(), i, 0);
-			accel_steps.push_back(1);
-		}
-	}
-
-	std::cout << "Step Vector Size: " << accel_steps.size() << '\n';
-	
-	accel_dirs.clear();
-	accel_dirs.insert(accel_dirs.end(), accel_steps.size(), dir);
-
-	timer::setup_move(accel_steps, accel_dirs, final_speed, &position_steps, &motor_in_motion);
-	timer::start_move();
 }

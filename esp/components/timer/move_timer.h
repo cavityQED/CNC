@@ -27,8 +27,11 @@
 //Base Timer Frequency, 80 MHz
 #define BASE_TIMER_FREQUENCY 80000000
 
-namespace timer {
-	void setup();	//Configures the timers and gpio pins
+class Timer {
+public:
+	Timer();
+	~Timer() {}
+	
 	void configure_timers();
 	void configure_gpio();
 	
@@ -40,36 +43,47 @@ namespace timer {
 	 * 	@param pos			- pointer to motor position
 	 * 	@param motion		- pointer to motor motion bool
 	 */
-	void setup_move(	std::vector<bool> step, 
-						std::vector<bool> dirs, 
+	void move_setup(	const std::vector<bool> &step, 
+						const std::vector<bool*> &dirs, 
 						int wait_time_us,
 						int* pos,
-						bool* motion);
-	
+						bool* motion,
+						bool accel = true);
 	/*	START MOVE
 	 * 		Starts the timers
 	 */
 	void start_move();
 	
 	/*	RESET
-	 * 		Resets the timer counters and enables interrupts and alarms
+	 * 		Resets the timer counters and enables the interrupts and alarms
 	 */
 	void reset();
-		
-	//Timer ISR Callbacks
-	void IRAM_ATTR pulse_step_isr(void* arg);
-	void IRAM_ATTR pulse_stop_isr(void* arg);
-		
+	 
+	/*	PULSE STEP ISR
+	 * 		Executes when the Step Timer counter reached the alarm value.
+	 * 		First sends a step signal to the motor driver if the step vector is
+	 * 			true at the current pulse position.
+	 * 		Then updates the position.
+	 * 		Then increments the cur_pulse counter (if in accel mode)
+	 * 			and sets the direction for the next step
+	 */
+	static void IRAM_ATTR pulse_step_isr(void* arg);
 	
-	//Step and dir vectors for move operations
-	static std::vector<bool> pulse_step_vector{0};
-	static std::vector<bool> pulse_dirs_vector{0};
+	/*	PULSE STOP ISR
+	 * 		Stops the timer counters at the end of the move.
+	 * 		Sets the motion bool to false.
+	 */
+	static void IRAM_ATTR pulse_stop_isr(void* arg);
 	
-	static int		cur_pulse = 0;	//Current pulse number
-	static int*		position_steps;	//Pointer to motor position
-	static bool		direction = 1;	//Motor direction
-	static bool*	in_motion;		//Motor motion
-		
-}//timer namespace
+private:
+	static std::vector<bool>	pulse_step_vector;	//Step container used by the Pulse Step ISR
+	static std::vector<bool*>	pulse_dirs_vector;	//Direction container used by the Pulse Step ISR
+	
+	static int		cur_pulse;		//Pulse counter
+	static int*		position_steps;	//Pointer to the motor's step position to be updated in the Pulse Step ISR
+	static bool		direction;		//Direction of the motor
+	static bool		accel_mode;		//True if Pulse Step ISR should increment cur_pulse, false otherwise
+	static bool*	in_motion;		//Pointer to the motor's motion bool to be updated by the Pulse Stop ISR
+};
 
 #endif

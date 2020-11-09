@@ -121,16 +121,7 @@ public slots:
 	
 	void jog(SPI::AXIS a, bool dir) {
 		set_dir(a, dir);
-		in_program = false;
-		sendbuf[0] = SPI::TEST_FUNCTION;
-		sendbuf[1] = 1000;
-		sendbuf[2] = (int)dir;
-		sendbuf[3] = 100;
-		if(!in_motion)
-			send(get_pin(a));
-		in_motion = true;
-		startTimer(TIMER_PERIOD);
-		//move(a);
+		move(a);
 	}
 	
 	void setJog(double mm) {set_jog_speed_mm(mm);}

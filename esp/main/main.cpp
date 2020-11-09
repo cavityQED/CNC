@@ -96,6 +96,7 @@ void get_message() {
 			gen_axis.stop();
 			break;
 		case RECEIVE:
+			gen_axis.print_pos_steps();
 			break;
 		case SETUP_CURVE:
 			gen_axis.setup_curve(msg);
@@ -146,9 +147,7 @@ extern "C" void app_main(void) {
 	gpio_isr_handler_add(ZERO_INTERLOCK, zero_interlock, NULL);
 	gpio_set_intr_type(DEVICE_SELECT, GPIO_INTR_POSEDGE);
 	gpio_isr_handler_add(DEVICE_SELECT, msg_ready, NULL);
-	
-	timer::setup();
-	
+		
 	gen_axis.set_spi(&spi);
 	xTaskCreate(main_task, "main_task", 4096, NULL, 1, NULL);
 }
