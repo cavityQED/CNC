@@ -28,88 +28,93 @@ public:
 			
 public slots:
 	void enableJogMode(bool ena) {
-		emit enableJog(ena);
+		event.type = JOG::ENABLE_JOG;
+		event.enable = ena;
+		emit jog_event(event);
 	}
-	
-	void enableJogContinuous() {
-		jogContinuous = !jogContinuous;
-		emit enableContinuousJog(jogContinuous);
-	}
-	
+		
 	void xJogPos() {
-		emit jog(SPI::X_AXIS, 1);
+		event.type = JOG::JOG_MOVE;
+		event.axis = SPI::X_AXIS;
+		event.direction = 1;
+		emit jog_event(event);
 	}
 	void xJogNeg() {
-		emit jog(SPI::X_AXIS, 0);
+		event.type = JOG::JOG_MOVE;
+		event.axis = SPI::X_AXIS;
+		event.direction = 0;
+		emit jog_event(event);
 	}
 	void yJogPos() {
-		emit jog(SPI::Y_AXIS, 1);
+		event.type = JOG::JOG_MOVE;
+		event.axis = SPI::Y_AXIS;
+		event.direction = 1;
+		emit jog_event(event);
 	}
 	void yJogNeg() {
-		emit jog(SPI::Y_AXIS, 0);
+		event.type = JOG::JOG_MOVE;
+		event.axis = SPI::Y_AXIS;
+		event.direction = 0;
+		emit jog_event(event);
 	}
 	void zJogPos() {}
 	void zJogNeg() {}
 	
 	void setJogSpeedMin(bool checked) {
+		event.type = JOG::SET_JOG_SPEED_MM;
 		if(checked) {
-			emit setFeedrate(10);
-			emit setJog(.01);
+			event.jog_mm = 0.01;
 			jog_low->setChecked(false);
 			jog_med->setChecked(false);
 			jog_high->setChecked(false);
 		}
 		else
-			emit setJog(0);
+			event.jog_mm = 0;
+			
+		emit jog_event(event);
 	}
 	void setJogSpeedLow(bool checked) {
+		event.type = JOG::SET_JOG_SPEED_MM;
 		if(checked) {
-			emit setFeedrate(20);
-			emit setJog(.1);
+			event.jog_mm = 0.1;
 			jog_min->setChecked(false);
 			jog_med->setChecked(false);
 			jog_high->setChecked(false);
 		}
 		else
-			emit setJog(0);
+			event.jog_mm = 0;
+			
+		emit jog_event(event);
 	}
 	void setJogSpeedMed(bool checked) {
+		event.type = JOG::SET_JOG_SPEED_MM;
 		if(checked) {
-			emit setFeedrate(30);
-			emit setJog(1);
+			event.jog_mm = 1;
 			jog_min->setChecked(false);
 			jog_low->setChecked(false);
 			jog_high->setChecked(false);
 		}
 		else
-			emit setJog(0);
+			event.jog_mm = 0;
+			
+		emit jog_event(event);
 	}
 	void setJogSpeedHigh(bool checked) {
+		event.type = JOG::SET_JOG_SPEED_MM;
 		if(checked) {
-			emit setFeedrate(40);
-			emit setJog(2.5);
+			event.jog_mm = 2.5;
 			jog_min->setChecked(false);
 			jog_low->setChecked(false);
 			jog_med->setChecked(false);
 		}
 		else
-			emit setJog(0);
-	}
-	
-	void stop() {
-		if(jogContinuous)
-			emit stopContinuousJog();
+			event.jog_mm = 0;
+			
+		emit jog_event(event);
 	}
 		
-signals:
-	void positionChanged(double xpos, double ypos);
-	void jog(SPI::AXIS a, bool dir);
-	void jogContinuously(SPI::AXIS a, bool dir);
-	void setJog(double mm);
-	void setFeedrate(int feedrate);
-	void enableJog(bool en);
-	void enableContinuousJog(bool en);
-	void stopContinuousJog();
+signals:	
+	void jog_event(JOG::event_t &event);
 	
 private:
 	//Main Group Box
@@ -144,8 +149,8 @@ private:
 	
 	double xPos;
 	double yPos;
-	
-	bool jogContinuous = false;
+		
+	JOG::event_t event;
 };
 
 #endif

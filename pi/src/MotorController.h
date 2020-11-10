@@ -101,6 +101,8 @@ public:
 	void timerEvent(QTimerEvent *e) override;
 		
 public slots:
+
+	void jog_event_handler(JOG::event_t &event);
 	
 	void run_p() {
 		test_lines();
@@ -117,23 +119,6 @@ public slots:
 		std::cout << "X Steps: " << recvbuf[1] << '\n';
 		send(y_params.pin_num);
 		std::cout << "Y Steps: " << recvbuf[1] << '\n';
-	}
-	
-	void jog(SPI::AXIS a, bool dir) {
-		set_dir(a, dir);
-		move(a);
-	}
-	
-	void setJog(double mm) {set_jog_speed_mm(mm);}
-	void setFeedrate(int feedrate) {set_feed_rate(feedrate);}
-	void enableJog(bool en) {enable_jog_mode(en);}
-	void enableContinuousJog(bool en) {
-		sendbuf[0] = SPI::ENA_JOG_CONTINUOUS;
-		sendbuf[1] = (int)en;
-		if(x_connected)
-			send(x_params.pin_num);
-		if(y_connected)
-			send(y_params.pin_num);
 	}
 	
 	void updateAxisConfig();

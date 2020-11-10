@@ -487,3 +487,20 @@ void MotorController::updateAxisConfig() {
 	if(y_params.pin_num)
 		setup_axis(y_params);
 }
+
+void MotorController::jog_event_handler(JOG::event_t &event) {
+	switch(event.type) {
+		case JOG::ENABLE_JOG:
+			enable_jog_mode(event.enable);
+			break;
+		case JOG::SET_JOG_SPEED_MM:
+			set_jog_speed_mm(event.jog_mm);
+			break;
+		case JOG::JOG_MOVE:
+			set_dir(event.axis, event.direction);
+			move(event.axis);
+			break;
+		default:
+			break;
+	}
+}

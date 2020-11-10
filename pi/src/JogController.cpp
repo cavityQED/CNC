@@ -6,11 +6,6 @@ JogController::JogController(QWidget *parent) : QWidget(parent) {
 	setShortcuts();
 	connectButtons();
 	setStyleSheets();
-	
-	QAction *enJogCont = new QAction;
-	enJogCont->setShortcut(Qt::Key_F12);
-	connect(enJogCont, &QAction::triggered, this, &JogController::enableJogContinuous);
-	addAction(enJogCont);
 }
 
 void JogController::createButtons() {
@@ -98,12 +93,7 @@ void JogController::connectButtons() {
 	connect(y_neg, SIGNAL(pressed()), this, SLOT(yJogNeg()));
 	connect(z_pos, SIGNAL(pressed()), this, SLOT(zJogPos()));
 	connect(z_neg, SIGNAL(pressed()), this, SLOT(zJogNeg()));
-	
-	connect(x_pos, SIGNAL(released()), this, SLOT(stop()));
-	connect(x_neg, &QPushButton::released, this, &JogController::stop);
-	connect(y_pos, &QPushButton::released, this, &JogController::stop);
-	connect(y_neg, &QPushButton::released, this, &JogController::stop);
-	
+		
 	connect(jog_mode_box, SIGNAL(toggled(bool)), this, SLOT(enableJogMode(bool)));
 	
 	connect(jog_min, SIGNAL(clicked(bool)), this, SLOT(setJogSpeedMin(bool)));

@@ -185,11 +185,11 @@ void axis::set_steps_to_move(int steps) {
 
 void axis::set_jog_steps(int steps) {
 	jog_steps = steps;
-	jog_step_vec.clear();
-	jog_dirs_vec.clear();
 	
-	std::cout << "Setting Jog Step Vector\n";
+	jog_step_vec.clear();	
 	calculator::get_linear_steps_with_accel(jog_step_vec, steps, jog_wait_time);
+	
+	jog_dirs_vec.clear();
 	jog_dirs_vec.insert(jog_dirs_vec.end(), jog_step_vec.size(), &motor_direction);
 			
 	std::cout << "Jog Steps: " << jog_steps << '\n';
