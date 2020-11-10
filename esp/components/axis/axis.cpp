@@ -480,8 +480,8 @@ void axis::setup_curve(std::vector<int> &info) {
 				
 		x2 += xo;
 		y2 += yo;
-		
-	}while(abs(x2 - x3) > 1 || abs(y2 - y3) > 1 || step_vec.size() < 2);
+				
+	}while(abs(x2 - x3) > 1 || abs(y2 - y3) > 1 || step_vec.size() < 3);
 	
 	if(x2 != x3) {
 		if(x_axis){
