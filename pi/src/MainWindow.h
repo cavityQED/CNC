@@ -25,6 +25,7 @@ public:
 	MainWindow(QWidget *parent = 0) : QMainWindow(parent){
 		jog = new JogController;
 		pos = new PositionReadout;
+		laser = new Laser;
 		controller = new MotorController(this);
 		
 		connect(controller, &MotorController::positionChanged, pos, &PositionReadout::setPosition);
@@ -42,8 +43,11 @@ public:
 		controller->get_position(x, y);
 		pos->setPosition(x, y);
 						
+		QVBoxLayout *vLayout = new QVBoxLayout;
+		vLayout->addWidget(pos);
+		vLayout->addWidget(laser);
 		QHBoxLayout *layout = new QHBoxLayout;
-		layout->addWidget(pos);
+		layout->addLayout(vLayout);
 		layout->addWidget(jog);
 		
 		QWidget *central = new QWidget;
@@ -82,6 +86,7 @@ private:
 	JogController *jog;
 	PositionReadout *pos;
 	MotorController *controller;
+	Laser* laser;
 	
 	motor::params_t xparams {};
 	motor::params_t yparams {};

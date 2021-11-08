@@ -7,12 +7,9 @@
 
 int main(int argc, char* argv[]) {
 	QApplication a(argc, argv);
-	//sem_unlink("sem_ready");
-	//MainWindow main;
-	//main.show();
-
-	Laser laser;
-	laser.show();
+	sem_unlink("sem_ready");
+	MainWindow main;
+	main.show();
 
 	return a.exec();
 }
