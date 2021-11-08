@@ -53,6 +53,12 @@ const std::string ConfigureUtility::get_param_value(const std::string &line) {
 }
 
 void ConfigureUtility::get_axis_params(SPI::AXIS a, motor::params_t &p, int start_line) {
+	if(file_contents.size() < 2)
+	{
+		p.a = a;
+		return;
+	}
+	
 	int cur_line = start_line;
 	auto line = file_contents.begin() + start_line;
 	char axis_name;

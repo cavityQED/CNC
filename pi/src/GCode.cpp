@@ -12,7 +12,7 @@ void translate_gcode_to_params(const char* filename, std::vector<params_t> &para
 		std::getline(file, g_line);
 		g_line.push_back(' ');
 		std::cout << "Got line: " << g_line << '\n';
-		if(g_line[1] == '0') {
+		if(g_line[1] == '1' || g_line[1] == '2' || g_line[1] == '3') {
 			gcode_line_to_params(g_line, p);
 			params.push_back(p);			
 		}
@@ -23,7 +23,7 @@ void translate_gcode_to_params(const char* filename, std::vector<params_t> &para
 }//translate_gcode_to_params
 
 void gcode_line_to_params(std::string &g_line, params_t &params) {
-	params.type = (MOVE_TYPE)((int)(g_line[2])%48);
+	params.type = (MOVE_TYPE)((int)(g_line[1])%48);
 	
 	params.x_i = prev_x;
 	params.y_i = prev_y;
@@ -116,6 +116,7 @@ void get_program(std::vector<params_t> &params, std::vector<motor::move_t> &move
 void get_program(const char* filename, std::vector<motor::move_t> &moves) {
 	std::vector<params_t> p;
 	translate_gcode_to_params(filename, p);
+	std::cout << "GCode Params Size: " << p.size() << '\n';
 	get_program(p, moves);
 }
 

@@ -43,6 +43,7 @@ public:
 	
 	static void release_sem_interrupt() {
 		sem_post(sem);
+		std::cout << "Sem Released\n";
 	}
 	
 	void setup_axis(motor::params_t &params);

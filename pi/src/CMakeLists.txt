@@ -17,10 +17,11 @@ set(libdocs	MainWindow.h
 			Curve.cpp
 			Line.cpp
 			GCode.cpp
-			SPI.cpp)
+			SPI.cpp
+			Laser.cpp)
 
 add_library(cncLib ${libdocs})
-target_link_libraries(cncLib Qt5::Core Qt5::Widgets wiringPi pthread rt utilities)
+target_link_libraries(cncLib Qt5::Core Qt5::Widgets wiringPi pthread rt utilities pigpio)
 target_compile_options(cncLib PRIVATE "-Wno-psabi")
  
 add_executable(cnc testing_main.cpp)

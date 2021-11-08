@@ -205,7 +205,7 @@ void MotorController::start_program(std::vector<motor::move_t> &moves) {
 }
 
 void MotorController::start_program() {
-	if(in_motion)
+	if(in_motion || program_moves.empty())
 		return;
 		
 	cur_program_move = 0;

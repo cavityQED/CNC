@@ -4,6 +4,7 @@
 #include "JogController.h"
 #include "PositionReadout.h"
 #include "Curve.h"
+#include "Laser.h"
 #include "ConfigureAxes.h"
 #include "utilities/ConfigureUtility.h"
 
@@ -64,6 +65,7 @@ public:
 		
 		wiringPiISR(ESP_MOVED_SIGNAL, INT_EDGE_RISING, esp_moved_isr);
 		
+		
 	}
 	
 	~MainWindow() {std::cout << "MainWindow destroyed\n";}
@@ -81,8 +83,8 @@ private:
 	PositionReadout *pos;
 	MotorController *controller;
 	
-	motor::params_t xparams;
-	motor::params_t yparams;
+	motor::params_t xparams {};
+	motor::params_t yparams {};
 	
 	double cur_xpos;
 	double cur_ypos;
