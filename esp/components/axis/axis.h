@@ -24,9 +24,9 @@
 #include "step_calculator.h"
 
 //GPIO numbers motor driver connections
-#define STEP	(gpio_num_t) 12
-#define DIR		(gpio_num_t) 14
-#define EN		(gpio_num_t) 27
+#define STEP	(gpio_num_t) 15
+#define DIR		(gpio_num_t) 2
+#define EN		(gpio_num_t) 4
 #define SYNC	(gpio_num_t) 26
 
 //Timers
@@ -179,7 +179,7 @@ private:
 	SpiClient *spi;
 	
 	//Timer to send step signals to motor driver
-	Timer step_timer;
+	//Timer step_timer;
 };
 
 #endif	

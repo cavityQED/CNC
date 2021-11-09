@@ -4,7 +4,7 @@
 
 #include "freertos/queue.h"
 
-#define DEVICE_SELECT	(gpio_num_t) 21
+#define DEVICE_SELECT	(gpio_num_t) 25
 #define ZERO_INTERLOCK	(gpio_num_t) 33
 
 static xQueueHandle evt_queue;

@@ -14,7 +14,7 @@ std::vector<bool> axis::dirs_vec = {0};
 
 axis::axis() {
 	//setup_gpio();
-	//setup_timers();
+	setup_timers();
 	set_defaults();
 }
 		
@@ -280,8 +280,8 @@ void axis::move_jog_mode() {
 			return;
 	}
 	
-	step_timer.move_setup(jog_step_vec, jog_dirs_vec, jog_wait_time, &position_steps, &motor_in_motion);
-	step_timer.start_move();
+	//step_timer.move_setup(jog_step_vec, jog_dirs_vec, jog_wait_time, &position_steps, &motor_in_motion);
+	//step_timer.start_move();
 	/*
 	int wait_time;
 	if(jog_continuous) {
@@ -289,19 +289,21 @@ void axis::move_jog_mode() {
 		wait_time = pulse_period_us;
 	}
 	else
-		wait_time = jog_wait_time;
+	*/
+	
+	//wait_time = jog_wait_time;
 	
 	std::cout << "Jogging " << jog_steps << " steps\n";
 					
 	reset_timer_counters();
 	
-	timer_set_alarm_value(LINE_GROUP, STEP_TIMER, wait_time / PERIOD_uS);
-	timer_set_alarm_value(LINE_GROUP, STOP_TIMER, wait_time * jog_steps / PERIOD_uS);
+	timer_set_alarm_value(LINE_GROUP, STEP_TIMER, jog_wait_time / PERIOD_uS);
+	timer_set_alarm_value(LINE_GROUP, STOP_TIMER, jog_wait_time * jog_steps / PERIOD_uS);
 	
 	timer_start(LINE_GROUP, STEP_TIMER);
 	timer_start(LINE_GROUP, STOP_TIMER);
 	motor_in_motion = true;
-	*/
+	
 }
 
 void axis::move_line_mode() {
@@ -321,19 +323,21 @@ void axis::move_line_mode() {
 			return;
 	}
 	
+	/*
 	calculator::get_linear_steps_with_accel(line_step_vec, steps_to_move, pulse_period_us);
 	line_dirs_vec.clear();
 	line_dirs_vec.insert(line_dirs_vec.end(), line_step_vec.size(), &motor_direction);
 	
 	step_timer.move_setup(line_step_vec, line_dirs_vec, pulse_period_us, &position_steps, &motor_in_motion, true);
-	
+	*/
 	if(sync_mode) {
 		spi->toggle_ready();
 		xSemaphoreTake(syncSem, portMAX_DELAY);
 	}
 	
-	step_timer.start_move();
 	/*
+	step_timer.start_move();
+	*/
 	reset_timer_counters();
 			
 	timer_set_alarm_value(LINE_GROUP, STEP_TIMER, pulse_period_us / PERIOD_uS);
@@ -342,21 +346,21 @@ void axis::move_line_mode() {
 	timer_start(LINE_GROUP, STEP_TIMER);
 	timer_start(LINE_GROUP, STOP_TIMER);
 	motor_in_motion = true;
-	*/
+	
 }
 
 void axis::move_curv_mode() {
 	if(motor_in_motion)
 		return;
 		
-	step_timer.move_setup(step_vec, curv_dirs_vec, pulse_period_us, &position_steps, &motor_in_motion, true);
+	//step_timer.move_setup(step_vec, curv_dirs_vec, pulse_period_us, &position_steps, &motor_in_motion, true);
 	
 	if(sync_mode) {
 		spi->toggle_ready();
 		xSemaphoreTake(syncSem, portMAX_DELAY);
 	}
 	
-	step_timer.start_move();
+//	step_timer.start_move();
 }
 
 void axis::stop() {	
@@ -384,6 +388,33 @@ void axis::find_zero() {
 	timer_set_alarm_value(LINE_GROUP, STEP_TIMER, (jog_wait_time * 4) / PERIOD_uS);
 	timer_start(LINE_GROUP, STEP_TIMER);
 	motor_in_motion = true;
+}
+
+void axis::reset_timer_counters()
+{
+	timer_pause(LINE_GROUP, STEP_TIMER);
+	timer_pause(LINE_GROUP, STOP_TIMER);
+	
+	timer_set_counter_value(LINE_GROUP, STEP_TIMER, 0);
+	timer_set_counter_value(LINE_GROUP, STOP_TIMER, 0);
+	
+	timer_enable_intr(LINE_GROUP, STEP_TIMER);
+	timer_enable_intr(LINE_GROUP, STOP_TIMER);
+	
+	timer_set_alarm(LINE_GROUP, STEP_TIMER, TIMER_ALARM_EN);
+	timer_set_alarm(LINE_GROUP, STOP_TIMER, TIMER_ALARM_EN);	
+
+	timer_pause(CURV_GROUP, STEP_TIMER);
+	timer_pause(CURV_GROUP, STOP_TIMER);
+	
+	timer_set_counter_value(CURV_GROUP, STEP_TIMER, 0);
+	timer_set_counter_value(CURV_GROUP, STOP_TIMER, 0);
+	
+	timer_enable_intr(CURV_GROUP, STEP_TIMER);
+	timer_enable_intr(CURV_GROUP, STOP_TIMER);
+	
+	timer_set_alarm(CURV_GROUP, STEP_TIMER, TIMER_ALARM_EN);
+	timer_set_alarm(CURV_GROUP, STOP_TIMER, TIMER_ALARM_EN);
 }
 
 void axis::setup_curve(std::vector<int> &info) {	

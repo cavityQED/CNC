@@ -13,7 +13,7 @@
 #define MISO	(gpio_num_t) 19
 #define SCLK	(gpio_num_t) 18
 #define CS		(gpio_num_t) 5
-#define READY	(gpio_num_t) 22	//Signal host we're ready to receive message
+#define READY	(gpio_num_t) 13	//Signal host we're ready to receive message
 #define SIGNAL	(gpio_num_t) 32
 
 #define SPI_MODE				2
