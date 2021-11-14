@@ -16,6 +16,10 @@ class Laser : public QGroupBox
 {
 public:
 	Laser(QWidget* parent = nullptr);
+
+	void setPower(int pow, bool start = false);
+	void on();
+	void off();
 	
 public slots:
 	void increase_power()

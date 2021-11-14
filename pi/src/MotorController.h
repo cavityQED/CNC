@@ -8,6 +8,7 @@
 #include <semaphore.h>
 
 #include <wiringPi.h>
+#include <pigpio.h>
 
 #include <iostream>
 #include <cstring>
@@ -41,9 +42,12 @@ public:
 	void setup_gpio();
 	void test_lines();
 	
-	static void release_sem_interrupt() {
-		sem_post(sem);
-		std::cout << "Sem Released\n";
+	static void release_sem_interrupt(int gpio, int level, uint32_t tick) {
+		//std::cout << "Sem Release Level: " << level << '\n';
+		//if(level == 1) {
+			sem_post(sem);
+			std::cout << "Sem Released\n";
+		//}
 	}
 	
 	void setup_axis(motor::params_t &params);

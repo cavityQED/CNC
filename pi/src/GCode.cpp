@@ -23,6 +23,8 @@ void translate_gcode_to_params(const char* filename, std::vector<params_t> &para
 }//translate_gcode_to_params
 
 void gcode_line_to_params(std::string &g_line, params_t &params) {
+	//if(g_line[0] == 'L')
+
 	params.type = (MOVE_TYPE)((int)(g_line[1])%48);
 	
 	params.x_i = prev_x;

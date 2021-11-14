@@ -68,6 +68,18 @@ void MotorController::setup_spi() {
 }
 
 void MotorController::setup_gpio() {
+	gpioTerminate();
+	int err = gpioInitialise();
+	if(err < 0)
+		std::cout << "initialisation failed\n";
+	gpioSetMode(READY_PIN, PI_INPUT);
+	gpioSetPullUpDown(READY_PIN, PI_PUD_DOWN);
+	gpioSetISRFunc(READY_PIN, RISING_EDGE, 0, release_sem_interrupt);
+	
+	gpioSetMode(SYNC_PIN, PI_OUTPUT);
+	
+	
+	/*
 	wiringPiSetupGpio();
 	
 	pinMode(READY_PIN, INPUT);
@@ -77,6 +89,7 @@ void MotorController::setup_gpio() {
 	wiringPiISR(READY_PIN, INT_EDGE_RISING, release_sem_interrupt);
 	
 	pinMode(SYNC_PIN, OUTPUT);
+	* */
 }
 
 void MotorController::setup_axis(motor::params_t &params) {	
@@ -104,8 +117,13 @@ void MotorController::setup_axis(motor::params_t &params) {
 	
 	if(!p->pin_num) return;
 	
-	pinMode(params.pin_num, OUTPUT);
-	digitalWrite(params.pin_num, 0);
+	//pigpio
+	gpioSetMode(params.pin_num, PI_OUTPUT);
+	gpioWrite(params.pin_num, 0);
+	
+	//WiringPi
+//	pinMode(params.pin_num, OUTPUT);
+//	digitalWrite(params.pin_num, 0);
 	
 	sendbuf[0] = SPI::SET_X_AXIS;
 	sendbuf[1] = x_axis;
@@ -141,7 +159,11 @@ void MotorController::send(int device_pin) {
 	std::cout << "Sending Function: " << SPI::function_code_to_string((SPI::FUNCTION_CODE)sendbuf[0]) << '\n';
 	
 	//Trigger the interrupt on the correct device to signal a message is ready to be sent
-	digitalWrite(device_pin, 1);
+	if(gpioWrite(device_pin, 1))
+		std::cout << "Error Writing pin " << device_pin << '\n';
+	else
+		std::cout << "Wrote pin " << device_pin << " high\n";
+	//digitalWrite(device_pin, 1);
 	
 	//Wait for the device to be ready for the message
 	sem_wait(sem);
@@ -151,7 +173,8 @@ void MotorController::send(int device_pin) {
 	std::cout << "Function Sent\n";
 	
 	//Reset the trigger line for the device
-	digitalWrite(device_pin, 0);
+	gpioWrite(device_pin, 0);
+	//digitalWrite(device_pin, 0);
 }
 
 void MotorController::send_curve_data(curve::esp_params_t &data) {	
@@ -249,7 +272,8 @@ void MotorController::next_move() {
 }
 
 void MotorController::sync_move() {
-	digitalWrite(SYNC_PIN, 0);
+	gpioWrite(SYNC_PIN, 0);
+	//digitalWrite(SYNC_PIN, 0);
 	
 	sendbuf[0] = SPI::MOVE;
 	
@@ -257,12 +281,15 @@ void MotorController::sync_move() {
 		send(x_params.pin_num);
 		sem_wait(sem);
 	}
+	//delayMicroseconds(10);
 	if(y_connected) {
 		send(y_params.pin_num);
 		sem_wait(sem);
 	}
 	
-	digitalWrite(SYNC_PIN, 1);
+	gpioWrite(SYNC_PIN, 1);
+	std::cout << "Wrote sync pin high\n";
+	//digitalWrite(SYNC_PIN, 1);
 	startTimer(TIMER_PERIOD);
 	parent()->startTimer(2*TIMER_PERIOD);
 	in_program = true;

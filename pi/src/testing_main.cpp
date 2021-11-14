@@ -11,5 +11,7 @@ int main(int argc, char* argv[]) {
 	MainWindow main;
 	main.show();
 
+//	Laser laser;
+//	laser.show();
 	return a.exec();
 }

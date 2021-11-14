@@ -3,19 +3,16 @@
 /*	Initialize static variables	*/
 bool			axis::motor_direction	= false;
 bool			axis::motor_in_motion	= false;
-bool			axis::neg				= false;
-bool			axis::pos				= true;
 int				axis::position_steps	= 0;
-int				axis::step_num			= 0;
+int				axis::jog_steps			= 0;
 xQueueHandle	axis::syncSem			= xSemaphoreCreateBinary();
 
 std::vector<bool> axis::step_vec = {0};
 std::vector<bool> axis::dirs_vec = {0};
 
 axis::axis() {
-	//setup_gpio();
-	setup_timers();
 	set_defaults();
+	step_timer = std::make_shared<Timer>(&position_steps, &motor_in_motion);
 }
 		
 void axis::check_error(const char* msg) {
@@ -24,23 +21,7 @@ void axis::check_error(const char* msg) {
 	}
 }
 
-void axis::setup_gpio() {	
-	//Setup the pins to be used as GPIO outputs
-	gpio_pad_select_gpio(STEP);
-	error = gpio_set_direction(STEP, GPIO_MODE_OUTPUT);
-	check_error("step pin set direction");
-	
-	gpio_pad_select_gpio(DIR);
-	error = gpio_set_direction(DIR, GPIO_MODE_OUTPUT);
-	check_error("direction pin set direction");
-	
-	gpio_pad_select_gpio(EN);
-	error = gpio_set_direction(EN, GPIO_MODE_OUTPUT);
-	check_error("enable pin set direction");
-	
-	//Enable the motor to get holding torque on startup
-	gpio_set_level(EN, 0);
-	
+void axis::setup_gpio() {
 	//Setup the Sync Pin
 	gpio_config_t io_conf;
 	memset(&io_conf, 0, sizeof(io_conf));
@@ -52,93 +33,6 @@ void axis::setup_gpio() {
 	gpio_config(&io_conf);	
 	gpio_set_intr_type(SYNC, GPIO_INTR_POSEDGE);
 	gpio_isr_handler_add(SYNC, syncSem_release_isr, NULL);		
-}
-
-void axis::setup_timers() {
-	timer_config_t timer_config;
-	memset(&timer_config, 0, sizeof(timer_config));
-	timer_config.divider		= 80 * PERIOD_uS;
-	timer_config.counter_dir	= TIMER_COUNT_UP;
-	timer_config.counter_en		= TIMER_PAUSE;
-	timer_config.alarm_en		= TIMER_ALARM_EN;
-	timer_config.auto_reload	= TIMER_AUTORELOAD_EN;
-	timer_config.intr_type		= TIMER_INTR_MAX;
-	
-	//Setup Step timers with auto reload
-	timer_init(LINE_GROUP, STEP_TIMER, &timer_config);
-	timer_init(CURV_GROUP, STEP_TIMER, &timer_config);
-	
-	//Setup Stop timers without auto reload
-	timer_config.auto_reload = TIMER_AUTORELOAD_DIS;
-	timer_init(LINE_GROUP, STOP_TIMER, &timer_config);
-	timer_init(CURV_GROUP, STOP_TIMER, &timer_config);
-						
-	//Enable Interrupts on the Timers
-	timer_enable_intr(LINE_GROUP, STEP_TIMER);
-	timer_enable_intr(LINE_GROUP, STOP_TIMER);
-	timer_enable_intr(CURV_GROUP, STEP_TIMER);
-	timer_enable_intr(CURV_GROUP, STOP_TIMER);
-
-	//Add the Callbacks
-	timer_isr_register(LINE_GROUP, STEP_TIMER, line_step_isr, NULL, ESP_INTR_FLAG_IRAM, NULL);
-	timer_isr_register(LINE_GROUP, STOP_TIMER, line_stop_isr, NULL, ESP_INTR_FLAG_IRAM, NULL);	
-	timer_isr_register(CURV_GROUP, STEP_TIMER, curv_step_isr, NULL, ESP_INTR_FLAG_IRAM, NULL);
-	timer_isr_register(CURV_GROUP, STOP_TIMER, curv_stop_isr, NULL, ESP_INTR_FLAG_IRAM, NULL);
-}
-
-void axis::line_step_isr(void* arg) {
-	timer_spinlock_take(LINE_GROUP);
-
-	gpio_set_level(STEP, 1);
-	gpio_set_level(STEP, 0);
-
-	(motor_direction)? position_steps += 1 : position_steps -= 1;
-
-	timer_group_clr_intr_status_in_isr(LINE_GROUP, STEP_TIMER);
-	timer_group_enable_alarm_in_isr(LINE_GROUP, STEP_TIMER);
-	timer_spinlock_give(LINE_GROUP);
-}
-
-void axis::line_stop_isr(void* arg) {
-	timer_spinlock_take(LINE_GROUP);
-	
-	timer_group_set_counter_enable_in_isr(LINE_GROUP, STEP_TIMER, TIMER_PAUSE);
-	timer_group_set_counter_enable_in_isr(LINE_GROUP, STOP_TIMER, TIMER_PAUSE);
-	
-	motor_in_motion = false;
-	
-	timer_group_clr_intr_status_in_isr(LINE_GROUP, STOP_TIMER);
-	timer_group_enable_alarm_in_isr(LINE_GROUP, STOP_TIMER);
-	timer_spinlock_give(LINE_GROUP);
-}
-
-void axis::curv_step_isr(void* arg) {
-	timer_spinlock_take(CURV_GROUP);
-		
-	gpio_set_level(STEP, step_vec[step_num]);
-	gpio_set_level(STEP, 0);
-		
-	(motor_direction)? position_steps += (int)step_vec[step_num] : position_steps -= (int)step_vec[step_num];
-	
-	motor_direction = dirs_vec[++step_num];
-	gpio_set_level(DIR, motor_direction);
-	
-	timer_group_clr_intr_status_in_isr(CURV_GROUP, STEP_TIMER);	
-	timer_group_enable_alarm_in_isr(CURV_GROUP, STEP_TIMER);
-	timer_spinlock_give(CURV_GROUP);
-}
-
-void axis::curv_stop_isr(void* arg) {
-	timer_spinlock_take(CURV_GROUP);
-	
-	timer_group_set_counter_enable_in_isr(CURV_GROUP, STEP_TIMER, TIMER_PAUSE);
-	timer_group_set_counter_enable_in_isr(CURV_GROUP, STOP_TIMER, TIMER_PAUSE);
-	
-	motor_in_motion = false;
-	
-	timer_group_clr_intr_status_in_isr(CURV_GROUP, STOP_TIMER);
-	timer_group_enable_alarm_in_isr(CURV_GROUP, STOP_TIMER);
-	timer_spinlock_give(CURV_GROUP);
 }
 
 void axis::syncSem_release_isr(void* arg) {
@@ -175,25 +69,19 @@ void axis::set_direction(bool dir) {
 		return;
 		
 	motor_direction = dir;
-	gpio_set_level(DIR, dir);
+	std::cout << "Direction set to " << (int)motor_direction << '\n';
+	//gpio_set_level(DIR, dir);
 }
 
 void axis::set_steps_to_move(int steps) {		
-	std::cout << "Will move " << steps << " steps on next move\n";
 	steps_to_move = steps;
+	std::cout << "Will move " << steps_to_move << " steps on next move\n";
 }
 
 void axis::set_jog_steps(int steps) {
 	jog_steps = steps;
-	
-	jog_step_vec.clear();	
-	calculator::get_linear_steps_with_accel(jog_step_vec, steps, jog_wait_time);
-	
-	jog_dirs_vec.clear();
-	jog_dirs_vec.insert(jog_dirs_vec.end(), jog_step_vec.size(), &motor_direction);
 			
 	std::cout << "Jog Steps: " << jog_steps << '\n';
-	std::cout << "Jog Vec Size: " << jog_step_vec.size() << '\n';
 }
 
 void axis::enable_jog_mode(bool enable) {
@@ -258,7 +146,7 @@ void axis::move() {
 		}
 		return;
 	}
-		
+
 	if(jog_mode) 
 		move_jog_mode();
 	else if(line_mode) 
@@ -279,31 +167,9 @@ void axis::move_jog_mode() {
 		if(!motor_direction && jog_steps > position_steps)
 			return;
 	}
-	
-	//step_timer.move_setup(jog_step_vec, jog_dirs_vec, jog_wait_time, &position_steps, &motor_in_motion);
-	//step_timer.start_move();
-	/*
-	int wait_time;
-	if(jog_continuous) {
-		jog_steps = motor_direction? max_travel_steps - position_steps : position_steps;
-		wait_time = pulse_period_us;
-	}
-	else
-	*/
-	
-	//wait_time = jog_wait_time;
-	
-	std::cout << "Jogging " << jog_steps << " steps\n";
-					
-	reset_timer_counters();
-	
-	timer_set_alarm_value(LINE_GROUP, STEP_TIMER, jog_wait_time / PERIOD_uS);
-	timer_set_alarm_value(LINE_GROUP, STOP_TIMER, jog_wait_time * jog_steps / PERIOD_uS);
-	
-	timer_start(LINE_GROUP, STEP_TIMER);
-	timer_start(LINE_GROUP, STOP_TIMER);
-	motor_in_motion = true;
-	
+
+	step_timer->linear_move_config(	2000, jog_wait_time, 30000, jog_steps, motor_direction);
+	step_timer->start_linear();
 }
 
 void axis::move_line_mode() {
@@ -322,45 +188,39 @@ void axis::move_line_mode() {
 		if(!motor_direction && steps_to_move > position_steps)
 			return;
 	}
-	
-	/*
-	calculator::get_linear_steps_with_accel(line_step_vec, steps_to_move, pulse_period_us);
-	line_dirs_vec.clear();
-	line_dirs_vec.insert(line_dirs_vec.end(), line_step_vec.size(), &motor_direction);
-	
-	step_timer.move_setup(line_step_vec, line_dirs_vec, pulse_period_us, &position_steps, &motor_in_motion, true);
-	*/
+
+	step_timer->linear_move_config(2000, pulse_period_us, 30000, steps_to_move, motor_direction);
+
 	if(sync_mode) {
 		spi->toggle_ready();
 		xSemaphoreTake(syncSem, portMAX_DELAY);
 	}
 	
-	/*
-	step_timer.start_move();
-	*/
-	reset_timer_counters();
-			
-	timer_set_alarm_value(LINE_GROUP, STEP_TIMER, pulse_period_us / PERIOD_uS);
-	timer_set_alarm_value(LINE_GROUP, STOP_TIMER, pulse_period_us * steps_to_move / PERIOD_uS);
-		
-	timer_start(LINE_GROUP, STEP_TIMER);
-	timer_start(LINE_GROUP, STOP_TIMER);
-	motor_in_motion = true;
-	
+	step_timer->start_linear();
 }
 
 void axis::move_curv_mode() {
 	if(motor_in_motion)
 		return;
 		
-	//step_timer.move_setup(step_vec, curv_dirs_vec, pulse_period_us, &position_steps, &motor_in_motion, true);
-	
+	std::cout << "Moving Curve Mode\n";
+	std::cout << "Curve Steps:\t" << step_vec.size() << '\n';
+
+	step_timer->vector_move_config(2000, pulse_period_us, 30000, 
+		std::make_shared<std::vector<bool>>(step_vec), std::make_shared<std::vector<bool>>(dirs_vec));
+
 	if(sync_mode) {
+		std::cout << "Toggling Ready\n";
+		//gpio_set_level(spi->ready_pin(), 1);
 		spi->toggle_ready();
+
+		//gpio_set_level(spi->ready_pin(), 0);
 		xSemaphoreTake(syncSem, portMAX_DELAY);
 	}
-	
-//	step_timer.start_move();
+	else
+		std::cout << "Curve move no sync\n";
+
+	step_timer->start_vector();
 }
 
 void axis::stop() {	
@@ -390,35 +250,10 @@ void axis::find_zero() {
 	motor_in_motion = true;
 }
 
-void axis::reset_timer_counters()
-{
-	timer_pause(LINE_GROUP, STEP_TIMER);
-	timer_pause(LINE_GROUP, STOP_TIMER);
-	
-	timer_set_counter_value(LINE_GROUP, STEP_TIMER, 0);
-	timer_set_counter_value(LINE_GROUP, STOP_TIMER, 0);
-	
-	timer_enable_intr(LINE_GROUP, STEP_TIMER);
-	timer_enable_intr(LINE_GROUP, STOP_TIMER);
-	
-	timer_set_alarm(LINE_GROUP, STEP_TIMER, TIMER_ALARM_EN);
-	timer_set_alarm(LINE_GROUP, STOP_TIMER, TIMER_ALARM_EN);	
-
-	timer_pause(CURV_GROUP, STEP_TIMER);
-	timer_pause(CURV_GROUP, STOP_TIMER);
-	
-	timer_set_counter_value(CURV_GROUP, STEP_TIMER, 0);
-	timer_set_counter_value(CURV_GROUP, STOP_TIMER, 0);
-	
-	timer_enable_intr(CURV_GROUP, STEP_TIMER);
-	timer_enable_intr(CURV_GROUP, STOP_TIMER);
-	
-	timer_set_alarm(CURV_GROUP, STEP_TIMER, TIMER_ALARM_EN);
-	timer_set_alarm(CURV_GROUP, STOP_TIMER, TIMER_ALARM_EN);
-}
-
 void axis::setup_curve(std::vector<int> &info) {	
 	set_feed_rate(info[7]);
+
+	int positive_steps = 0;
 
 	int r 		= info[2];	
 	int x2		= info[3];
@@ -502,11 +337,13 @@ void axis::setup_curve(std::vector<int> &info) {
 			
 		if(x_axis) {
 			step_vec.push_back(xo);
-			dirs_vec.push_back((xo == 0)? dirs_vec[dirs_vec.size() - 1] : (bool)(xo+1));
+			dirs_vec.push_back((xo == 0)? dirs_vec[step_vec.size() - 1] : (bool)(xo+1));
+			positive_steps += xo;
 		}
 		else {
 			step_vec.push_back(yo);
-			dirs_vec.push_back((yo == 0)? dirs_vec[dirs_vec.size() - 1] : (bool)(yo+1));
+			dirs_vec.push_back((yo == 0)? dirs_vec[step_vec.size() - 1] : (bool)(yo+1));
+			positive_steps += yo;
 		}
 				
 		x2 += xo;
@@ -518,6 +355,7 @@ void axis::setup_curve(std::vector<int> &info) {
 		if(x_axis){
 			step_vec.push_back(1);
 			dirs_vec.push_back(std::signbit(x2-x3));
+			positive_steps += 1;
 		}
 		else {
 			step_vec.push_back(0);
@@ -528,6 +366,7 @@ void axis::setup_curve(std::vector<int> &info) {
 		if(!x_axis){
 			step_vec.push_back(1);
 			dirs_vec.push_back(std::signbit(y2-y3));
+			positive_steps += 1;
 		}
 		else {
 			step_vec.push_back(0);
@@ -536,13 +375,14 @@ void axis::setup_curve(std::vector<int> &info) {
 	}
 	
 	std::cout << "Curve Steps: " << step_vec.size() << '\n';
+	std::cout << "Positive Steps: " << positive_steps << '\n';
 	
-	curv_dirs_vec.clear();
-	curv_dirs_vec.resize(step_vec.size());
-	for(int i = 0; i < dirs_vec.size(); i++)
-		dirs_vec[i]? curv_dirs_vec[i] = &pos : curv_dirs_vec[i] = &neg;
-		
-	spi->toggle_ready();
+	//Add one more step so the timer isr doesn't try to read past the last element
+	dirs_vec.push_back(*dirs_vec.end());
+
+	//spi->toggle_ready();
+	gpio_set_level(spi->ready_pin(), 1);
+	gpio_set_level(spi->ready_pin(), 0);
 }
 
 void axis::test_function(std::vector<int> args) {

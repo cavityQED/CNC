@@ -79,11 +79,14 @@ public:
 	}
 	
 	void toggle_ready() {
+		gpio_set_level(READY, 0);
 		gpio_set_level(READY, 1);
 		gpio_set_level(READY, 0);
 	}
 	
 	void printFunction(AXIS_FUNCTION_CODE code);
+
+	gpio_num_t ready_pin() {return READY;}
 		
 private:
 	spi_slave_interface_config_t	slave_config;

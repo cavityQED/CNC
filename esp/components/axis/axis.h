@@ -21,12 +21,7 @@
 
 #include "spi_client.h"
 #include "move_timer.h"
-#include "step_calculator.h"
 
-//GPIO numbers motor driver connections
-#define STEP	(gpio_num_t) 15
-#define DIR		(gpio_num_t) 2
-#define EN		(gpio_num_t) 4
 #define SYNC	(gpio_num_t) 26
 
 //Timers
@@ -49,15 +44,11 @@ public:
 	/*	Destructor	*/
 	~axis() {}
 	
-	/*	Check error function; prints the input and then the error	*/
-	void check_error(const char* msg);
-	
-	/*	Functions called by the constructor to setup the 
-	 * 		various timers, spi, etc	
-	 */
-	void setup_timers();
 	void setup_gpio();
 	void set_defaults();	
+	
+	/*	Check error function; prints the input and then the error	*/
+	void check_error(const char* msg);
 	
 	/*	Set the SPI Pointer	*/
 	void set_spi(SpiClient *s) {spi = s;}
@@ -110,13 +101,7 @@ public:
 	void enable_sync_mode(bool enable);
 	void enable_continuous_jog(bool enable);
 	void enable_travel_limits(bool enable);
-	
-	/* 	Timer Callbacks	*/
-	static void IRAM_ATTR line_step_isr(void* arg);
-	static void IRAM_ATTR line_stop_isr(void* arg);
-	static void IRAM_ATTR curv_step_isr(void* arg);
-	static void IRAM_ATTR curv_stop_isr(void* arg);
-	
+		
 	/* Sync Semaphore Release Interrupt	*/
 	static void IRAM_ATTR syncSem_release_isr(void* arg);
 	
@@ -136,24 +121,11 @@ private:
 		
 	static std::vector<bool> step_vec;		//Holds true for step, false for no step during a curve move
 	static std::vector<bool> dirs_vec;		//Direction of each step during a curve move
-	static int step_num;					//Step number for accessing curve vectors
 	static const int zero_steps = 200;		//Number of steps to move once zero position is found
-	
-	static bool neg;
-	static bool pos;
 		
-	std::vector<bool>	jog_step_vec;
-	std::vector<bool*>	jog_dirs_vec;
-	
-	std::vector<bool>	line_step_vec;
-	std::vector<bool*>	line_dirs_vec;
-	
-	std::vector<bool>	curv_step_vec;
-	std::vector<bool*>	curv_dirs_vec;
-	
 	//Jog Mode Variables
-	int jog_steps = 0;						//Number of steps to move in one jog step
-	static const int jog_wait_time = 200;	//Time between steps in microseconds during jog
+	static int jog_steps;						//Number of steps to move in one jog step
+	static const int jog_wait_time = 100;	//Time between steps in microseconds during jog
 	
 	//Position and Direction Variables
 	bool zeroing = false;					//True if motor is trying to find machine zero
@@ -179,7 +151,7 @@ private:
 	SpiClient *spi;
 	
 	//Timer to send step signals to motor driver
-	//Timer step_timer;
+	std::shared_ptr<Timer> step_timer;
 };
 
 #endif	

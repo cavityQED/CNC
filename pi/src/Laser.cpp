@@ -2,7 +2,7 @@
 
 Laser::Laser(QWidget* parent) : QGroupBox(parent)
 {
-	gpioInitialise();
+	//gpioInitialise();
 	
 	gpioSetPWMfrequency(LASER_PIN, 5000);
 	
@@ -25,4 +25,21 @@ Laser::Laser(QWidget* parent) : QGroupBox(parent)
 	connect(decrease_button, &QPushButton::released, this, &Laser::decrease_power);
 }
 
+void Laser::setPower(int pow, bool start)
+{
+	m_power = pow;
+	power_edit->setText(QString::number(m_power, 'f', 1));
 
+	if(start)
+		on();
+}
+
+void Laser::on()
+{
+	gpioPWM(LASER_PIN, m_power*255/100);
+}
+
+void Laser::off()
+{
+	gpioPWM(LASER_PIN, 0);
+}

@@ -67,7 +67,7 @@ public:
 		
 		setStyleSheet("QWidget{background-color: #DDEFF2;}");	
 		
-		wiringPiISR(ESP_MOVED_SIGNAL, INT_EDGE_RISING, esp_moved_isr);
+		//wiringPiISR(ESP_MOVED_SIGNAL, INT_EDGE_RISING, esp_moved_isr);
 		
 		
 	}
