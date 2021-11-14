@@ -189,7 +189,11 @@ void axis::move_line_mode() {
 			return;
 	}
 
-	step_timer->linear_move_config(2000, pulse_period_us, 30000, steps_to_move, motor_direction);
+	step_timer->linear_move_config(	5000,
+									pulse_period_us,
+									40000,
+									steps_to_move,
+									motor_direction);
 
 	if(sync_mode) {
 		spi->toggle_ready();
@@ -206,19 +210,19 @@ void axis::move_curv_mode() {
 	std::cout << "Moving Curve Mode\n";
 	std::cout << "Curve Steps:\t" << step_vec.size() << '\n';
 
-	step_timer->vector_move_config(2000, pulse_period_us, 30000, 
-		std::make_shared<std::vector<bool>>(step_vec), std::make_shared<std::vector<bool>>(dirs_vec));
+	step_timer->vector_move_config(	5000,
+									pulse_period_us,
+									40000,
+									std::make_shared<std::vector<bool>>(step_vec),
+									std::make_shared<std::vector<bool>>(dirs_vec));
 
 	if(sync_mode) {
-		std::cout << "Toggling Ready\n";
 		//gpio_set_level(spi->ready_pin(), 1);
 		spi->toggle_ready();
 
 		//gpio_set_level(spi->ready_pin(), 0);
 		xSemaphoreTake(syncSem, portMAX_DELAY);
 	}
-	else
-		std::cout << "Curve move no sync\n";
 
 	step_timer->start_vector();
 }
@@ -252,8 +256,6 @@ void axis::find_zero() {
 
 void axis::setup_curve(std::vector<int> &info) {	
 	set_feed_rate(info[7]);
-
-	int positive_steps = 0;
 
 	int r 		= info[2];	
 	int x2		= info[3];
@@ -338,12 +340,10 @@ void axis::setup_curve(std::vector<int> &info) {
 		if(x_axis) {
 			step_vec.push_back(xo);
 			dirs_vec.push_back((xo == 0)? dirs_vec[step_vec.size() - 1] : (bool)(xo+1));
-			positive_steps += xo;
 		}
 		else {
 			step_vec.push_back(yo);
 			dirs_vec.push_back((yo == 0)? dirs_vec[step_vec.size() - 1] : (bool)(yo+1));
-			positive_steps += yo;
 		}
 				
 		x2 += xo;
@@ -355,7 +355,6 @@ void axis::setup_curve(std::vector<int> &info) {
 		if(x_axis){
 			step_vec.push_back(1);
 			dirs_vec.push_back(std::signbit(x2-x3));
-			positive_steps += 1;
 		}
 		else {
 			step_vec.push_back(0);
@@ -366,7 +365,6 @@ void axis::setup_curve(std::vector<int> &info) {
 		if(!x_axis){
 			step_vec.push_back(1);
 			dirs_vec.push_back(std::signbit(y2-y3));
-			positive_steps += 1;
 		}
 		else {
 			step_vec.push_back(0);
@@ -375,7 +373,6 @@ void axis::setup_curve(std::vector<int> &info) {
 	}
 	
 	std::cout << "Curve Steps: " << step_vec.size() << '\n';
-	std::cout << "Positive Steps: " << positive_steps << '\n';
 	
 	//Add one more step so the timer isr doesn't try to read past the last element
 	dirs_vec.push_back(*dirs_vec.end());

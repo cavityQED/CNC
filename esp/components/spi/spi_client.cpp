@@ -54,7 +54,6 @@ void SpiClient::get_message(std::vector<int> &msg) {
 	spi_transaction.tx_buffer	= &sendbuf[0];
 	spi_transaction.rx_buffer	= &msg[0];
 	
-	std::cout << "SPI SLAVE Transmit.....\n";
 	//Wait for the message
 	esp_err_t err = spi_slave_transmit(SPI3_HOST, &spi_transaction, portMAX_DELAY);
 	
