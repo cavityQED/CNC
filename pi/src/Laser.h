@@ -17,7 +17,6 @@ class Laser : public QGroupBox
 public:
 	Laser(QWidget* parent = nullptr);
 
-	void setPower(int pow, bool start = false);
 	void on();
 	void off();
 	
@@ -41,6 +40,8 @@ public slots:
 		gpioPWM(LASER_PIN, m_power*255/100);
 		power_edit->setText(QString::number(m_power, 'f', 1));
 	}
+	
+	void setPower(int pow, bool start = false);
 	
 protected:
 	QPushButton*	increase_button;

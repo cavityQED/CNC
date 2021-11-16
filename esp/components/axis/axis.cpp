@@ -168,7 +168,11 @@ void axis::move_jog_mode() {
 			return;
 	}
 
-	step_timer->linear_move_config(	2000, jog_wait_time, 30000, jog_steps, motor_direction);
+	step_timer->linear_move_config(	5000, 
+									jog_wait_time,
+									40000,
+									jog_steps,
+									motor_direction);
 	step_timer->start_linear();
 }
 
@@ -206,10 +210,13 @@ void axis::move_line_mode() {
 void axis::move_curv_mode() {
 	if(motor_in_motion)
 		return;
-		
-	std::cout << "Moving Curve Mode\n";
-	std::cout << "Curve Steps:\t" << step_vec.size() << '\n';
-
+	
+	if(sync_mode && steps_to_move == 0) {
+		spi->toggle_ready();
+		xSemaphoreTake(syncSem, portMAX_DELAY);
+		return;
+	}	
+	
 	step_timer->vector_move_config(	5000,
 									pulse_period_us,
 									40000,
@@ -217,10 +224,7 @@ void axis::move_curv_mode() {
 									std::make_shared<std::vector<bool>>(dirs_vec));
 
 	if(sync_mode) {
-		//gpio_set_level(spi->ready_pin(), 1);
 		spi->toggle_ready();
-
-		//gpio_set_level(spi->ready_pin(), 0);
 		xSemaphoreTake(syncSem, portMAX_DELAY);
 	}
 
@@ -232,26 +236,12 @@ void axis::stop() {
 }
 
 void axis::stop_zero_interlock() {
-	stop();
-	
-	position_steps = -zero_steps;
-		
-	timer_set_alarm_value(LINE_GROUP, STEP_TIMER, jog_wait_time / PERIOD_uS);
-	timer_set_alarm_value(LINE_GROUP, STOP_TIMER, jog_wait_time * zero_steps / PERIOD_uS);
-	
-	set_direction(1);
-	
-	timer_start(LINE_GROUP, STEP_TIMER);
-	timer_start(LINE_GROUP, STOP_TIMER);
-	motor_in_motion = true;
+
 }
 
 void axis::find_zero() {
 	set_direction(0);
-		
-	timer_set_alarm_value(LINE_GROUP, STEP_TIMER, (jog_wait_time * 4) / PERIOD_uS);
-	timer_start(LINE_GROUP, STEP_TIMER);
-	motor_in_motion = true;
+
 }
 
 void axis::setup_curve(std::vector<int> &info) {	

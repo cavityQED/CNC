@@ -16,6 +16,11 @@ void translate_gcode_to_params(const char* filename, std::vector<params_t> &para
 			gcode_line_to_params(g_line, p);
 			params.push_back(p);			
 		}
+		else if(g_line[0] == 'L')
+		{
+			gcode_line_to_params(g_line, p);
+			params.push_back(p);
+		}
 	}
 	
 	prev_x = 0;
@@ -23,17 +28,24 @@ void translate_gcode_to_params(const char* filename, std::vector<params_t> &para
 }//translate_gcode_to_params
 
 void gcode_line_to_params(std::string &g_line, params_t &params) {
-	//if(g_line[0] == 'L')
+	std::string::iterator it = g_line.begin();
+	
+	if(g_line[0] == 'L') {
+		params.type = LASER_SET_POWER;
+		params.laser_power = get_double(++it);
+		return;
+	}
 
-	params.type = (MOVE_TYPE)((int)(g_line[1])%48);
+	else
+	{
+		params.type = (MOVE_TYPE)((int)(g_line[1])%48);
+		it++;
+	}
 	
 	params.x_i = prev_x;
 	params.y_i = prev_y;
 	params.i = 0;
 	params.j = 0;
-	
-	std::string::iterator it = g_line.begin();
-	it++;
 	
 	std::cout << "Translating line: " << &g_line[0] << '\n';
 	
@@ -79,6 +91,7 @@ void get_program(std::vector<params_t> &params, std::vector<motor::move_t> &move
 			line_params.speed = p.feed_rate;
 			line::get_line(line_params, line_op);
 			move.line_op = 1;
+			move.laser_op = false;
 			move.l = line_op;
 			moves.push_back(move);
 		}
@@ -94,6 +107,7 @@ void get_program(std::vector<params_t> &params, std::vector<motor::move_t> &move
 			curve_op.dir = 1;
 			curve::get_curve(curve_op, curve_esp_op);
 			move.line_op = 0;
+			move.laser_op = false;
 			move.c = curve_esp_op;
 			moves.push_back(move);
 		}
@@ -109,7 +123,18 @@ void get_program(std::vector<params_t> &params, std::vector<motor::move_t> &move
 			curve_op.dir = 0;
 			curve::get_curve(curve_op, curve_esp_op);
 			move.line_op = 0;
+			move.laser_op = false;
 			move.c = curve_esp_op;
+			moves.push_back(move);
+		}
+
+		else if(p.type == LASER_SET_POWER)
+		{
+			laser::op laser_op;
+			laser_op.power = p.laser_power;
+			move.line_op = false;
+			move.laser_op = true;
+			move.l_op = laser_op;
 			moves.push_back(move);
 		}
 	}

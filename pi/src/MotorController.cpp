@@ -77,19 +77,6 @@ void MotorController::setup_gpio() {
 	gpioSetISRFunc(READY_PIN, RISING_EDGE, 0, release_sem_interrupt);
 	
 	gpioSetMode(SYNC_PIN, PI_OUTPUT);
-	
-	
-	/*
-	wiringPiSetupGpio();
-	
-	pinMode(READY_PIN, INPUT);
-	pullUpDnControl(READY_PIN, PUD_DOWN);
-	
-	//Attach the ready signal to the semaphore release interrupt
-	wiringPiISR(READY_PIN, INT_EDGE_RISING, release_sem_interrupt);
-	
-	pinMode(SYNC_PIN, OUTPUT);
-	* */
 }
 
 void MotorController::setup_axis(motor::params_t &params) {	
@@ -120,11 +107,7 @@ void MotorController::setup_axis(motor::params_t &params) {
 	//pigpio
 	gpioSetMode(params.pin_num, PI_OUTPUT);
 	gpioWrite(params.pin_num, 0);
-	
-	//WiringPi
-//	pinMode(params.pin_num, OUTPUT);
-//	digitalWrite(params.pin_num, 0);
-	
+		
 	sendbuf[0] = SPI::SET_X_AXIS;
 	sendbuf[1] = x_axis;
 	send(params.pin_num);
@@ -163,7 +146,6 @@ void MotorController::send(int device_pin) {
 		std::cout << "Error Writing pin " << device_pin << '\n';
 	else
 		std::cout << "Wrote pin " << device_pin << " high\n";
-	//digitalWrite(device_pin, 1);
 	
 	//Wait for the device to be ready for the message
 	sem_wait(sem);
@@ -174,7 +156,6 @@ void MotorController::send(int device_pin) {
 	
 	//Reset the trigger line for the device
 	gpioWrite(device_pin, 0);
-	//digitalWrite(device_pin, 0);
 }
 
 void MotorController::send_curve_data(curve::esp_params_t &data) {	
@@ -233,16 +214,22 @@ void MotorController::start_program() {
 		
 	cur_program_move = 0;
 	enable_sync_mode(true);
+
+	if(program_moves[0].laser_op)
+	{
+		emit setLaserPower(program_moves[0].l_op.power);
+		cur_program_move++;
+	}
 	
-	if(program_moves[0].line_op) {
+	if(program_moves[cur_program_move].line_op) {
 		enable_line_mode(true);
-		send_line_data(program_moves[0].l);
+		send_line_data(program_moves[cur_program_move].l);
 		sync_move();
 	}
 	
-	else if(!program_moves[0].line_op) {
+	else if(!program_moves[cur_program_move].line_op) {
 		enable_curv_mode(true);
-		send_curve_data(program_moves[0].c);
+		send_curve_data(program_moves[cur_program_move].c);
 		sync_move();
 	}
 }
@@ -257,7 +244,15 @@ void MotorController::next_move() {
 	}
 	else {
 		std::cout << "Move " << cur_program_move << ":\n";
-		if(program_moves[cur_program_move].line_op) {
+		if(program_moves[cur_program_move].laser_op)
+		{
+			emit setLaserPower(program_moves[cur_program_move].l_op.power);
+			startTimer(TIMER_PERIOD);
+			in_program = true;
+			in_motion = true;
+		}
+
+		else if(program_moves[cur_program_move].line_op) {
 			enable_line_mode(true);
 			send_line_data(program_moves[cur_program_move].l);
 			sync_move();
@@ -273,7 +268,6 @@ void MotorController::next_move() {
 
 void MotorController::sync_move() {
 	gpioWrite(SYNC_PIN, 0);
-	//digitalWrite(SYNC_PIN, 0);
 	
 	sendbuf[0] = SPI::MOVE;
 	
@@ -289,7 +283,6 @@ void MotorController::sync_move() {
 	
 	gpioWrite(SYNC_PIN, 1);
 	std::cout << "Wrote sync pin high\n";
-	//digitalWrite(SYNC_PIN, 1);
 	startTimer(TIMER_PERIOD);
 	parent()->startTimer(2*TIMER_PERIOD);
 	in_program = true;

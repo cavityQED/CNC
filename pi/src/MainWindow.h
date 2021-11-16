@@ -29,6 +29,7 @@ public:
 		controller = new MotorController(this);
 		
 		connect(controller, &MotorController::positionChanged, pos, &PositionReadout::setPosition);
+		connect(controller, &MotorController::setLaserPower, laser, &Laser::setPower);
 		connect(jog, &JogController::jog_event, controller, &MotorController::jog_event_handler);
 		
 		ConfigureUtility configure;

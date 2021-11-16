@@ -58,10 +58,10 @@ public:
 	 * 		different from parameters such as speed, steps_to_move,
 	 * 		etc. that change from operation to operation	
 	 */
-	void set_steps_per_mm(int spmm) {steps_per_mm = spmm;}
-	void set_max_travel_steps(int max_steps) {max_travel_steps = max_steps;}
-	void set_backlash(int b) {backlash = b;}
-	void set_x_axis(bool x) {x_axis = x;}
+	void set_steps_per_mm		(int spmm)			{steps_per_mm = spmm;}
+	void set_max_travel_steps	(int max_steps) 	{max_travel_steps = max_steps;}
+	void set_backlash			(int b)				{backlash = b;}
+	void set_x_axis				(bool x)			{x_axis = x;}
 	
 	/*	Setters for operation specific parameters
 	 * 		like speed, steps_to_move, etc	
@@ -87,7 +87,6 @@ public:
 	void stop_zero_interlock();
 	void find_zero();
 	
-	void reset_timer_counters();
 	void setup_curve(std::vector<int> &info);
 	
 	/*	Getters	*/
@@ -124,7 +123,7 @@ private:
 	static const int zero_steps = 200;		//Number of steps to move once zero position is found
 		
 	//Jog Mode Variables
-	static int jog_steps;						//Number of steps to move in one jog step
+	static int jog_steps;					//Number of steps to move in one jog step
 	static const int jog_wait_time = 100;	//Time between steps in microseconds during jog
 	
 	//Position and Direction Variables

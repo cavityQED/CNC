@@ -18,7 +18,9 @@ set(libdocs	MainWindow.h
 			Line.cpp
 			GCode.cpp
 			SPI.cpp
-			Laser.cpp)
+			Laser.cpp
+			Program.cpp
+			Action.cpp)
 
 add_library(cncLib ${libdocs})
 target_link_libraries(cncLib Qt5::Core Qt5::Widgets wiringPi pthread rt utilities pigpio)

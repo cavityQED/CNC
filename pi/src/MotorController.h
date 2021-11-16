@@ -138,6 +138,7 @@ public slots:
 	
 signals:
 	void positionChanged(double x, double y, double z = 0);
+	void setLaserPower(int pow, bool start = true);
 	
 private:
 	//SPI

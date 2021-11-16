@@ -99,6 +99,13 @@ namespace line {
 
 }//line namespace
 
+namespace laser
+{
+	typedef struct {
+		int power;
+	}op;
+}
+
 namespace motor {
 	
 	typedef struct {
@@ -111,11 +118,14 @@ namespace motor {
 	}params_t;
 
 	typedef struct {
+		bool laser_op;
 		bool line_op;	//True for line operation, false for curve operation
 	
 		line::ops_t l;	//Line operation
 	
 		curve::esp_params_t c;	//Curve operation
+
+		laser::op l_op;
 	}move_t;
 	
 }//motor namespace
@@ -126,7 +136,8 @@ namespace gcode {
 		RAPID_POSITION,
 		LINEAR_INTERPOLATION,
 		CIRCULAR_INTERPOLATION_CW,
-		CIRCULAR_INTERPOLATION_CCW
+		CIRCULAR_INTERPOLATION_CCW,
+		LASER_SET_POWER
 	};
 
 	typedef struct {
@@ -139,6 +150,8 @@ namespace gcode {
 		double i;
 		double j;
 		double feed_rate;
+
+		int laser_power;
 	}params_t;
 
 }//gcode namespace
