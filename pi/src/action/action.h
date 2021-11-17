@@ -1,6 +1,8 @@
 #ifndef ACTION_H
 #define ACTION_H
 
+#include <memory>
+
 #include <QWidget>
 
 namespace CNC
@@ -27,15 +29,16 @@ class Action : public QWidget
 
 public:
 	
-	Action(QWidget* parent = nullptr);
+	Action(std::shared_ptr<CNC::codeBlock> block, QWidget* parent = nullptr);
 	~Action() {}
 
 public slots:
 
-	void execute() {}
+	virtual void execute() = 0;
 
 protected:
 
+	std::shared_ptr<CNC::codeBlock>		m_block;
 };
 
 }//CNC namespace

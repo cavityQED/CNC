@@ -31,6 +31,7 @@ public slots:
 	void stop();
 
 	void loadBlocks();	//Read text stored at m_filename and translate to codeBlocks
+	void loadActions() {}	//Convert list of code blocks into list of program actions
 
 public:
 

@@ -84,7 +84,7 @@ void Program::loadBlocks()
 				//Set the number code
 				tmpBlock.numberCode = get_double(++line_it);
 
-				//Populate codeBlock variables until another supported code letter is reached or the end of the line
+				//Populate codeBlock variables until another supported code letter or the end of the line is reached
 				while(!(is_supported_letter_code(*line_it)) && line_it != line.end())
 				{
 					switch(*line_it)
@@ -114,8 +114,7 @@ void Program::loadBlocks()
 			else
 				line_it++;
 		}
-	}	
-
+	}		
 	//Close the file
 	m_codeFile.close();	
 }//loadBlocks

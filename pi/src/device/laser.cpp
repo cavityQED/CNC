@@ -1,4 +1,4 @@
-#include "Laser.h"
+#include "laser.h"
 
 Laser::Laser(QWidget* parent) : QGroupBox(parent)
 {
