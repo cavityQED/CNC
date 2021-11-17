@@ -3,7 +3,7 @@
 namespace CNC
 {
 
-Action::Action(std::shared_ptr<CNC::codeBlock> block, QWidget* parent) : QWidget(parent), m_block(block)
+Action::Action(CNC::codeBlock block, QWidget* parent) : QWidget(parent), m_block(std::move(block))
 {
 	
 }

@@ -1,7 +1,7 @@
 #ifndef ACTION_H
 #define ACTION_H
 
-#include <memory>
+#include <pigpio.h>
 
 #include <QWidget>
 
@@ -29,7 +29,7 @@ class Action : public QWidget
 
 public:
 	
-	Action(std::shared_ptr<CNC::codeBlock> block, QWidget* parent = nullptr);
+	Action(CNC::codeBlock block, QWidget* parent = nullptr);
 	~Action() {}
 
 public slots:
@@ -38,7 +38,7 @@ public slots:
 
 protected:
 
-	std::shared_ptr<CNC::codeBlock>		m_block;
+	CNC::codeBlock		m_block;
 };
 
 }//CNC namespace

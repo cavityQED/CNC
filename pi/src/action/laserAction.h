@@ -13,10 +13,10 @@ class LaserAction : public Action
 
 public:
 
-	LaserAction(std::shared_ptr<CNC::codeBlock> block, QWidget* parent = nullptr);
+	LaserAction(	Laser* laser,
+					CNC::codeBlock block,
+					QWidget* parent = nullptr);
 	~LaserAction() {}
-
-	void setLaser(std::shared_ptr<Laser> l)		{m_laser = l;}
 
 public slots:
 	
@@ -24,7 +24,7 @@ public slots:
 
 protected:
 
-	std::shared_ptr<Laser>	m_laser = nullptr;
+	Laser*	m_laser = nullptr;
 };
 
 }//CNC namespace

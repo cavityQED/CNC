@@ -3,7 +3,7 @@
 namespace CNC
 {
 
-StepperAction::StepperAction(std::shared_ptr<CNC::codeBlock> block, QWidget* parent) : Action(block, parent)
+StepperAction::StepperAction(CNC::codeBlock block, QWidget* parent) : Action(block, parent)
 {
 
 }

@@ -3,7 +3,10 @@
 namespace CNC
 {
 
-LaserAction::LaserAction(std::shared_ptr<CNC::codeBlock> block, QWidget* parent) : Action(block, parent)
+LaserAction::LaserAction(	Laser* laser,
+							CNC::codeBlock block,
+							QWidget* parent)
+	: Action(block, parent), m_laser(laser)
 {
 
 }

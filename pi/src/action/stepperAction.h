@@ -12,7 +12,7 @@ class StepperAction : public Action
 
 public:
 
-	StepperAction(std::shared_ptr<CNC::codeBlock> block, QWidget* parent = nullptr);
+	StepperAction(CNC::codeBlock block, QWidget* parent = nullptr);
 	~StepperAction() {}
 
 public slots:
