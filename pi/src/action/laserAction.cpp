@@ -16,7 +16,7 @@ void LaserAction::execute()
 	if(m_laser == nullptr)
 		return;
 
-	switch(m_block->numberCode)
+	switch(m_block.numberCode)
 	{
 		case 0:
 			//Laser Off
@@ -28,7 +28,7 @@ void LaserAction::execute()
 			break;
 		case 2:
 			//Laser On with power P
-			m_laser->setPower(m_block->p, true);
+			m_laser->setPower(m_block.p, true);
 			break;
 		default:
 			break;

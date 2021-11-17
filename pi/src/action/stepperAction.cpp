@@ -11,7 +11,7 @@ StepperAction::StepperAction(CNC::codeBlock block, QWidget* parent) : Action(blo
 
 void StepperAction::execute()
 {
-	switch(m_block->numberCode)
+	switch(m_block.numberCode)
 	{
 		case 0:
 			//Rapid positioning
