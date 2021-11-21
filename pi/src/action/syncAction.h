@@ -8,14 +8,19 @@
 namespace CNC
 {
 
-class syncAction : public Action
+class SyncAction : public Action
 {
 	Q_OBJECT
 
 public:
 
-	syncAction(codeBlock block, QWidget* parent = nullptr);
-	~syncAction() {}
+	SyncAction(codeBlock block, QWidget* parent = nullptr);
+	~SyncAction() {}
+
+	void clear() {m_actions.clear();}
+
+	void addAction	(Action* a)	{m_actions.push_back(a);}
+	void setSyncPin	(int pin)	{m_syncPin = pin;}
 
 public slots:
 
@@ -23,6 +28,7 @@ public slots:
 
 protected:
 	std::vector<Action*>	m_actions;
+	int						m_syncPin;	//Pin to bring high to signal devices to execute action
 };
 
 }//CNC namespace

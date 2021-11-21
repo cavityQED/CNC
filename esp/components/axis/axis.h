@@ -79,6 +79,7 @@ public:
 	
 	/*	Motor moving and helper functions	*/
 	void move();
+	void linear_move(bool sync, bool dir, int steps, int time_us);
 	void move_jog_mode();
 	void move_line_mode();
 	void move_curv_mode();

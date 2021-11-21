@@ -4,7 +4,7 @@
 #include "JogController.h"
 #include "PositionReadout.h"
 #include "Curve.h"
-#include "Laser.h"
+#include "device/laser.h"
 #include "ConfigureAxes.h"
 #include "utilities/ConfigureUtility.h"
 
@@ -25,11 +25,11 @@ public:
 	MainWindow(QWidget *parent = 0) : QMainWindow(parent){
 		jog = new JogController;
 		pos = new PositionReadout;
-		laser = new Laser;
+		laser = new CNC::DEVICE::Laser;
 		controller = new MotorController(this);
-		
+
 		connect(controller, &MotorController::positionChanged, pos, &PositionReadout::setPosition);
-		connect(controller, &MotorController::setLaserPower, laser, &Laser::setPower);
+		connect(controller, &MotorController::setLaserPower, laser, &CNC::DEVICE::Laser::setPower);
 		connect(jog, &JogController::jog_event, controller, &MotorController::jog_event_handler);
 		
 		ConfigureUtility configure;
@@ -67,10 +67,6 @@ public:
 		connect(axes, &QAction::triggered, this, &MainWindow::displayConfigureWindow);
 		
 		setStyleSheet("QWidget{background-color: #DDEFF2;}");	
-		
-		//wiringPiISR(ESP_MOVED_SIGNAL, INT_EDGE_RISING, esp_moved_isr);
-		
-		
 	}
 	
 	~MainWindow() {std::cout << "MainWindow destroyed\n";}
@@ -87,7 +83,7 @@ private:
 	JogController *jog;
 	PositionReadout *pos;
 	MotorController *controller;
-	Laser* laser;
+	CNC::DEVICE::Laser* laser;
 	
 	motor::params_t xparams {};
 	motor::params_t yparams {};

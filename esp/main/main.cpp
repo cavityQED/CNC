@@ -89,6 +89,9 @@ void get_message() {
 			gen_axis.print_pos_steps();
 			gen_axis.move();
 			break;
+		case LINEAR_MOVE:
+			gen_axis.linear_move((bool)msg[1], (bool)msg[2], msg[3], msg[4]);
+			break;
 		case FIND_ZERO:
 			gen_axis.find_zero();
 			break;

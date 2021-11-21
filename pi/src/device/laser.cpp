@@ -1,5 +1,11 @@
 #include "laser.h"
 
+namespace CNC
+{
+
+namespace DEVICE
+{
+
 Laser::Laser(QWidget* parent) : QGroupBox(parent)
 {
 	//gpioInitialise();
@@ -43,3 +49,6 @@ void Laser::off()
 {
 	gpioPWM(LASER_PIN, 0);
 }
+
+}//DEVICE namespace
+}//CNC namespace

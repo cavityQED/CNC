@@ -61,6 +61,7 @@ void axis::set_step_time(int time) {
 	if(time <= 0)
 		return;
 	pulse_period_us = time;
+	std::cout << "Pulse Period Set: " << pulse_period_us << "us\n";
 	set_feed_rate(1000000/(pulse_period_us*steps_per_mm));
 }
 
@@ -155,6 +156,16 @@ void axis::move() {
 		move_curv_mode();
 	else
 		return;
+}
+
+void axis::linear_move(bool sync, bool dir, int steps, int time_us)
+{
+	enable_line_mode(true);
+	enable_sync_mode(sync);
+	set_direction(dir);
+	set_steps_to_move(steps);
+	set_step_time(time_us);
+	move();
 }
 
 void axis::move_jog_mode() {

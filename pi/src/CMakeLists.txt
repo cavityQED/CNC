@@ -15,6 +15,8 @@ add_subdirectory(utilities)
 add_subdirectory(action)
 add_subdirectory(device)
 
+include_directories(${CMAKE_SOURCE_DIR})
+
 set(libdocs	MainWindow.h
 			JogController.cpp
 			PositionReadout.cpp

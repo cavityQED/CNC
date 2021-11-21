@@ -5,7 +5,6 @@ namespace CNC
 
 Program::Program(const std::string filename, QWidget* parent) : QWidget(parent), m_filename(filename)
 {
-
 }
 
 void Program::printBlocks()
@@ -21,27 +20,80 @@ void Program::printBlocks()
 	}
 }
 
-void Program::run()
+void Program::timerEvent(QTimerEvent* e)
 {
-	while(runProgram)
-	{
+	bool motion = false;
 
+	if(m_devices.x_axis != nullptr)
+	{
+		m_devices.x_axis->esp_get_motion_info();
+		motion = motion || m_devices.x_axis->isMoving();
 	}
+
+	if(m_devices.y_axis != nullptr)
+	{
+		m_devices.y_axis->esp_get_motion_info();
+		motion = motion || m_devices.y_axis->isMoving();
+	}
+
+	if(m_devices.z_axis != nullptr)
+	{
+		m_devices.z_axis->esp_get_motion_info();
+		motion = motion || m_devices.z_axis->isMoving();
+	}
+
+	if(m_programStep >= m_programActions.size() && !motion)
+	{
+		killTimer(e->timerId());
+		return;
+	}
+
+	if(m_programActions[m_programStep]->getCodeBlock().letterCode == 'L' && !motion)
+	{
+		std::cout << "\n***PROGRAM MOVE " << m_programStep << "***\n";
+		m_programActions[m_programStep++]->execute();
+		return;
+	}
+
+	if(m_programStep < m_programActions.size() && !motion)
+	{
+		std::cout << "\n***PROGRAM MOVE " << m_programStep << "***\n";
+		m_programActions[m_programStep++]->execute();
+		return;
+	}
+}
+
+void Program::start()
+{
+	reset();
+	m_timer = startTimer(m_programTimerPeriod);
+
 }
 
 void Program::pause()
 {
-
+	killTimer(m_timer);
 }
 
 void Program::resume()
 {
-	
+	m_timer = startTimer(m_programTimerPeriod);
 }
 
 void Program::stop()
 {
 
+}
+
+void Program::reset()
+{
+
+}
+
+void Program::load()
+{
+	loadBlocks();
+	loadActions();
 }
 
 void Program::loadBlocks()
@@ -58,6 +110,11 @@ void Program::loadBlocks()
 	CNC::codeBlock			tmpBlock {};	//Temporary code block
 	std::string				line;			//Line of text
 	std::string::iterator	line_it;		//Text line iterator
+
+	//Previous absolute positions of the axes
+	double prev_x = 0;
+	double prev_y = 0;
+	double prev_z = 0;
 
 	while(!m_codeFile.eof())	//Read the code text file until the end
 	{
@@ -84,18 +141,23 @@ void Program::loadBlocks()
 				//Set the number code
 				tmpBlock.numberCode = get_double(++line_it);
 
+				//Set the previous positions
+				tmpBlock.prev_x = prev_x;
+				tmpBlock.prev_y = prev_y;
+				tmpBlock.prev_z = prev_z;
+
 				//Populate codeBlock variables until another supported code letter or the end of the line is reached
 				while(!(is_supported_letter_code(*line_it)) && line_it != line.end())
 				{
 					switch(*line_it)
 					{
-						case 'x': case 'X': tmpBlock.x = get_double(++line_it); break;
-						case 'y': case 'Y': tmpBlock.y = get_double(++line_it); break;
-						case 'z': case 'Z': tmpBlock.z = get_double(++line_it); break;
+						case 'x': case 'X': tmpBlock.x = get_double(++line_it); tmpBlock.abs_x = true; prev_x = tmpBlock.x; break;
+						case 'y': case 'Y': tmpBlock.y = get_double(++line_it); tmpBlock.abs_y = true; prev_y = tmpBlock.y; break;
+						case 'z': case 'Z': tmpBlock.z = get_double(++line_it); tmpBlock.abs_z = true; prev_z = tmpBlock.z; break;
 
-						case 'u': case 'U': tmpBlock.u = get_double(++line_it); break;
-						case 'v': case 'V': tmpBlock.v = get_double(++line_it); break;
-						case 'w': case 'W': tmpBlock.w = get_double(++line_it); break;
+						case 'u': case 'U': tmpBlock.u = get_double(++line_it); tmpBlock.abs_x = false; prev_x += tmpBlock.u; break;
+						case 'v': case 'V': tmpBlock.v = get_double(++line_it); tmpBlock.abs_y = false; prev_y += tmpBlock.v; break;
+						case 'w': case 'W': tmpBlock.w = get_double(++line_it); tmpBlock.abs_z = false; prev_z += tmpBlock.w; break;
 
 						case 'i': case 'I': tmpBlock.i = get_double(++line_it); break;
 						case 'j': case 'J': tmpBlock.j = get_double(++line_it); break;
@@ -107,6 +169,7 @@ void Program::loadBlocks()
 						default: line_it++;
 					}
 				}
+
 				//Add the block to the program
 				m_programBlocks.push_back(tmpBlock);
 			}
@@ -118,6 +181,69 @@ void Program::loadBlocks()
 	//Close the file
 	m_codeFile.close();	
 }//loadBlocks
+
+void Program::loadActions()
+{
+	m_programActions.clear();
+
+	double feed_rate = 0;
+
+	double dx = 0;
+	double dy = 0;
+	double dz = 0;
+
+	CNC::codeBlock 		code_block;
+
+	CNC::LaserAction*	laser_action;	
+	CNC::StepperAction*	x_action;		
+	CNC::StepperAction*	y_action;		
+	CNC::StepperAction*	z_action;		
+	CNC::SyncAction*	sync_action;		
+
+	for(auto &b : m_programBlocks)
+	{
+
+		switch(b.letterCode)
+		{
+			case 'G':
+			{
+				if(b.f)
+					feed_rate = b.f;
+				else
+					b.f = feed_rate;
+
+				switch(b.numberCode)
+				{
+					case 0:
+						break;
+					case 1:
+					{	//Linear Interpolation
+						std::cout << "\n\nAdding G1 Linear Move\n";
+						m_programActions.push_back(G1_linearInterpolation(b));
+						std::cout << "\n\nAdded G1 Linear Move\n";
+						break;
+					}
+					default:
+						break;
+				}
+				
+				break;
+			}
+
+			case 'L':
+			{
+				std::cout << "\n\nAdding laser action to program actions\n";
+				laser_action = new CNC::LaserAction(m_devices.laser, b);
+				m_programActions.push_back(laser_action);
+				std::cout << "Added laser action to program actions\n";
+				break;
+			}
+
+			default:
+				break;
+		}
+	}
+}
 
 double Program::get_double(std::string::iterator &s)
 {
@@ -146,6 +272,62 @@ bool Program::is_supported_letter_code(const char c)
 		default:
 			return false;
 	}
+}
+
+/********************************
+*		G Code Translation		*
+********************************/
+
+CNC::SyncAction* Program::G0_rapid(const CNC::codeBlock& block)
+{
+
+}
+
+CNC::SyncAction* Program::G1_linearInterpolation(const CNC::codeBlock& block)
+{
+	CNC::StepperAction::params_t p;
+	p.block = std::move(block);
+
+	CNC::SyncAction* syncAction = new CNC::SyncAction(block);
+	syncAction->setSyncPin(18);
+
+	double dx = (block.abs_x)? block.x - block.prev_x : block.u;
+	double dy = (block.abs_y)? block.y - block.prev_y : block.v;
+	double dz = (block.abs_z)? block.z - block.prev_z : block.w;
+
+	double D = std::sqrt(dx*dx + dy*dy + dz*dz);
+	double t = D / block.f;
+
+	std::cout << "Move Time: " << t << "s\n";
+
+	p.type = 1;
+	p.seconds = t;
+
+	if(dx)
+	{
+		p.mm = std::fabs(dx);
+		p.direction = !std::signbit(dx);
+		p.motor = m_devices.x_axis;
+		syncAction->addAction(new CNC::StepperAction(p));
+	}
+
+	if(dy)
+	{
+		p.mm = std::fabs(dy);
+		p.direction = !std::signbit(dy);
+		p.motor = m_devices.y_axis;
+		syncAction->addAction(new CNC::StepperAction(p));
+	}
+
+	if(dz)
+	{
+		p.mm = std::fabs(dz);
+		p.direction = !std::signbit(dz);
+		p.motor = m_devices.z_axis;
+		syncAction->addAction(new CNC::StepperAction(p));
+	}
+
+	return syncAction;
 }
 
 }//CNC namespace

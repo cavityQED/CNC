@@ -275,7 +275,6 @@ void MotorController::sync_move() {
 		send(x_params.pin_num);
 		sem_wait(sem);
 	}
-	//delayMicroseconds(10);
 	if(y_connected) {
 		send(y_params.pin_num);
 		sem_wait(sem);
@@ -344,14 +343,14 @@ void MotorController::enable_travel_limits(bool enable) {
 }
 
 void MotorController::set_jog_steps(int steps) {
+	sendbuf[0] = SPI::SET_JOG_STEPS;
+	
 	if(x_connected) {
-		sendbuf[0] = SPI::SET_JOG_STEPS;
 		sendbuf[1] = steps;
 		send(x_params.pin_num);
 	}
 	
 	if(y_connected) {
-		sendbuf[0] = SPI::SET_JOG_STEPS;
 		sendbuf[1] = steps;
 		send(y_params.pin_num);
 	}
@@ -416,8 +415,7 @@ void MotorController::get_position_spi() {
 		y_motion = (bool)recvbuf[2];
 	}
 	
-	if(!x_motion && !y_motion)
-		in_motion = false;
+	in_motion = x_motion || y_motion;
 }
 
 int MotorController::get_pin(SPI::AXIS a) {

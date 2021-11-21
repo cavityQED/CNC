@@ -3,6 +3,8 @@
 
 #include <pigpio.h>
 
+#include <iostream>
+
 #include <QPushButton>
 #include <QLineEdit>
 #include <QLabel>
@@ -12,8 +14,16 @@
 
 #define LASER_PIN 21
 
+namespace CNC
+{
+
+namespace DEVICE
+{
+
 class Laser : public QGroupBox
 {
+	Q_OBJECT
+
 public:
 	Laser(QWidget* parent = nullptr);
 
@@ -50,5 +60,8 @@ protected:
 	
 	int				m_power = 0;	
 };
+
+}//DEVICE namespace
+}//CNC namespace
 
 #endif

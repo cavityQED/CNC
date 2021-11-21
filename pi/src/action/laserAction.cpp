@@ -3,7 +3,7 @@
 namespace CNC
 {
 
-LaserAction::LaserAction(	Laser* laser,
+LaserAction::LaserAction(	CNC::DEVICE::Laser* laser,
 							CNC::codeBlock block,
 							QWidget* parent)
 	: Action(block, parent), m_laser(laser)
@@ -15,6 +15,8 @@ void LaserAction::execute()
 {
 	if(m_laser == nullptr)
 		return;
+
+	std::cout << "\nLaser Action Executing......\n";
 
 	switch(m_block.numberCode)
 	{
@@ -33,6 +35,9 @@ void LaserAction::execute()
 		default:
 			break;
 	}
+
+	std::cout << "\nLaser Action Executed\n";
+
 }
 
 }//CNC namespace
