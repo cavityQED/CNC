@@ -159,6 +159,7 @@ void stepperMotor::esp_get_motion_info()
 	m_inMotion = recvBuffer[2];
 
 	m_mmPosition = m_stepPosition*m_params.spmm;
+	emit positionChange(m_mmPosition);
 }
 	
 

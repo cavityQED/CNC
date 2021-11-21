@@ -26,7 +26,6 @@ void StepperAction::execute()
 		case 0:
 			//Rapid positioning
 			break;
-
 		case 1:
 			//Linear Interpolation
 			m_params.motor->linearMove(m_params.sync, m_params.direction, m_params.mm, m_params.seconds);

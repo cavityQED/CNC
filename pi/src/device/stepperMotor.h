@@ -57,6 +57,7 @@ public:
 	~stepperMotor() {}
 
 	void linearMove(bool sync, bool dir, double mm, double time);
+	void jogMove(bool dir);
 
 	//ESP32 motor config
 	void esp_motor_config(params_t &p);
@@ -83,6 +84,12 @@ public:
 	//ESP32 recieve motion info
 	void esp_get_motion_info();
 
+public slots:
+	
+
+signals:
+	void positionChange(double mm);
+
 public:
 
 	//Getters
@@ -98,6 +105,9 @@ protected:
 	double		m_mmPosition;		//Absolute motor position in mm from zero
 	bool		m_inMotion;			//True if the motor is in motion
 	bool		m_sync;				//True if action is part of a sync action
+
+	int			m_jogSteps;			//Number of steps to move on a jog
+	int			m_jogTime;			//Jog step wait time in us
 };
 
 }//DEVICE namespace

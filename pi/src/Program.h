@@ -56,7 +56,6 @@ public:
 
 	const std::string	filename()	{return m_filename;}
 	size_t				blockSize()	{return m_programBlocks.size();}
-	//bool				isRunning()	{return runProgram;}
 
 protected:
 	//Helper functions for parsing code text file
@@ -80,7 +79,7 @@ protected:
 
 	int		m_timer;
 	int 	m_programStep = 0;			//Current program step
-	int		m_programTimerPeriod = 100;	//Period in ms of the program timer
+	int		m_programTimerPeriod = 25;	//Period in ms of the program timer
 
 };
 
