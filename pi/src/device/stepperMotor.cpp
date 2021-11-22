@@ -160,8 +160,6 @@ void stepperMotor::esp_get_motion_info()
 
 	m_mmPosition = (double)m_stepPosition/(double)m_params.spmm;
 	emit positionChange(m_mmPosition);
-
-	std::cout << "\n\tGot ESP Position\n";
 }
 	
 
