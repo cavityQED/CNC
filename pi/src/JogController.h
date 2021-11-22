@@ -11,8 +11,7 @@
 #include <QTimerEvent>
 #include <QAction>
 
-#include "MotorController.h"
-#include "Curve.h"
+#include "device/stepperMotor.h"
 
 class JogController : public QWidget {
 	Q_OBJECT
@@ -25,97 +24,146 @@ public:
 	void setShortcuts();
 	void connectButtons();
 	void setStyleSheets();
+
+	void setXaxis(CNC::DEVICE::stepperMotor* x)	{x_axis = x;}
+	void setYaxis(CNC::DEVICE::stepperMotor* y)	{y_axis = y;}
+	void setZaxis(CNC::DEVICE::stepperMotor* z)	{z_axis = z;}
 			
 public slots:
 	void enableJogMode(bool ena) {
-		event.type = JOG::ENABLE_JOG;
-		event.enable = ena;
-		emit jog_event(event);
+		if(x_axis != nullptr)
+			x_axis->esp_enable_jog_mode(ena);
+		if(y_axis != nullptr)
+			y_axis->esp_enable_jog_mode(ena);
+		if(z_axis != nullptr)
+			z_axis->esp_enable_jog_mode(ena);
 	}
 		
 	void xJogPos() {
-		event.type = JOG::JOG_MOVE;
-		event.axis = SPI::X_AXIS;
-		event.direction = 1;
-		emit jog_event(event);
+		if(x_axis != nullptr)
+			x_axis->jogMove(1);
 	}
+
 	void xJogNeg() {
-		event.type = JOG::JOG_MOVE;
-		event.axis = SPI::X_AXIS;
-		event.direction = 0;
-		emit jog_event(event);
+		if(x_axis != nullptr)
+			x_axis->jogMove(0);
 	}
+
 	void yJogPos() {
-		event.type = JOG::JOG_MOVE;
-		event.axis = SPI::Y_AXIS;
-		event.direction = 1;
-		emit jog_event(event);
+		if(y_axis != nullptr)
+			y_axis->jogMove(1);
 	}
 	void yJogNeg() {
-		event.type = JOG::JOG_MOVE;
-		event.axis = SPI::Y_AXIS;
-		event.direction = 0;
-		emit jog_event(event);
+		if(y_axis != nullptr)
+			y_axis->jogMove(0);
 	}
 	void zJogPos() {}
 	void zJogNeg() {}
 	
-	void setJogSpeedMin(bool checked) {
-		event.type = JOG::SET_JOG_SPEED_MM;
-		if(checked) {
-			event.jog_mm = 0.01;
+	void setJogSpeedMin(bool checked) 
+	{
+		if(checked)
+		{
+			if(x_axis != nullptr)
+				x_axis->setJogDistance(.01);
+			if(y_axis != nullptr)
+				y_axis->setJogDistance(.01);
+			if(z_axis != nullptr)
+				z_axis->setJogDistance(.01);
+		
 			jog_low->setChecked(false);
 			jog_med->setChecked(false);
 			jog_high->setChecked(false);
 		}
 		else
-			event.jog_mm = 0;
-			
-		emit jog_event(event);
+		{
+			if(x_axis != nullptr)
+				x_axis->setJogDistance(0);
+			if(y_axis != nullptr)
+				y_axis->setJogDistance(0);
+			if(z_axis != nullptr)
+				z_axis->setJogDistance(0);			
+		}
 	}
-	void setJogSpeedLow(bool checked) {
-		event.type = JOG::SET_JOG_SPEED_MM;
-		if(checked) {
-			event.jog_mm = 0.1;
+
+	void setJogSpeedLow(bool checked) 
+	{
+		if(checked)
+		{
+			if(x_axis != nullptr)
+				x_axis->setJogDistance(.1);
+			if(y_axis != nullptr)
+				y_axis->setJogDistance(.1);
+			if(z_axis != nullptr)
+				z_axis->setJogDistance(.1);
+		
 			jog_min->setChecked(false);
 			jog_med->setChecked(false);
 			jog_high->setChecked(false);
 		}
 		else
-			event.jog_mm = 0;
-			
-		emit jog_event(event);
+		{
+			if(x_axis != nullptr)
+				x_axis->setJogDistance(0);
+			if(y_axis != nullptr)
+				y_axis->setJogDistance(0);
+			if(z_axis != nullptr)
+				z_axis->setJogDistance(0);			
+		}
 	}
-	void setJogSpeedMed(bool checked) {
-		event.type = JOG::SET_JOG_SPEED_MM;
-		if(checked) {
-			event.jog_mm = 1;
+
+	void setJogSpeedMed(bool checked) 
+	{
+		if(checked)
+		{
+			if(x_axis != nullptr)
+				x_axis->setJogDistance(1);
+			if(y_axis != nullptr)
+				y_axis->setJogDistance(1);
+			if(z_axis != nullptr)
+				z_axis->setJogDistance(1);
+		
 			jog_min->setChecked(false);
 			jog_low->setChecked(false);
 			jog_high->setChecked(false);
 		}
 		else
-			event.jog_mm = 0;
-			
-		emit jog_event(event);
+		{
+			if(x_axis != nullptr)
+				x_axis->setJogDistance(0);
+			if(y_axis != nullptr)
+				y_axis->setJogDistance(0);
+			if(z_axis != nullptr)
+				z_axis->setJogDistance(0);			
+		}
 	}
-	void setJogSpeedHigh(bool checked) {
-		event.type = JOG::SET_JOG_SPEED_MM;
-		if(checked) {
-			event.jog_mm = 2.5;
+
+	void setJogSpeedHigh(bool checked) 
+	{
+		if(checked)
+		{
+			if(x_axis != nullptr)
+				x_axis->setJogDistance(2.5);
+			if(y_axis != nullptr)
+				y_axis->setJogDistance(2.5);
+			if(z_axis != nullptr)
+				z_axis->setJogDistance(2.5);
+		
 			jog_min->setChecked(false);
 			jog_low->setChecked(false);
 			jog_med->setChecked(false);
 		}
 		else
-			event.jog_mm = 0;
-			
-		emit jog_event(event);
+		{
+			if(x_axis != nullptr)
+				x_axis->setJogDistance(0);
+			if(y_axis != nullptr)
+				y_axis->setJogDistance(0);
+			if(z_axis != nullptr)
+				z_axis->setJogDistance(0);			
+		}
 	}
 		
-signals:	
-	void jog_event(JOG::event_t &event);
-	
 private:
 	//Main Group Box
 	//Will be a checkable box to activate/deactivate jog mode
@@ -137,6 +185,10 @@ private:
 	QPushButton *jog_low;
 	QPushButton *jog_med;
 	QPushButton *jog_high;
+
+	CNC::DEVICE::stepperMotor* x_axis = nullptr;
+	CNC::DEVICE::stepperMotor* y_axis = nullptr;
+	CNC::DEVICE::stepperMotor* z_axis = nullptr;
 	
 	//Jog Speed Group Box
 	QGroupBox *jog_speed_box;
@@ -144,13 +196,8 @@ private:
 	//Action to Toggle Jog Mode
 	QAction *jog_toggle;
 	
-	//MotorController
-	MotorController *motorController;
-	
 	double xPos;
 	double yPos;
-		
-	JOG::event_t event;
 };
 
 #endif

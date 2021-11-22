@@ -3,6 +3,8 @@
 
 #include "spiDevice.h"
 
+#include <QTimerEvent>
+
 namespace CNC
 {
 namespace DEVICE
@@ -57,6 +59,8 @@ public:
 	~stepperMotor() {}
 
 	void linearMove(bool sync, bool dir, double mm, double time);
+
+	void setJogDistance(double mm);
 	void jogMove(bool dir);
 
 	//ESP32 motor config
@@ -84,8 +88,9 @@ public:
 	//ESP32 recieve motion info
 	void esp_get_motion_info();
 
-public slots:
-	
+public:
+
+	virtual void timerEvent(QTimerEvent* e) override;
 
 signals:
 	void positionChange(double mm);
@@ -108,6 +113,14 @@ protected:
 
 	int			m_jogSteps;			//Number of steps to move on a jog
 	int			m_jogTime;			//Jog step wait time in us
+
+	//Modes
+	bool		m_jogMode = false;
+	bool		m_lineMode = false;
+	bool		m_curvMode = false;
+	bool		m_syncMode = false;
+
+	static const int m_timerPeriod = 25;
 };
 
 }//DEVICE namespace

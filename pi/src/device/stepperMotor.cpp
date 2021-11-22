@@ -25,6 +25,21 @@ void stepperMotor::linearMove(bool sync, bool dir, double mm, double time)
 	esp_move();
 }
 
+void stepperMotor::setJogDistance(double mm)
+{
+	esp_set_jog_steps(mm * m_params.spmm);
+}
+
+void stepperMotor::jogMove(bool dir)
+{
+	if(!m_jogMode)
+		return;
+
+	esp_set_direction(dir);
+	esp_move();
+	startTimer(m_timerPeriod);
+}
+
 void stepperMotor::esp_motor_config(params_t &p)
 {
 	sendBuffer[0] = ESP::SET_X_AXIS;
@@ -124,6 +139,7 @@ void stepperMotor::esp_set_step_time(int time_us)
 
 void stepperMotor::esp_enable_jog_mode(bool enable)
 {
+	m_jogMode = enable;
 	sendBuffer[0] = ESP::ENA_JOG_MODE;
 	sendBuffer[1] = (int)enable;
 	spiSend(m_params.device_pin);
@@ -131,6 +147,7 @@ void stepperMotor::esp_enable_jog_mode(bool enable)
 
 void stepperMotor::esp_enable_line_mode(bool enable)
 {
+	m_lineMode = enable;
 	sendBuffer[0] = ESP::ENA_LINE_MODE;
 	sendBuffer[1] = (int)enable;
 	spiSend(m_params.device_pin);
@@ -138,6 +155,7 @@ void stepperMotor::esp_enable_line_mode(bool enable)
 
 void stepperMotor::esp_enable_curv_mode(bool enable)
 {
+	m_curvMode = enable;
 	sendBuffer[0] = ESP::ENA_CURV_MODE;
 	sendBuffer[1] = (int)enable;
 	spiSend(m_params.device_pin);
@@ -145,6 +163,7 @@ void stepperMotor::esp_enable_curv_mode(bool enable)
 
 void stepperMotor::esp_enable_sync_mode(bool enable)
 {
+	m_syncMode = enable;
 	sendBuffer[0] = ESP::ENA_SYNC_MODE;
 	sendBuffer[1] = (int)enable;
 	spiSend(m_params.device_pin);
@@ -161,7 +180,13 @@ void stepperMotor::esp_get_motion_info()
 	m_mmPosition = (double)m_stepPosition/(double)m_params.spmm;
 	emit positionChange(m_mmPosition);
 }
-	
+
+void stepperMotor::timerEvent(QTimerEvent* e)
+{
+	esp_get_motion_info();
+	if(!m_inMotion)
+		killTimer(e->timerId());
+}
 
 }//DEVICE namespace
 }//CNC namespace

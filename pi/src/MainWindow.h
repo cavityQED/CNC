@@ -45,6 +45,9 @@ public:
 		x_axis = new CNC::DEVICE::stepperMotor(xparams);
 		y_axis = new CNC::DEVICE::stepperMotor(yparams);
 
+		jog->setXaxis(x_axis);
+		jog->setYaxis(y_axis);
+
 		CNC::Program::devicePointers devices;
 		devices.x_axis = x_axis;
 		devices.y_axis = y_axis;
