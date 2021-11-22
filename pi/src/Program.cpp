@@ -26,19 +26,19 @@ void Program::timerEvent(QTimerEvent* e)
 
 	if(m_devices.x_axis != nullptr)
 	{
-		m_devices.x_axis->esp_get_motion_info();
+		m_devices.x_axis->esp_receive();
 		motion = motion || m_devices.x_axis->isMoving();
 	}
 
 	if(m_devices.y_axis != nullptr)
 	{
-		m_devices.y_axis->esp_get_motion_info();
+		m_devices.y_axis->esp_receive();
 		motion = motion || m_devices.y_axis->isMoving();
 	}
 
 	if(m_devices.z_axis != nullptr)
 	{
-		m_devices.z_axis->esp_get_motion_info();
+		m_devices.z_axis->esp_receive();
 		motion = motion || m_devices.z_axis->isMoving();
 	}
 

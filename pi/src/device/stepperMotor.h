@@ -38,6 +38,7 @@ enum esp32FUNCTION
 	RECEIVE,
 	TEST_FUNCTION
 };
+
 }//ESP namespace
 
 class stepperMotor : public spiDevice
@@ -58,41 +59,54 @@ public:
 	stepperMotor(params_t &params, QWidget* parent = nullptr);
 	~stepperMotor() {}
 
+	/*	Configure Stepper
+	*		Set Stepper Motor Parameters
+	*			-	steps/mm
+	*			-	max travel
+	*			-	x axis
+	*/
+	void configureStepper(params_t &p);
+
+	void jogMove(bool dir);
 	void linearMove(bool sync, bool dir, double mm, double time);
 
-	void setJogDistance(double mm);
-	void jogMove(bool dir);
+	void setJogDistance(double mm)	{esp_set_jog_steps(mm*m_params.spmm);}
 
-	//ESP32 motor config
-	void esp_motor_config(params_t &p);
+public:
 
-	//ESP32 move functions
-	void esp_move();
-	void esp_linear_move(bool sync, bool dir, double mm, double time);
-	void move_to(double	mm_pos, bool sync = true);
-	void move_to(int 	step_pos, bool sync = true);
-	void move_steps(int steps, bool dir, bool sync = false);
+	/****************************
+	*	ESP FUNCTION COMMANDS	*
+	****************************/
+	/*
+	*	Functions to send individual commands over spi
+	*		to the esp controller responsible for driving the motor
+	*/
 
-	//ESP32 move config
-	void esp_set_steps_to_move(int steps);
-	void esp_set_jog_steps(int steps);
-	void esp_set_direction(bool dir);
-	void esp_set_step_time(int time_us);	//Set the step timer in microseconds
+	void esp_set_feed_rate		(int feed_rate);
+	void esp_set_step_time		(int time_us);
+	void esp_set_steps_to_move	(int steps);
+	void esp_set_jog_steps		(int steps);
+	void esp_set_steps_per_mm	(int steps);
+	void esp_set_backlash		(int backlash);
+	void esp_set_max_steps		(int max_steps);
+	void esp_set_direction		(bool dir);
+	void esp_set_x_axis			(bool x_axis);
+	void esp_enable_jog_mode	(bool enable);
+	void esp_enable_line_mode	(bool enable);
+	void esp_enable_curv_mode	(bool enable);
+	void esp_enable_sync_mode	(bool enable);
+	void esp_linear_move		(bool sync, bool dir, double mm, double time);
+	void esp_receive			();
+	void esp_move				();
+	void esp_stop				();
 
-	//ESP32 mode config
-	void esp_enable_jog_mode(bool enable);
-	void esp_enable_line_mode(bool enable);
-	void esp_enable_curv_mode(bool enable);
-	void esp_enable_sync_mode(bool enable);
-
-	//ESP32 recieve motion info
-	void esp_get_motion_info();
 
 public:
 
 	virtual void timerEvent(QTimerEvent* e) override;
 
 signals:
+
 	void positionChange(double mm);
 
 public:

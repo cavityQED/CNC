@@ -12,22 +12,14 @@ stepperMotor::stepperMotor(params_t &params, QWidget* parent) : spiDevice(parent
 	gpioSetMode(m_params.device_pin, PI_OUTPUT);
 	gpioWrite(m_params.device_pin, 0);
 
-	esp_motor_config(m_params);
+	configureStepper(m_params);
 }
 
-void stepperMotor::linearMove(bool sync, bool dir, double mm, double time)
+void stepperMotor::configureStepper(params_t &p)
 {
-	esp_enable_line_mode(true);
-	esp_enable_sync_mode(sync);
-	esp_set_direction(dir);
-	esp_set_steps_to_move(mm * m_params.spmm);
-	esp_set_step_time(1000000 * time / (mm * (double)m_params.spmm));
-	esp_move();
-}
-
-void stepperMotor::setJogDistance(double mm)
-{
-	esp_set_jog_steps(mm * m_params.spmm);
+	esp_set_x_axis			(p.x_axis);
+	esp_set_steps_per_mm	(p.spmm);
+	esp_set_max_steps		(p.max_mm * p.spmm);
 }
 
 void stepperMotor::jogMove(bool dir)
@@ -40,19 +32,14 @@ void stepperMotor::jogMove(bool dir)
 	startTimer(m_timerPeriod);
 }
 
-void stepperMotor::esp_motor_config(params_t &p)
+void stepperMotor::linearMove(bool sync, bool dir, double mm, double time)
 {
-	sendBuffer[0] = ESP::SET_X_AXIS;
-	sendBuffer[1] = p.x_axis;
-	spiSend(m_params.device_pin);
-
-	sendBuffer[0] = ESP::SET_STEPS_PER_MM;
-	sendBuffer[1] = p.spmm;
-	spiSend(m_params.device_pin);
-
-	sendBuffer[0] = ESP::SET_MAX_STEPS;
-	sendBuffer[1] = p.max_mm;
-	spiSend(m_params.device_pin);
+	esp_enable_line_mode(true);
+	esp_enable_sync_mode(sync);
+	esp_set_direction(dir);
+	esp_set_steps_to_move(mm * m_params.spmm);
+	esp_set_step_time(1000000 * time / (mm * (double)m_params.spmm));
+	esp_move();
 }
 
 void stepperMotor::esp_move()
@@ -70,41 +57,6 @@ void stepperMotor::esp_linear_move(bool sync, bool dir, double mm, double time)
 	sendBuffer[3] = mm * m_params.spmm;
 	sendBuffer[4] = 1000000.0 * time / mm / m_params.spmm;
 	spiSend(m_params.device_pin);
-}
-
-
-void stepperMotor::move_to(double mm_pos, bool sync)
-{
-	//If the motor is in motion already, do nothing
-	if(m_inMotion)
-	{
-		std::cout << "Motor in motion!\n";
-		return;
-	}
-
-	double diff	= m_mmPosition - mm_pos;
-
-	//Set the direction
-	esp_set_direction(!std::signbit(diff));
-
-	//Set the steps to move
-	esp_set_steps_to_move(std::fabs(diff) + m_params.spmm);
-
-	//Set the sync mode
-	esp_enable_sync_mode(sync);
-
-	//Finally, tell the device to move
-	esp_move();
-}
-
-void stepperMotor::move_to(int step_pos, bool sync)
-{
-
-}
-
-void stepperMotor::move_steps(int steps, bool dir, bool sync)
-{
-
 }
 
 void stepperMotor::esp_set_steps_to_move(int steps)
@@ -134,6 +86,27 @@ void stepperMotor::esp_set_step_time(int time_us)
 {
 	sendBuffer[0] = ESP::SET_STEP_TIME;
 	sendBuffer[1] = time_us;
+	spiSend(m_params.device_pin);
+}
+
+void stepperMotor::esp_set_steps_per_mm(int steps)
+{
+	sendBuffer[0] = ESP::SET_STEPS_PER_MM;
+	sendBuffer[1] = steps;
+	spiSend(m_params.device_pin);
+}
+
+void stepperMotor::esp_set_max_steps(int max_steps)
+{
+	sendBuffer[0] = ESP::SET_MAX_STEPS;
+	sendBuffer[1] = max_steps;
+	spiSend(m_params.device_pin);
+}
+
+void stepperMotor::esp_set_x_axis(bool x_axis)
+{
+	sendBuffer[0] = ESP::SET_X_AXIS;
+	sendBuffer[1] = (int)x_axis;
 	spiSend(m_params.device_pin);
 }
 
@@ -169,7 +142,7 @@ void stepperMotor::esp_enable_sync_mode(bool enable)
 	spiSend(m_params.device_pin);
 }
 
-void stepperMotor::esp_get_motion_info()
+void stepperMotor::esp_receive()
 {
 	sendBuffer[0] = ESP::RECEIVE;
 	spiSend(m_params.device_pin);
@@ -183,7 +156,7 @@ void stepperMotor::esp_get_motion_info()
 
 void stepperMotor::timerEvent(QTimerEvent* e)
 {
-	esp_get_motion_info();
+	esp_receive();
 	if(!m_inMotion)
 		killTimer(e->timerId());
 }
