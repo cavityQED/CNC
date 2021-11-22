@@ -25,6 +25,10 @@ public:
 		
 public slots:
 	void setPosition(double x, double y, double z = 0);
+
+	void setX(double x);
+	void setY(double y);
+	void setZ(double z);
 	
 private:	
 	//Main Group Box

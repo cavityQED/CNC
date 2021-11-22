@@ -10,6 +10,7 @@ int main(int argc, char* argv[]) {
 	QApplication a(argc, argv);
 	sem_unlink("spi_ready_semaphore");
 
+/*
 	gpioInitialise();
 	CNC::DEVICE::stepperMotor::params_t x_params {5, 200, 200, true};
 	CNC::DEVICE::stepperMotor::params_t y_params {6, 200, 200, false};
@@ -31,11 +32,9 @@ int main(int argc, char* argv[]) {
 	p.loadActions();
 
 	p.start();
-/*
+*/
 	MainWindow main;
 	main.show();
-*/
-//	Laser laser;
-//	laser.show();
+
 	return a.exec();
 }

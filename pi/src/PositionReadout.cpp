@@ -95,3 +95,18 @@ void PositionReadout::setPosition(double x, double y, double z) {
 	y_lineEdit->setText(QString::number(y, 'f', 2) + ' ' + unit);
 	z_lineEdit->setText(QString::number(z, 'f', 2) + ' ' + unit);
 }
+
+void PositionReadout::setX(double x)
+{
+	x_lineEdit->setText(QString::number(x, 'f', 2) + ' ' + unit);
+}
+
+void PositionReadout::setY(double y)
+{
+	y_lineEdit->setText(QString::number(y, 'f', 2) + ' ' + unit);
+}
+
+void PositionReadout::setZ(double z)
+{
+	z_lineEdit->setText(QString::number(z, 'f', 2) + ' ' + unit);
+}

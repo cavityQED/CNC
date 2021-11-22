@@ -53,7 +53,7 @@ void stepperMotor::esp_linear_move(bool sync, bool dir, double mm, double time)
 	sendBuffer[1] = (int)sync;
 	sendBuffer[2] = (int)dir;
 	sendBuffer[3] = mm * m_params.spmm;
-	sendBuffer[4] = 1000000 * time / mm / m_params.spmm;
+	sendBuffer[4] = 1000000.0 * time / mm / m_params.spmm;
 	spiSend(m_params.device_pin);
 }
 
@@ -158,8 +158,10 @@ void stepperMotor::esp_get_motion_info()
 	m_stepPosition = recvBuffer[1];
 	m_inMotion = recvBuffer[2];
 
-	m_mmPosition = m_stepPosition*m_params.spmm;
+	m_mmPosition = (double)m_stepPosition/(double)m_params.spmm;
 	emit positionChange(m_mmPosition);
+
+	std::cout << "\n\tGot ESP Position\n";
 }
 	
 

@@ -16,7 +16,7 @@ public:
 	struct params_t
 	{
 		int		type;
-		int		seconds;
+		double	seconds;
 		double	mm;
 		bool	direction;
 		bool	sync;

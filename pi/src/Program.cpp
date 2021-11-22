@@ -42,9 +42,10 @@ void Program::timerEvent(QTimerEvent* e)
 		motion = motion || m_devices.z_axis->isMoving();
 	}
 
-	if(m_programStep >= m_programActions.size() && !motion)
+	if(m_programStep >= m_programActions.size())
 	{
-		killTimer(e->timerId());
+		if(!motion)
+			killTimer(e->timerId());
 		return;
 	}
 
@@ -220,13 +221,13 @@ void Program::loadActions()
 					{	//Linear Interpolation
 						std::cout << "\n\nAdding G1 Linear Move\n";
 						m_programActions.push_back(G1_linearInterpolation(b));
-						std::cout << "\n\nAdded G1 Linear Move\n";
+						std::cout << "Added G1 Linear Move\n";
 						break;
 					}
 					default:
 						break;
 				}
-				
+
 				break;
 			}
 
