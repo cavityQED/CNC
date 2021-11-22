@@ -20,12 +20,6 @@ include_directories(${CMAKE_SOURCE_DIR})
 set(libdocs	MainWindow.h
 			JogController.cpp
 			PositionReadout.cpp
-			MotorController.cpp
-			ConfigureAxes.cpp
-			Curve.cpp
-			Line.cpp
-			GCode.cpp
-			SPI.cpp
 			Laser.cpp
 			Program.cpp)
 
