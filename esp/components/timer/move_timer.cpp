@@ -109,7 +109,10 @@ void Timer::linear_move_config(	int initial_wait_time_us,
 	timer_set_divider(LINEAR_GROUP, PULSE_TIMER, d0);
 
 	//Divider time product
-	divider_tp = BASE_TIMER_FREQUENCY / accel_steps_per_s_per_s / final_wait_time_us;
+	divider_tp = BASE_TIMER_FREQUENCY / (double)accel_steps_per_s_per_s / (double)final_wait_time_us;
+	if(!divider_tp)
+		divider_tp = 1;
+	std::cout << "Divider Time Product: " << divider_tp << '\n';
 
 	//Set Pulse timer alarm value
 	timer_set_alarm_value(LINEAR_GROUP, PULSE_TIMER, final_wait_time_us);
@@ -146,7 +149,10 @@ void Timer::vector_move_config(	int initial_wait_time_us,
 	timer_set_divider(VECTOR_GROUP, PULSE_TIMER, d0);
 
 	//Divider time product
-	divider_tp = BASE_TIMER_FREQUENCY / accel_steps_per_s_per_s / final_wait_time_us;
+	divider_tp = BASE_TIMER_FREQUENCY / (double)accel_steps_per_s_per_s / (double)final_wait_time_us;
+	if(!divider_tp)
+		divider_tp = 1;
+	std::cout << "Divider Time Product: " << divider_tp << '\n';
 
 	//Set Pulse timer alarm value
 	timer_set_alarm_value(VECTOR_GROUP, PULSE_TIMER, final_wait_time_us);
@@ -203,7 +209,16 @@ void Timer::linear_pulse_isr(void* arg)
 	timer_get_counter_time_sec(LINEAR_GROUP, SECONDS_TIMER, &cur_time);
 	cur_pulse++;
 
-	if(cur_time < const_time && cur_pulse < decel_start_pulse)
+	if(cur_pulse >= final_pulse)
+	{
+		/*	Stop the motor	
+		*		Set the in_motion variable to false
+		*/
+		*in_motion = false;
+		timer_group_set_counter_enable_in_isr(LINEAR_GROUP, PULSE_TIMER, TIMER_PAUSE);
+	}
+
+	else if(cur_time < const_time && cur_pulse < decel_start_pulse)
 	{
 		//	Acceleration phase
 		//		Decrease the timer divider to decrease the time between counter ticks
@@ -212,8 +227,8 @@ void Timer::linear_pulse_isr(void* arg)
 
 	else if(std::fabs(cur_time - const_time) < min_wait_time)
 	{
-		accel_stop_pulse = cur_pulse;
-		decel_start_pulse = final_pulse - accel_stop_pulse;
+		//	Start constant speed phase, use current pulse to set pulse number to start deceleration 
+		decel_start_pulse = final_pulse - cur_pulse;
 	}
 
 	else if(cur_pulse == decel_start_pulse)
@@ -224,16 +239,8 @@ void Timer::linear_pulse_isr(void* arg)
 
 	else if(cur_pulse > decel_start_pulse)
 	{
-		timer_set_divider(LINEAR_GROUP, PULSE_TIMER, (int)(divider_tp/(const_time - cur_time)) );
-	}
-
-	if(cur_pulse >= final_pulse)
-	{
-		/*	Stop the motor	
-		*		Set the in_motion variable to false
-		*/
-		timer_group_set_counter_enable_in_isr(LINEAR_GROUP, PULSE_TIMER, TIMER_PAUSE);
-		*in_motion = false;
+		//	Deceleration phase
+		timer_set_divider(LINEAR_GROUP, PULSE_TIMER, (int)(divider_tp/std::fabs(const_time - cur_time)) );
 	}
 
 	timer_group_clr_intr_status_in_isr	(LINEAR_GROUP, PULSE_TIMER);

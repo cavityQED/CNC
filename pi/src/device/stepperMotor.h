@@ -69,6 +69,7 @@ public:
 
 	void jogMove(bool dir);
 	void linearMove(bool sync, bool dir, double mm, double time);
+	void vectorMove(double xi, double xf, double yi, double yf, double feed, double r, bool dir);
 
 	void setJogDistance(double mm)	{esp_set_jog_steps(mm*m_params.spmm);}
 
@@ -91,6 +92,7 @@ public:
 	void esp_set_max_steps		(int max_steps);
 	void esp_set_direction		(bool dir);
 	void esp_set_x_axis			(bool x_axis);
+	void esp_setup_curve		(double xi, double xf, double yi, double yf, double feed, double r, bool dir);
 	void esp_enable_jog_mode	(bool enable);
 	void esp_enable_line_mode	(bool enable);
 	void esp_enable_curv_mode	(bool enable);
@@ -134,7 +136,7 @@ protected:
 	bool		m_curvMode = false;
 	bool		m_syncMode = false;
 
-	static const int m_timerPeriod = 25;
+	static const int m_timerPeriod = 10;
 };
 
 }//DEVICE namespace

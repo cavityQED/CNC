@@ -22,46 +22,44 @@ void Program::printBlocks()
 
 void Program::timerEvent(QTimerEvent* e)
 {
-	bool motion = false;
+	m_programMotion = false;
 
 	if(m_devices.x_axis != nullptr)
 	{
 		m_devices.x_axis->esp_receive();
-		motion = motion || m_devices.x_axis->isMoving();
+		m_programMotion = m_programMotion || m_devices.x_axis->isMoving();
 	}
 
 	if(m_devices.y_axis != nullptr)
 	{
 		m_devices.y_axis->esp_receive();
-		motion = motion || m_devices.y_axis->isMoving();
+		m_programMotion = m_programMotion || m_devices.y_axis->isMoving();
 	}
 
 	if(m_devices.z_axis != nullptr)
 	{
 		m_devices.z_axis->esp_receive();
-		motion = motion || m_devices.z_axis->isMoving();
+		m_programMotion = m_programMotion || m_devices.z_axis->isMoving();
 	}
 
-	if(m_programStep >= m_programActions.size())
+	if(!m_programMotion)
 	{
-		if(!motion)
-			killTimer(e->timerId());
-		return;
+		killTimer(e->timerId());
+		execute_next();
 	}
+}
 
-	if(m_programActions[m_programStep]->getCodeBlock().letterCode == 'L' && !motion)
+void Program::execute_next()
+{
+	if(m_programStep < m_programActions.size())
 	{
-		std::cout << "\n***PROGRAM MOVE " << m_programStep << "***\n";
+		std::cout << "********STEP " << m_programStep << "********\n";
 		m_programActions[m_programStep++]->execute();
-		return;
+		m_timer = startTimer(m_programTimerPeriod);
 	}
 
-	if(m_programStep < m_programActions.size() && !motion)
-	{
-		std::cout << "\n***PROGRAM MOVE " << m_programStep << "***\n";
-		m_programActions[m_programStep++]->execute();
-		return;
-	}
+	else
+		stop();
 }
 
 void Program::start()
@@ -83,12 +81,20 @@ void Program::resume()
 
 void Program::stop()
 {
-
+	if(m_devices.x_axis != nullptr)
+		m_devices.x_axis->esp_stop();
+	if(m_devices.y_axis != nullptr)
+		m_devices.y_axis->esp_stop();
+	if(m_devices.z_axis != nullptr)
+		m_devices.z_axis->esp_stop();
+	if(m_devices.laser != nullptr)
+		m_devices.laser->off();
 }
 
 void Program::reset()
 {
-
+	stop();
+	m_programStep = 0;
 }
 
 void Program::load()
@@ -221,9 +227,26 @@ void Program::loadActions()
 					{	//Linear Interpolation
 						std::cout << "\n\nAdding G1 Linear Move\n";
 						m_programActions.push_back(G1_linearInterpolation(b));
-						std::cout << "Added G1 Linear Move\n";
+						std::cout << "Added G1 Move\n";
 						break;
 					}
+
+					case 2:
+					{	//Circular Interpolation CW
+						std::cout << "\n\nAdding G2 CW Circular Move\n";
+						m_programActions.push_back(G2_circularInterpolationCW(b));
+						std::cout << "Added G2 Move\n";
+						break;
+					}
+
+					case 3:
+					{	//Circular Interpolation CW
+						std::cout << "\n\nAdding G3 CCW Circular Move\n";
+						m_programActions.push_back(G3_circularInterpolationCCW(b));
+						std::cout << "Added G3 Move\n";
+						break;
+					}
+
 					default:
 						break;
 				}
@@ -286,8 +309,8 @@ CNC::SyncAction* Program::G0_rapid(const CNC::codeBlock& block)
 
 CNC::SyncAction* Program::G1_linearInterpolation(const CNC::codeBlock& block)
 {
-	CNC::StepperAction::params_t p;
-	p.block = std::move(block);
+	CNC::StepperAction::linearConfig config;
+	config.block = std::move(block);
 
 	CNC::SyncAction* syncAction = new CNC::SyncAction(block);
 	syncAction->setSyncPin(18);
@@ -301,32 +324,120 @@ CNC::SyncAction* Program::G1_linearInterpolation(const CNC::codeBlock& block)
 
 	std::cout << "Move Time: " << t << "s\n";
 
-	p.type = 1;
-	p.seconds = t;
+	config.seconds = t;
+	config.sync = true;
 
 	if(dx)
 	{
-		p.mm = std::fabs(dx);
-		p.direction = !std::signbit(dx);
-		p.motor = m_devices.x_axis;
-		syncAction->addAction(new CNC::StepperAction(p));
+		config.mm = std::fabs(dx);
+		config.direction = !std::signbit(dx);
+		config.motor = m_devices.x_axis;
+		syncAction->addAction(new CNC::StepperAction(config));
 	}
 
 	if(dy)
 	{
-		p.mm = std::fabs(dy);
-		p.direction = !std::signbit(dy);
-		p.motor = m_devices.y_axis;
-		syncAction->addAction(new CNC::StepperAction(p));
+		config.mm = std::fabs(dy);
+		config.direction = !std::signbit(dy);
+		config.motor = m_devices.y_axis;
+		syncAction->addAction(new CNC::StepperAction(config));
 	}
 
 	if(dz)
 	{
-		p.mm = std::fabs(dz);
-		p.direction = !std::signbit(dz);
-		p.motor = m_devices.z_axis;
-		syncAction->addAction(new CNC::StepperAction(p));
+		config.mm = std::fabs(dz);
+		config.direction = !std::signbit(dz);
+		config.motor = m_devices.z_axis;
+		syncAction->addAction(new CNC::StepperAction(config));
 	}
+
+	return syncAction;
+}
+
+CNC::SyncAction* Program::G2_circularInterpolationCW(const CNC::codeBlock& block)
+{
+	CNC::StepperAction::vectorConfig config;
+	config.block = std::move(block);
+
+	CNC::SyncAction* syncAction = new CNC::SyncAction(block);
+	syncAction->setSyncPin(18);
+
+	//Currently need the center of the circle to be zero for the esp to properly calculate steps
+	//So must use i, j, k in the g code
+	if(block.r)
+	{
+		std::cout << "Circle with radius unsupported; use I, J, and K\n";
+		return syncAction;
+	}
+
+	else
+	{
+		config.xi = -block.i;
+		config.yi = -block.j;
+		config.zi = -block.k;
+
+		config.xf = (block.abs_x)? block.x - block.prev_x : block.u;
+		config.yf = (block.abs_y)? block.y - block.prev_y : block.v;
+		config.zf = (block.abs_z)? block.z - block.prev_z : block.w;
+
+ 		config.xf -= block.i;
+		config.yf -= block.j;
+		config.zf -= block.k;
+
+		config.r = std::sqrt(block.i*block.i + block.j*block.j + block.k*block.k);
+	}
+
+	config.dir = 1;
+
+	config.motor = m_devices.x_axis;
+	syncAction->addAction(new CNC::StepperAction(config));
+
+	config.motor = m_devices.y_axis;
+	syncAction->addAction(new CNC::StepperAction(config));
+
+	return syncAction;
+}
+
+CNC::SyncAction* Program::G3_circularInterpolationCCW(const CNC::codeBlock& block)
+{
+	CNC::StepperAction::vectorConfig config;
+	config.block = std::move(block);
+
+	CNC::SyncAction* syncAction = new CNC::SyncAction(block);
+	syncAction->setSyncPin(18);
+
+	//Currently need the center of the circle to be zero for the esp to properly calculate steps
+	//So must use i, j, k in the g code
+	if(block.r)
+	{
+		std::cout << "Circle with radius unsupported; use I, J, and K\n";
+		return syncAction;
+	}
+
+	else
+	{
+		config.xi = -block.i;
+		config.yi = -block.j;
+		config.zi = -block.k;
+
+		config.xf = (block.abs_x)? block.x - block.prev_x : block.u;
+		config.yf = (block.abs_y)? block.y - block.prev_y : block.v;
+		config.zf = (block.abs_z)? block.z - block.prev_z : block.w;
+
+		config.xf -= block.i;
+		config.yf -= block.j;
+		config.zf -= block.k;
+
+		config.r = std::sqrt(block.i*block.i + block.j*block.j + block.k*block.k);
+	}
+
+	config.dir = 0;
+
+	config.motor = m_devices.x_axis;
+	syncAction->addAction(new CNC::StepperAction(config));
+
+	config.motor = m_devices.y_axis;
+	syncAction->addAction(new CNC::StepperAction(config));
 
 	return syncAction;
 }

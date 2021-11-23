@@ -222,12 +222,6 @@ void axis::move_curv_mode() {
 	if(motor_in_motion)
 		return;
 	
-	if(sync_mode && steps_to_move == 0) {
-		spi->toggle_ready();
-		xSemaphoreTake(syncSem, portMAX_DELAY);
-		return;
-	}	
-	
 	step_timer->vector_move_config(	5000,
 									pulse_period_us,
 									40000,
@@ -243,6 +237,7 @@ void axis::move_curv_mode() {
 }
 
 void axis::stop() {	
+	step_timer->reset();
 	motor_in_motion = false;
 }
 
@@ -264,8 +259,8 @@ void axis::setup_curve(std::vector<int> &info) {
 	int x3 		= info[5];
 	int y3 		= info[6];	
 	int xo 		= 0;
-	int mask	= 0;
 	int yo 		= 0;		
+	int mask	= 0;
 	int fxy;
 	int dx;
 	int dy;	
@@ -278,9 +273,9 @@ void axis::setup_curve(std::vector<int> &info) {
 	dirs_vec.clear();
 	
 	std::cout << "R: " << r << "\tXi: " << x2 << "\tYi: " << y2 << "\tXf: " << x3 << "\tYf: " << y3 << "\twait time: " << pulse_period_us << '\n';
-	
+
 	do {
-		fxy = x2*x2 + y2*y2 - r*r;
+		fxy = (x2*x2) + (y2*y2) - (r*r);
 		dx = 2*x2;
 		dy = 2*y2;
 		
@@ -315,29 +310,6 @@ void axis::setup_curve(std::vector<int> &info) {
 			case 15:	yo = -1;	break;
 		}
 		
-		if(x2 == 0 && abs(y2) == r && step_vec.size() != 0) {
-			std::cout << "Adding " << backlash << " backlash steps in y at position: " << x2 << ", " << y2 << '\n';
-			if(!x_axis) {
-				step_vec.insert(step_vec.end(), backlash, 1);
-				dirs_vec.insert(dirs_vec.end(), backlash, (y2 < 0)? 1 : 0);
-			}
-			else {
-				step_vec.insert(step_vec.end(), backlash, 0);
-				dirs_vec.insert(dirs_vec.end(), backlash, dirs_vec[dirs_vec.size() - 1]);
-			}
-		}
-		else if(y2 == 0 && abs(x2) == r && step_vec.size() != 0) {
-			std::cout << "Adding " << backlash << " backlash steps in x at position: " << x2 << ", " << y2 << '\n';
-			if(x_axis) {
-				step_vec.insert(step_vec.end(), backlash, 1);
-				dirs_vec.insert(dirs_vec.end(), backlash, (x2 < 0)? 1 : 0);
-			}
-			else {
-				step_vec.insert(step_vec.end(), backlash, 0);
-				dirs_vec.insert(dirs_vec.end(), backlash, dirs_vec[dirs_vec.size() - 1]);
-			}
-		}
-			
 		if(x_axis) {
 			step_vec.push_back(xo);
 			dirs_vec.push_back((xo == 0)? dirs_vec[step_vec.size() - 1] : (bool)(xo+1));
@@ -349,7 +321,7 @@ void axis::setup_curve(std::vector<int> &info) {
 				
 		x2 += xo;
 		y2 += yo;
-				
+
 	}while(abs(x2 - x3) > 1 || abs(y2 - y3) > 1 || step_vec.size() < 3);
 	
 	if(x2 != x3) {

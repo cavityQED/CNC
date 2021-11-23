@@ -26,7 +26,7 @@
 #define	SECONDS_TIMER	TIMER_1
 
 //Base Timer Frequency, 80 MHz
-#define BASE_TIMER_FREQUENCY 80000000
+#define BASE_TIMER_FREQUENCY 80000000.0
 
 class Timer {
 public:
