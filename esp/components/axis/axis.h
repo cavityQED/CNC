@@ -80,7 +80,7 @@ public:
 	{
 		std::cout << "\tPosition (steps):\t\t" << m_step_position << '\n';
 	}
-	
+
 	void print_info() const
 	{
 		std::cout << "\tPosition (steps):\t"	<< m_step_position << '\n';
@@ -123,9 +123,9 @@ public:
 	void vector_move_config(	const position_t& start,
 								const position_t& end,
 								int final_wait_time,
-								int accel = m_accel,
 								int r = m_radius,
-								bool dir = false);
+								bool dir = false,
+								int accel = m_accel);
 	void vector_move();
 	void jog_move(bool dir);
 

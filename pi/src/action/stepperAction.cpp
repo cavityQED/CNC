@@ -42,6 +42,8 @@ void StepperAction::execute()
 			//Circular Interpolation Clockwise
 		case 3:
 			//Circular Interpolation Counterclockwise
+			m_config.motor->esp_enable_curv_mode(true);
+			
 			m_config.motor->vectorMove(	m_config.xi,
 										m_config.yi,
 										m_config.zi,

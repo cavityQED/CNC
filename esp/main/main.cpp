@@ -117,7 +117,9 @@ void get_message() {
 			gen_axis.enable_sync_mode(true);
 			gen_axis.vector_move_config(	{msg[1], msg[2], msg[3]},	//Start Position
 											{msg[4], msg[5], msg[6]},	//End Position
-											msg[7]);					//Pulse Period in us
+											msg[7],						//Pulse Period
+											msg[8],						//Radius
+											(bool)msg[9]);				//Direction
 			gen_axis.vector_move();
 			break;
 		}

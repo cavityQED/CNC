@@ -351,6 +351,7 @@ CNC::SyncAction* Program::G1_linearInterpolation(const CNC::codeBlock& block)
 CNC::SyncAction* Program::G2_circularInterpolationCW(const CNC::codeBlock& block)
 {
 	CNC::StepperAction::stepperConfig config;
+	config.block = std::move(block);
 
 	CNC::SyncAction* syncAction = new CNC::SyncAction(block);
 	syncAction->setSyncPin(18);
@@ -395,6 +396,7 @@ CNC::SyncAction* Program::G2_circularInterpolationCW(const CNC::codeBlock& block
 CNC::SyncAction* Program::G3_circularInterpolationCCW(const CNC::codeBlock& block)
 {
 	CNC::StepperAction::stepperConfig config;
+	config.block = std::move(block);
 
 	CNC::SyncAction* syncAction = new CNC::SyncAction(block);
 	syncAction->setSyncPin(18);

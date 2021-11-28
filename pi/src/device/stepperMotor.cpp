@@ -51,6 +51,8 @@ void stepperMotor::vectorMove(	double xi,
 	sendBuffer[5] = yf * m_params.spmm;
 	sendBuffer[6] = zf * m_params.spmm;
 	sendBuffer[7] = 1000000 / (int)(f * m_params.spmm);
+	sendBuffer[8] = (int)(r * m_params.spmm);
+	sendBuffer[9] = (int)dir;
 	spiSend(m_params.device_pin);
 }
 
