@@ -36,6 +36,7 @@ class Action : public QWidget
 public:
 	
 	Action(CNC::codeBlock block, QWidget* parent = nullptr);
+	Action(QWidget* parent = nullptr);
 	~Action() {}
 
 	virtual void enable_sync_mode(bool enable)	{return;}

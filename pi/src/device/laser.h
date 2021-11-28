@@ -11,6 +11,8 @@
 #include <QString>
 #include <QHBoxLayout>
 #include <QGroupBox>
+#include <QAction>
+
 
 #define LASER_PIN 21
 
@@ -33,7 +35,9 @@ public:
 public slots:
 	void increase_power()
 	{
-		if(m_power <= 95)
+		if(m_power < 5)
+			m_power += 1;
+		else if(m_power <= 95)
 			m_power += 5;
 		else
 			m_power = 100;
@@ -43,7 +47,9 @@ public slots:
 	
 	void decrease_power()
 	{
-		if(m_power >= 5)
+		if(m_power <= 5 && m_power > 0)
+			m_power -= 1;
+		else if(m_power > 5)
 			m_power -= 5;
 		else
 			m_power = 0;

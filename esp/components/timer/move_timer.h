@@ -6,6 +6,7 @@
 #include <iostream>
 #include <memory>
 #include <cmath>
+#include <stdint.h>
 
 #include "driver/gpio.h"
 #include "driver/timer.h"
@@ -29,7 +30,16 @@
 #define BASE_TIMER_FREQUENCY 80000000.0
 
 class Timer {
+
 public:
+
+	enum axis_t 
+	{
+		X_AXIS = 0x01,
+		Y_AXIS = 0x02,
+		Z_AXIS = 0x04,
+	};
+
 	Timer(int* pos, bool* motion);
 	~Timer() {}
 	
@@ -69,6 +79,11 @@ public:
 	 * 		Resets the timer counters and enables the interrupts and alarms
 	 */
 	void reset();
+
+	void set_axis(axis_t a) {m_axis = a;}
+	void curve_setup_2D(int x, int y, int xf, int yf, int r, bool d);
+
+	static void IRAM_ATTR G2_2D_circularInterpolation();
 	 
 	/*	LINEAR PULSE ISR
 	*		Pulses PULSE_PIN and updates position_steps when the associated timer's alarm value is reached
@@ -102,6 +117,15 @@ private:
 	static double		min_wait_time;		//Minimum wait time in seconds achieved in the pulse timer
 	static int*			position_steps;		//Pointer to the motor's step position to be updated in the Pulse Step ISR
 	static bool*		in_motion;			//Pointer to the motor's motion bool to be updated by the Pulse Stop ISR
+
+	static axis_t m_axis;
+	static axis_t	m_step_axis;
+	static bool m_d;
+	static int xo, yo;
+	static int m_xi, m_yi, m_r;
+	static int m_xf, m_yf;
 };
+
+
 
 #endif

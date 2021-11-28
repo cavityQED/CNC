@@ -9,14 +9,8 @@ StepperAction::StepperAction(CNC::DEVICE::stepperMotor* motor, CNC::codeBlock bl
 
 }
 
-StepperAction::StepperAction(CNC::StepperAction::linearConfig& config, QWidget* parent)
-	: Action(config.block, parent), m_linearConfig(std::move(config))
-{
-
-}
-
-StepperAction::StepperAction(CNC::StepperAction::vectorConfig& config, QWidget* parent)
-	: Action(config.block, parent), m_vectorConfig(std::move(config))
+StepperAction::StepperAction(CNC::StepperAction::stepperConfig& config, QWidget* parent)
+	: Action(config.block, parent), m_config(std::move(config))
 {
 
 }
@@ -34,22 +28,29 @@ void StepperAction::execute()
 			break;
 		case 1:
 			//Linear Interpolation
-			m_linearConfig.motor->esp_linear_move(	m_linearConfig.sync,
-													m_linearConfig.direction,
-													m_linearConfig.mm,
-													m_linearConfig.seconds);
+			m_config.motor->esp_enable_line_mode(true);
+
+			m_config.motor->vectorMove(	m_config.xi,
+										m_config.yi,
+										m_config.zi,
+										m_config.xf,
+										m_config.yf,
+										m_config.zf,
+										m_config.f);
 			break;
 		case 2:
 			//Circular Interpolation Clockwise
 		case 3:
 			//Circular Interpolation Counterclockwise
-			m_vectorConfig.motor->vectorMove(	m_vectorConfig.xi,
-												m_vectorConfig.xf,
-												m_vectorConfig.yi,
-												m_vectorConfig.yf,
-												m_vectorConfig.block.f,
-												m_vectorConfig.r,
-												m_vectorConfig.dir);
+			m_config.motor->vectorMove(	m_config.xi,
+										m_config.yi,
+										m_config.zi,
+										m_config.xf,
+										m_config.yf,
+										m_config.zf,
+										m_config.f,
+										m_config.r,
+										m_config.dir);
 			break;
 		case 4:
 			//Dwell

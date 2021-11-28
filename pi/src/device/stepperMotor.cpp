@@ -17,7 +17,7 @@ stepperMotor::stepperMotor(params_t &params, QWidget* parent) : spiDevice(parent
 
 void stepperMotor::configureStepper(params_t &p)
 {
-	esp_set_x_axis			(p.x_axis);
+	esp_set_axis			(p.axis);
 	esp_set_steps_per_mm	(p.spmm);
 	esp_set_max_steps		(p.max_mm * p.spmm);
 }
@@ -27,78 +27,37 @@ void stepperMotor::jogMove(bool dir)
 	if(!m_jogMode)
 		return;
 
-	esp_set_direction(dir);
-	esp_move();
-	startTimer(m_timerPeriod);
-}
-
-void stepperMotor::linearMove(bool sync, bool dir, double mm, double time)
-{
-	esp_linear_move(sync, dir, mm, time);
-}
-
-void stepperMotor::vectorMove(double xi, double xf, double yi, double yf, double feed, double r, bool dir)
-{
-	std::cout << "\tVector Move: " << "[" << xi << ", " << xf << ", " << yi << ", "  << yf << ", " << feed << ", " << r << ", " << dir << "]\n"; 
-	esp_enable_sync_mode(true);
-	esp_enable_curv_mode(true);
-	esp_setup_curve(xi, xf, yi, yf, feed, r, dir);
-	spiWaitForReady();
-	std::cout << "\tSPI Wait Released - Moving Motor\n";
-	esp_move();
-}
-
-void stepperMotor::esp_move()
-{
-	sendBuffer[0] = ESP::MOVE;
-	spiSend(m_params.device_pin);
-	m_inMotion = true;
-}
-
-void stepperMotor::esp_stop()
-{
-	sendBuffer[0] = ESP::STOP;
-	spiSend(m_params.device_pin);
-	startTimer(m_timerPeriod);
-}
-
-void stepperMotor::esp_linear_move(bool sync, bool dir, double mm, double time)
-{
-	sendBuffer[0] = ESP::LINEAR_MOVE;
-	sendBuffer[1] = (int)sync;
-	sendBuffer[2] = (int)dir;
-	sendBuffer[3] = mm * m_params.spmm;
-	sendBuffer[4] = 1000000.0 * time / mm / m_params.spmm;
-	spiSend(m_params.device_pin);
-}
-
-void stepperMotor::esp_set_steps_to_move(int steps)
-{
-	std::cout << "\n";
-	sendBuffer[0] = ESP::SET_STEPS_TO_MOVE;
-	sendBuffer[1] = steps;
-	spiSend(m_params.device_pin);
-
-}
-
-void stepperMotor::esp_set_jog_steps(int steps)
-{
-	sendBuffer[0] = ESP::SET_JOG_STEPS;
-	sendBuffer[1] = steps;
-	spiSend(m_params.device_pin);
-}
-
-void stepperMotor::esp_set_direction(bool dir)
-{
-	sendBuffer[0] = ESP::SET_DIRECTION;
+	sendBuffer[0] = ESP::JOG_MOVE;
 	sendBuffer[1] = (int)dir;
 	spiSend(m_params.device_pin);
+	startTimer(m_timerPeriod);
 }
 
-void stepperMotor::esp_set_step_time(int time_us)
+void stepperMotor::vectorMove(	double xi,
+								double yi,
+								double zi,
+								double xf,
+								double yf,
+								double zf,
+								double f,
+								double r,
+								bool dir)
 {
-	sendBuffer[0] = ESP::SET_STEP_TIME;
-	sendBuffer[1] = time_us;
+	sendBuffer[0] = ESP::VECTOR_MOVE;
+	sendBuffer[1] = xi * m_params.spmm;
+	sendBuffer[2] = yi * m_params.spmm;
+	sendBuffer[3] = zi * m_params.spmm;
+	sendBuffer[4] = xf * m_params.spmm;
+	sendBuffer[5] = yf * m_params.spmm;
+	sendBuffer[6] = zf * m_params.spmm;
+	sendBuffer[7] = 1000000 / (int)(f * m_params.spmm);
+	spiSend(m_params.device_pin);
+}
+
+void stepperMotor::esp_set_axis(ESP::AXIS a)
+{
+	sendBuffer[0] = ESP::SET_AXIS;
+	sendBuffer[1] = (int)a;
 	spiSend(m_params.device_pin);
 }
 
@@ -116,23 +75,17 @@ void stepperMotor::esp_set_max_steps(int max_steps)
 	spiSend(m_params.device_pin);
 }
 
-void stepperMotor::esp_set_x_axis(bool x_axis)
+void stepperMotor::esp_set_jog_steps(int jog_steps)
 {
-	sendBuffer[0] = ESP::SET_X_AXIS;
-	sendBuffer[1] = (int)x_axis;
+	sendBuffer[0] = ESP::SET_JOG_STEPS;
+	sendBuffer[1] = jog_steps;
 	spiSend(m_params.device_pin);
 }
 
-void stepperMotor::esp_setup_curve(double xi, double xf, double yi, double yf, double feed, double r, bool dir)
+void stepperMotor::esp_set_jog_speed(int jog_us)
 {
-	sendBuffer[0] = ESP::SETUP_CURVE;
-	sendBuffer[1] = (int)dir;
-	sendBuffer[2] = (int)(r * m_params.spmm);
-	sendBuffer[3] = (int)(xi * m_params.spmm);
-	sendBuffer[4] = (int)(yi * m_params.spmm);
-	sendBuffer[5] = (int)(xf * m_params.spmm);
-	sendBuffer[6] = (int)(yf * m_params.spmm);
-	sendBuffer[7] = feed;
+	sendBuffer[0] = ESP::SET_JOG_SPEED;
+	sendBuffer[1] = jog_us;
 	spiSend(m_params.device_pin);
 }
 
@@ -174,10 +127,18 @@ void stepperMotor::esp_receive()
 	spiSend(m_params.device_pin);
 
 	m_stepPosition = recvBuffer[1];
-	m_inMotion = recvBuffer[2];
+	m_inMotion = (bool)recvBuffer[2];
 
 	m_mmPosition = (double)m_stepPosition/(double)m_params.spmm;
+	std::cout << "Position: " << m_mmPosition << '\n';
 	emit positionChange(m_mmPosition);
+}
+
+void stepperMotor::esp_stop()
+{
+	sendBuffer[0] = ESP::STOP;
+	spiSend(m_params.device_pin);
+	startTimer(m_timerPeriod);
 }
 
 void stepperMotor::timerEvent(QTimerEvent* e)

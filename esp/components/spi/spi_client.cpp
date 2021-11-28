@@ -91,29 +91,23 @@ void SpiClient::set_sendbuffer_value(int index, int value) {
 void SpiClient::printFunction(AXIS_FUNCTION_CODE code) {
 	std::cout << "Message: ";
 	switch(code) {
-		case SET_FEED_RATE:			std::cout << "Set Feed Rate";				break;		
-		case SET_DIRECTION:			std::cout << "Set Direction";				break;
-		case SET_STEP_TIME:			std::cout << "Set Step Time";				break;
-		case SET_STEPS_TO_MOVE:		std::cout << "Set Steps to Move";			break;
-		case SET_JOG_STEPS:			std::cout << "Set Jog Steps";				break;
-		case SET_BACKLASH:			std::cout << "Set Backlash";				break;
-		case SET_X_AXIS:			std::cout << "Set X Axis";					break;
-		case SET_STEPS_PER_MM:		std::cout << "Set steps/mm";				break;
-		case SET_MAX_STEPS:			std::cout << "Set Max Steps";				break;
-		case SETUP_CURVE:			std::cout << "Setup Curve";					break;
-		case ENA_JOG_MODE:			std::cout << "Enable Jog Mode";				break;
-		case ENA_LINE_MODE:			std::cout << "Enable Line Mode";			break;
-		case ENA_CURV_MODE:			std::cout << "Enable Curve Mode";			break;
-		case ENA_SYNC_MODE:			std::cout << "Enable Sync Mode";			break;
-		case ENA_JOG_CONTINUOUS:	std::cout << "Continuous Jog Enabled";		break;
-		case ENA_TRAVEL_LIMITS:		std::cout << "Enable Travel Limits";		break;
-		case FIND_ZERO:				std::cout << "Find Zero";					break;
-		case MOVE:					std::cout << "Move";						break;
-		case STOP:					std::cout << "Stop";						break;
-		case RECEIVE:				std::cout << "Receive";						break;
-		case TEST_FUNCTION:			std::cout << "Test Function";				break;
-		default:					std::cout << "Unrecognized Function";		break;
+		case SET_AXIS:				std::cout << "Set Axis";				break;
+		case SET_STEPS_PER_MM:		std::cout << "Set steps/mm";			break;
+		case SET_MAX_STEPS:			std::cout << "Set Max Steps";			break;
+		case SET_DIRECTION:			std::cout << "Set Direction";			break;
+		case SET_ACCELERATION:		std::cout << "Set Acceleration";		break;
+		case SET_INITIAL_PERIOD:	std::cout << "Set Initial Period";		break;
+		case SET_JOG_STEPS:			std::cout << "Set Jog Steps";			break;
+		case SET_JOG_SPEED:			std::cout << "Set Jog Speed";			break;
+		case ENA_JOG_MODE:			std::cout << "Enable Jog Mode";			break;
+		case ENA_LINE_MODE:			std::cout << "Enable Line Mode";		break;
+		case ENA_CURV_MODE:			std::cout << "Enable Curve Mode";		break;
+		case ENA_SYNC_MODE:			std::cout << "Enable Sync Mode";		break;
+		case VECTOR_MOVE:			std::cout << "Vector Move";				break;
+		case JOG_MOVE:				std::cout << "Jog Move";				break;
+		case STOP:					std::cout << "Stop";					break;
+		case RECEIVE:				std::cout << "Receive";					break;
+		default:					std::cout << "Unrecognized Function";	break;
 	}
 	std::cout << '\n';
 }
-	 

@@ -1,6 +1,5 @@
 #include "axis.h"
 #include "spi_client.h"
-#include "move_timer.h"
 
 #include "freertos/queue.h"
 
@@ -35,78 +34,111 @@ void IRAM_ATTR zero_interlock(void* arg) {
 
 void get_message() {
 	std::cout << "Getting Message\n";
-	spi.set_sendbuffer_value(1, gen_axis.get_position_steps());
+	spi.set_sendbuffer_value(1, gen_axis.step_position());
 	spi.set_sendbuffer_value(2, gen_axis.in_motion());
 	spi.get_message(msg);
 	spi.printFunction((AXIS_FUNCTION_CODE)msg[0]);
 	switch((AXIS_FUNCTION_CODE) msg[0]) {
-		case SET_FEED_RATE:
-			gen_axis.set_feed_rate(msg[1]);
+
+		case SET_AXIS:
+		{
+			gen_axis.set_axis((AXIS)msg[1]);
 			break;
+		}
+		
+		case SET_STEPS_PER_MM:
+		{
+			gen_axis.set_spmm(msg[1]);
+			break;
+		}
+		
+		case SET_MAX_STEPS:
+		{
+			gen_axis.set_max_steps(msg[1]);
+			break;
+		}
+		
 		case SET_DIRECTION:
-			gen_axis.set_direction((bool) msg[1]);
+		{
+			gen_axis.set_direction((bool)msg[1]);
 			break;
-		case SET_STEP_TIME:
-			gen_axis.set_step_time(msg[1]);
+		}
+
+		case SET_ACCELERATION:
+		{
+			gen_axis.set_accel(msg[1]);
 			break;
-		case SET_STEPS_TO_MOVE:
-			gen_axis.set_steps_to_move(msg[1]);
+		}
+
+		case SET_INITIAL_PERIOD:
+		{
+			gen_axis.set_init_period(msg[1]);
 			break;
+		}
+
 		case SET_JOG_STEPS:
+		{
 			gen_axis.set_jog_steps(msg[1]);
 			break;
-		case SET_BACKLASH:
-			gen_axis.set_backlash(msg[1]);
+		}
+
+		case SET_JOG_SPEED:
+		{
+			gen_axis.set_jog_speed(msg[1]);
 			break;
-		case SET_X_AXIS:
-			gen_axis.set_x_axis((bool)msg[1]);
-			break;
-		case SET_STEPS_PER_MM:
-			gen_axis.set_steps_per_mm(msg[1]);
-			break;
-		case SET_MAX_STEPS:
-			gen_axis.set_max_travel_steps(msg[1]);
-			break;
+		}
+
 		case ENA_JOG_MODE:
+		{
 			gen_axis.enable_jog_mode((bool)msg[1]);
 			break;
+		}
+
 		case ENA_LINE_MODE:
+		{
 			gen_axis.enable_line_mode((bool)msg[1]);
 			break;
+		}
+
 		case ENA_CURV_MODE:
+		{
 			gen_axis.enable_curv_mode((bool)msg[1]);
 			break;
+		}
+
 		case ENA_SYNC_MODE:
+		{
 			gen_axis.enable_sync_mode((bool)msg[1]);
 			break;
-		case ENA_JOG_CONTINUOUS:
-			gen_axis.enable_continuous_jog((bool)msg[1]);
+		}
+
+		case VECTOR_MOVE:
+		{
+			gen_axis.enable_sync_mode(true);
+			gen_axis.vector_move_config(	{msg[1], msg[2], msg[3]},	//Start Position
+											{msg[4], msg[5], msg[6]},	//End Position
+											msg[7]);					//Pulse Period in us
+			gen_axis.vector_move();
 			break;
-		case ENA_TRAVEL_LIMITS:
-			gen_axis.enable_travel_limits((bool)msg[1]);
+		}
+
+		case JOG_MOVE:
+		{
+			gen_axis.jog_move((bool)msg[1]);
 			break;
-		case MOVE:
-			gen_axis.print_pos_steps();
-			gen_axis.move();
-			break;
-		case LINEAR_MOVE:
-			gen_axis.linear_move((bool)msg[1], (bool)msg[2], msg[3], msg[4]);
-			break;
-		case FIND_ZERO:
-			gen_axis.find_zero();
-			break;
+		}
+
 		case STOP:
-			gen_axis.stop();
+		{
 			break;
+		}
+
 		case RECEIVE:
-			gen_axis.print_pos_steps();
+		{
+			gen_axis.print_info();
 			break;
-		case SETUP_CURVE:
-			gen_axis.setup_curve(msg);
-			break;
-		case TEST_FUNCTION:
-			gen_axis.test_function(msg);
-			break;
+		}
+
 		default:
 			break;
 		}
@@ -122,7 +154,7 @@ static void main_task(void* arg) {
 				get_message();
 				break;
 			case ZERO_STOP:
-				gen_axis.stop_zero_interlock();
+				//gen_axis.stop_zero_interlock();
 				break;
 			default:
 				break;
@@ -144,13 +176,15 @@ extern "C" void app_main(void) {
 	
 	gpio_config(&io_conf);
 	gpio_install_isr_service(0);
-	gen_axis.setup_gpio();
 	
 	gpio_set_intr_type(ZERO_INTERLOCK, GPIO_INTR_POSEDGE);
 	gpio_isr_handler_add(ZERO_INTERLOCK, zero_interlock, NULL);
 	gpio_set_intr_type(DEVICE_SELECT, GPIO_INTR_POSEDGE);
 	gpio_isr_handler_add(DEVICE_SELECT, msg_ready, NULL);
 		
+	gen_axis.setup_gpio();
+	gen_axis.setup_timers();
 	gen_axis.set_spi(&spi);
+
 	xTaskCreate(main_task, "main_task", 4096, NULL, 1, NULL);
 }

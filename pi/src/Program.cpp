@@ -300,6 +300,12 @@ bool Program::is_supported_letter_code(const char c)
 
 /********************************
 *		G Code Translation		*
+*								*
+*								*
+*								*
+*								*
+*								*
+*								*
 ********************************/
 
 CNC::SyncAction* Program::G0_rapid(const CNC::codeBlock& block)
@@ -309,44 +315,32 @@ CNC::SyncAction* Program::G0_rapid(const CNC::codeBlock& block)
 
 CNC::SyncAction* Program::G1_linearInterpolation(const CNC::codeBlock& block)
 {
-	CNC::StepperAction::linearConfig config;
+	CNC::StepperAction::stepperConfig config;
 	config.block = std::move(block);
 
 	CNC::SyncAction* syncAction = new CNC::SyncAction(block);
 	syncAction->setSyncPin(18);
 
-	double dx = (block.abs_x)? block.x - block.prev_x : block.u;
-	double dy = (block.abs_y)? block.y - block.prev_y : block.v;
-	double dz = (block.abs_z)? block.z - block.prev_z : block.w;
+	config.xf = (block.abs_x)? block.x - block.prev_x : block.u;
+	config.yf = (block.abs_y)? block.y - block.prev_y : block.v;
+	config.zf = (block.abs_z)? block.z - block.prev_z : block.w;
 
-	double D = std::sqrt(dx*dx + dy*dy + dz*dz);
-	double t = D / block.f;
+	config.f = block.f;
 
-	std::cout << "Move Time: " << t << "s\n";
-
-	config.seconds = t;
-	config.sync = true;
-
-	if(dx)
+	if(m_devices.x_axis != nullptr)
 	{
-		config.mm = std::fabs(dx);
-		config.direction = !std::signbit(dx);
 		config.motor = m_devices.x_axis;
 		syncAction->addAction(new CNC::StepperAction(config));
 	}
 
-	if(dy)
+	if(m_devices.y_axis != nullptr)
 	{
-		config.mm = std::fabs(dy);
-		config.direction = !std::signbit(dy);
 		config.motor = m_devices.y_axis;
 		syncAction->addAction(new CNC::StepperAction(config));
 	}
 
-	if(dz)
+	if(m_devices.z_axis != nullptr)
 	{
-		config.mm = std::fabs(dz);
-		config.direction = !std::signbit(dz);
 		config.motor = m_devices.z_axis;
 		syncAction->addAction(new CNC::StepperAction(config));
 	}
@@ -356,8 +350,7 @@ CNC::SyncAction* Program::G1_linearInterpolation(const CNC::codeBlock& block)
 
 CNC::SyncAction* Program::G2_circularInterpolationCW(const CNC::codeBlock& block)
 {
-	CNC::StepperAction::vectorConfig config;
-	config.block = std::move(block);
+	CNC::StepperAction::stepperConfig config;
 
 	CNC::SyncAction* syncAction = new CNC::SyncAction(block);
 	syncAction->setSyncPin(18);
@@ -387,7 +380,8 @@ CNC::SyncAction* Program::G2_circularInterpolationCW(const CNC::codeBlock& block
 		config.r = std::sqrt(block.i*block.i + block.j*block.j + block.k*block.k);
 	}
 
-	config.dir = 1;
+	config.dir	= 1;
+	config.f	= block.f;
 
 	config.motor = m_devices.x_axis;
 	syncAction->addAction(new CNC::StepperAction(config));
@@ -400,8 +394,7 @@ CNC::SyncAction* Program::G2_circularInterpolationCW(const CNC::codeBlock& block
 
 CNC::SyncAction* Program::G3_circularInterpolationCCW(const CNC::codeBlock& block)
 {
-	CNC::StepperAction::vectorConfig config;
-	config.block = std::move(block);
+	CNC::StepperAction::stepperConfig config;
 
 	CNC::SyncAction* syncAction = new CNC::SyncAction(block);
 	syncAction->setSyncPin(18);
@@ -431,7 +424,8 @@ CNC::SyncAction* Program::G3_circularInterpolationCCW(const CNC::codeBlock& bloc
 		config.r = std::sqrt(block.i*block.i + block.j*block.j + block.k*block.k);
 	}
 
-	config.dir = 0;
+	config.dir	= 0;
+	config.f	= block.f;
 
 	config.motor = m_devices.x_axis;
 	syncAction->addAction(new CNC::StepperAction(config));

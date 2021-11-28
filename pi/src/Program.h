@@ -48,7 +48,7 @@ public slots:
 	void stop();
 	void reset();
 	void execute_next();
-	
+
 	void load();
 	void loadBlocks();	//Read text stored at m_filename and translate to codeBlocks
 	void loadActions();	//Convert list of code blocks into list of program actions
@@ -82,7 +82,7 @@ protected:
 
 	int		m_timer;
 	int 	m_programStep = 0;			//Current program step
-	int		m_programTimerPeriod = 50;	//Period in ms of the program timer
+	int		m_programTimerPeriod = 5;	//Period in ms of the program timer
 
 };
 

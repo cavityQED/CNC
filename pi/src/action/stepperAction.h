@@ -13,38 +13,31 @@ class StepperAction : public Action
 
 public:
 
-	struct linearConfig
+	struct stepperConfig
 	{
-		double	seconds;
-		double	mm;
-		bool	direction;
-		bool	sync;
+		double xi	= 0;
+		double yi	= 0;
+		double zi	= 0;
+		
+		double xf	= 0;
+		double yf	= 0;
+		double zf	= 0;
+
+		double r	= 0;
+		double f	= 0;
+		
+		bool dir	= 0;
 
 		CNC::DEVICE::stepperMotor*	motor;
 		CNC::codeBlock				block;
 	};
 
-	struct vectorConfig
-	{
-		double xi, yi, zi;
-		double xf, yf, zf;
-
-		double r;
-		bool dir;
-		
-		CNC::DEVICE::stepperMotor*	motor;
-		CNC::codeBlock				block;	
-	};
-
 	StepperAction(CNC::DEVICE::stepperMotor* motor, CNC::codeBlock block, QWidget* parent = nullptr);
-	StepperAction(CNC::StepperAction::linearConfig& config, QWidget* parent = nullptr);
-	StepperAction(CNC::StepperAction::vectorConfig& config, QWidget* parent = nullptr);
+	StepperAction(CNC::StepperAction::stepperConfig& config, QWidget* parent = nullptr);
 	~StepperAction() {}
 
 	virtual void enable_sync_mode(bool enable) override {m_stepper->esp_enable_sync_mode(enable);}
 	virtual void wait_for_ready() override				{m_stepper->spiWaitForReady();}
-
-	void setParams(const linearConfig& config)	{m_linearConfig = config;}
 
 public:
 
@@ -55,8 +48,7 @@ public slots:
 protected:
 
 	CNC::DEVICE::stepperMotor*	m_stepper;
-	linearConfig				m_linearConfig;
-	vectorConfig				m_vectorConfig;
+	stepperConfig				m_config;
 
 	bool	m_dir;				//Direction - true for positive move, false for negative
 	int		m_steps;			//Number of steps to move

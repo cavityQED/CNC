@@ -79,8 +79,8 @@ private:
 	PositionReadout *pos;
 	MotorController *controller;
 	
-	CNC::DEVICE::stepperMotor::params_t xparams {5, 200, 200, true};
-	CNC::DEVICE::stepperMotor::params_t yparams {6, 200, 200, false};
+	CNC::DEVICE::stepperMotor::params_t xparams {5, 200, 200, CNC::DEVICE::ESP::AXIS::x_axis};
+	CNC::DEVICE::stepperMotor::params_t yparams {6, 200, 200, CNC::DEVICE::ESP::AXIS::y_axis};
 	
 	CNC::DEVICE::stepperMotor*	x_axis;
 	CNC::DEVICE::stepperMotor*	y_axis;

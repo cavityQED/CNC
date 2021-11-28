@@ -23,12 +23,36 @@ Laser::Laser(QWidget* parent) : QGroupBox(parent)
 	QHBoxLayout* hbox = new QHBoxLayout(this);
 	hbox->addWidget(label);
 	hbox->addWidget(power_edit);
-	hbox->addWidget(decrease_button);
-	hbox->addWidget(increase_button);
+
+	QVBoxLayout* vbox = new QVBoxLayout(this);
+	vbox->addWidget(increase_button);
+	vbox->addWidget(decrease_button);
+	hbox->addLayout(vbox);
+
+	QVBoxLayout* onoff = new QVBoxLayout(this);
+	QPushButton* on_button = new QPushButton("ON");
+	QPushButton* off_button = new QPushButton("OFF");
+	
+	onoff->addWidget(on_button);
+	onoff->addWidget(off_button);
+	hbox->addLayout(onoff);
+
 	setLayout(hbox);
 	
 	connect(increase_button, &QPushButton::released, this, &Laser::increase_power);
 	connect(decrease_button, &QPushButton::released, this, &Laser::decrease_power);
+	connect(on_button, &QPushButton::released, this, &Laser::on);
+	connect(off_button, &QPushButton::released, this, &Laser::off);
+
+	QAction* up = new QAction(this);
+	up->setShortcut(Qt::Key_Plus);
+	connect(up, &QAction::triggered, this, &Laser::increase_power);
+	addAction(up);
+
+	QAction* down = new QAction(this);
+	down->setShortcut(Qt::Key_Minus);
+	connect(down, &QAction::triggered, this, &Laser::decrease_power);
+	addAction(down);
 }
 
 void Laser::setPower(int pow, bool start)
