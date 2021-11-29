@@ -88,6 +88,12 @@ void get_message() {
 			break;
 		}
 
+		case SET_RAPID_SPEED:
+		{
+			gen_axis.set_rapid_speed(msg[1]);
+			break;
+		}
+
 		case ENA_JOG_MODE:
 		{
 			gen_axis.enable_jog_mode((bool)msg[1]);
@@ -149,7 +155,7 @@ void get_message() {
 static void main_task(void* arg) {
 	event_info_t evt;
 	while(1) {	
-		std::cout << "Main Task Waiting.....\n";
+		std::cout << "\nMain Task Waiting.....\n";
 		xQueueReceive(evt_queue, &evt, portMAX_DELAY);
 		switch(evt.type) {
 			case GET_MESSAGE:

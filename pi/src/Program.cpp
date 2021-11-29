@@ -222,6 +222,9 @@ void Program::loadActions()
 				switch(b.numberCode)
 				{
 					case 0:
+						std::cout << "\n\nAdding G0 Rapid Move\n";
+						m_programActions.push_back(G0_rapid(b));
+						std::cout << "Added G0 Move\n";
 						break;
 					case 1:
 					{	//Linear Interpolation
@@ -308,9 +311,10 @@ bool Program::is_supported_letter_code(const char c)
 *								*
 ********************************/
 
-CNC::SyncAction* Program::G0_rapid(const CNC::codeBlock& block)
+CNC::SyncAction* Program::G0_rapid(CNC::codeBlock& block)
 {
-
+	block.f = -1;
+	return G1_linearInterpolation(block);
 }
 
 CNC::SyncAction* Program::G1_linearInterpolation(const CNC::codeBlock& block)

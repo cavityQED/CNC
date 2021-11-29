@@ -86,6 +86,7 @@ public:
 		std::cout << "\tPosition (steps):\t"	<< m_step_position << '\n';
 		std::cout << "\tCurrent Divider:\t"		<< m_divider << '\n';
 		std::cout << "\tCurrent Step:\t\t"		<< m_cur_pulse << '\n';
+		std::cout << "\tMove Position:\t\t"		<< m_cur_pos;
 	}
 	
 public:
@@ -100,6 +101,7 @@ public:
 	void	set_init_period	(int period)	{m_init_period_us = period;}
 	void	set_jog_steps	(int steps)		{m_jog_steps = steps;}
 	void	set_jog_speed	(int jog_us)	{m_jog_period_us = jog_us;}
+	void	set_rapid_speed	(int rapid_us)	{m_rapid_period_us = rapid_us;}
 	void	set_spi			(SpiClient *s)	{m_spi = s;}
 
 public:
@@ -147,6 +149,7 @@ protected:
 	static int			m_max_steps;		//Maximum travel in steps
 	static int			m_jog_steps;		//Steps to travel during jog
 	static int			m_jog_period_us;	//Jog step period in microseconds
+	static int			m_rapid_period_us;	//Wait time in microseconds for rapid moves
 	static int			m_init_period_us;	//Initial wait time in microseconds between step pulses	
 	static SpiClient*	m_spi;				//Spi client to send messages to pi
 	static esp_err_t	m_esp_err;			//ESP error

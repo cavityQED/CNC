@@ -25,6 +25,7 @@ enum esp32FUNCTION
 
 	SET_JOG_STEPS,
 	SET_JOG_SPEED,
+	SET_RAPID_SPEED,
 
 	ENA_JOG_MODE,		
 	ENA_LINE_MODE,
@@ -105,6 +106,7 @@ public:
 
 	void esp_set_jog_steps		(int steps);
 	void esp_set_jog_speed		(int jog_us);
+	void esp_set_rapid_speed	(int rapid_us);
 
 	void esp_enable_jog_mode	(bool enable);
 	void esp_enable_line_mode	(bool enable);

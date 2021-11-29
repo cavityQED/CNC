@@ -91,6 +91,13 @@ void stepperMotor::esp_set_jog_speed(int jog_us)
 	spiSend(m_params.device_pin);
 }
 
+void stepperMotor::esp_set_rapid_speed(int rapid_us)
+{
+	sendBuffer[0] = ESP::SET_RAPID_SPEED;
+	sendBuffer[1] = rapid_us;
+	spiSend(m_params.device_pin);
+}
+
 void stepperMotor::esp_enable_jog_mode(bool enable)
 {
 	m_jogMode = enable;

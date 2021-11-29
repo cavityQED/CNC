@@ -8,10 +8,11 @@ int				axis::m_final_pulse			= 0;
 int				axis::m_step_position		= 0;
 int				axis::m_radius				= 0;
 int				axis::m_jog_period_us		= 100;
+int				axis::m_rapid_period_us		= 50;
 int				axis::m_spmm				= 200;			
 int				axis::m_max_mm				= 300;			
 int				axis::m_init_period_us		= 2500;	
-int				axis::m_accel				= 40000;			
+int				axis::m_accel				= 100000;			
 int				axis::m_max_steps			= 60000;	
 
 bool			axis::m_direction			= false;		
@@ -173,7 +174,10 @@ void axis::vector_move_config(	const position_t& start,
 								int r,
 								bool dir,
 								int accel)
-{		
+{	
+	if(final_wait_time < 0)
+		final_wait_time = m_rapid_period_us;
+
 	switch(m_axis)
 	{
 		case x_axis:
@@ -221,7 +225,7 @@ void axis::vector_move_config(	const position_t& start,
 		linear_interpolation_2D();
 	else if(m_curv_mode)
 		circular_interpolation_2D();
-	
+
 	reset_timers();
 	timer_set_divider(VECTOR_GROUP, PULSE_TIMER, m_divider_max);
 	timer_set_alarm_value(VECTOR_GROUP, PULSE_TIMER, final_wait_time);
@@ -233,6 +237,8 @@ void axis::vector_move()
 	{
 		m_spi->toggle_ready();
 		xSemaphoreTake(m_syncSem, portMAX_DELAY);
+		if(!m_final_pulse)
+			return;
 	}
 
 	timer_start(VECTOR_GROUP, PULSE_TIMER);
@@ -282,9 +288,11 @@ void axis::linear_interpolation_2D()
 	}
 
 	int mask = 0;
-	mask += (m_cur_pos.y > m_slope*m_cur_pos.x)? 	4 : 0;
-	mask += (m_end_pos.x > 0)?						2 : 0;
-	mask += (m_end_pos.y > 0)?						1 : 0;
+	int y = (m_end_pos.x)? m_slope*m_cur_pos.x : m_end_pos.y;
+
+	mask += (m_cur_pos.y > y)?	 	4 : 0;
+	mask += (m_end_pos.x > 0)?		2 : 0;
+	mask += (m_end_pos.y > 0)?		1 : 0;
 
 	switch(mask)
 	{
@@ -389,8 +397,6 @@ void axis::vector_move_isr(void* arg)
 	if(m_axis == m_step_axis)
 	{
 		gpio_set_level(PULSE_PIN, 1);
-		gpio_set_level(PULSE_PIN, 0);
-
 		m_step_position += (m_direction)? 1 : -1;
 		
 		if(++m_cur_pulse == m_final_pulse)
@@ -399,6 +405,7 @@ void axis::vector_move_isr(void* arg)
 			timer_pause(VECTOR_GROUP, SECONDS_TIMER);
 			m_motion = false;
 		}
+		gpio_set_level(PULSE_PIN, 0);
 	}
 
 	if(m_line_mode)
@@ -407,7 +414,6 @@ void axis::vector_move_isr(void* arg)
 		circular_interpolation_2D();
 
 	update_divider(VECTOR_GROUP);
-
 	timer_group_clr_intr_status_in_isr	(VECTOR_GROUP, PULSE_TIMER);
 	timer_group_enable_alarm_in_isr		(VECTOR_GROUP, PULSE_TIMER);
 	timer_spinlock_give					(VECTOR_GROUP);
