@@ -45,16 +45,19 @@ public:
 		x_axis = new CNC::DEVICE::stepperMotor(xparams);
 		y_axis = new CNC::DEVICE::stepperMotor(yparams);
 
+		connect(x_axis, &CNC::DEVICE::stepperMotor::positionChange, pos, &PositionReadout::setX);
+		connect(y_axis, &CNC::DEVICE::stepperMotor::positionChange, pos, &PositionReadout::setY);
+
 		jog->setXaxis(x_axis);
 		jog->setYaxis(y_axis);
+
+		x_axis->esp_receive();
+		y_axis->esp_receive();
 
 		CNC::Program::devicePointers devices;
 		devices.x_axis = x_axis;
 		devices.y_axis = y_axis;
 		devices.laser = laser;
-
-		connect(x_axis, &CNC::DEVICE::stepperMotor::positionChange, pos, &PositionReadout::setX);
-		connect(y_axis, &CNC::DEVICE::stepperMotor::positionChange, pos, &PositionReadout::setY);
 
 		program = new CNC::Program("cnc.nc", this);
 		program->setDevices(devices);

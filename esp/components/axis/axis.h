@@ -55,7 +55,6 @@ struct position_t
 		out << "[" << p.x << ", " << p.y << ", " << p.z << "]\n";
 		return out;
 	}
-
 };
 
 class axis {
@@ -162,6 +161,7 @@ protected:
 	static double		m_divider;			//Current divider
 
 	static int			m_cur_pulse;		//Current pulse number
+	static int			m_accel_pulse;		//Pulse to stop acceleration
 	static int			m_decel_pulse;		//Pulse to start deceleration
 	static int			m_final_pulse;		//Final pulse number; end point of the move
 	static int			m_radius;			//Radius for a curve move

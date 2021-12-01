@@ -3,16 +3,17 @@
 /*	Initialize static variables	*/
 int				axis::m_jog_steps			= 0;	
 int				axis::m_cur_pulse			= 0;		
+int				axis::m_accel_pulse			= 0;		
 int				axis::m_decel_pulse			= 0;		
 int				axis::m_final_pulse			= 0;		
 int				axis::m_step_position		= 0;
 int				axis::m_radius				= 0;
 int				axis::m_jog_period_us		= 100;
-int				axis::m_rapid_period_us		= 50;
+int				axis::m_rapid_period_us		= 100;
 int				axis::m_spmm				= 200;			
 int				axis::m_max_mm				= 300;			
 int				axis::m_init_period_us		= 2500;	
-int				axis::m_accel				= 100000;			
+int				axis::m_accel				= 80000;			
 int				axis::m_max_steps			= 60000;	
 
 bool			axis::m_direction			= false;		
@@ -210,9 +211,9 @@ void axis::vector_move_config(	const position_t& start,
 	m_slope 			= (double)(end.y - start.y)/(double)(end.x - start.x);
 
 	std::cout << "*****Vector Move Setup*****\n";
-	std::cout << "\tAxis:\t\t\t"			<< (int)m_axis			<< '\n';
 	std::cout << "\tStart:\t\t\t"			<< m_cur_pos;
 	std::cout << "\tEnd:\t\t\t"				<< m_end_pos;
+	std::cout << "\tAxis:\t\t\t"			<< (int)m_axis			<< '\n';
 	std::cout << "\tRadius:\t\t\t"			<< m_radius				<< '\n';
 	std::cout << "\tFinal Pulse:\t\t"		<< m_final_pulse 		<< '\n';
 	std::cout << "\tSlope:\t\t\t"			<< m_slope 				<< '\n';
@@ -251,11 +252,19 @@ void axis::jog_move(bool dir)
 	if(!m_jog_mode || m_motion)
 		return;
 
-	m_step_axis			= m_axis;
+	if(m_jog_mode && m_motion)
+	{
+		m_decel_pulse += m_jog_steps;
+		m_final_pulse += m_jog_steps;
+		std::cout << "Added Jog Steps\n";
+		return;
+	}
+
 	m_cur_time			= 0;
 	m_cur_pulse			= 0;
 	m_final_pulse		= m_jog_steps;
-	m_decel_pulse		= m_final_pulse;
+	m_accel_pulse		= m_jog_steps / 5;
+	m_decel_pulse		= m_final_pulse; //m_final_pulse - m_accel_pulse;
 	m_direction			= dir;
 	m_pulse_period_sec	= (double)m_jog_period_us / 1000000.0;
 	m_accel_time		= 1.0 / m_pulse_period_sec / (double)m_accel;
@@ -296,14 +305,14 @@ void axis::linear_interpolation_2D()
 
 	switch(mask)
 	{
-		case 0:	m_step_axis = x_axis;	m_direction = 0;	m_cur_pos.x--;	break;
-		case 1:	m_step_axis = y_axis;	m_direction = 1;	m_cur_pos.y++;	break;
-		case 2:	m_step_axis = x_axis;	m_direction = 1;	m_cur_pos.x++;	break;
-		case 3:	m_step_axis = y_axis;	m_direction = 1;	m_cur_pos.y++;	break;
-		case 4:	m_step_axis = y_axis;	m_direction = 0;	m_cur_pos.y--;	break;
-		case 5:	m_step_axis = x_axis;	m_direction = 0;	m_cur_pos.x--;	break;
-		case 6:	m_step_axis = y_axis;	m_direction = 0;	m_cur_pos.y--;	break;
-		case 7:	m_step_axis = x_axis;	m_direction = 1;	m_cur_pos.x++;	break;
+		case 0:		m_cur_pos.x--;	m_step_axis = x_axis;	m_direction = 0;	break;
+		case 1:		m_cur_pos.y++;	m_step_axis = y_axis;	m_direction = 1;	break;
+		case 2:		m_cur_pos.x++;	m_step_axis = x_axis;	m_direction = 1;	break;
+		case 3:		m_cur_pos.y++;	m_step_axis = y_axis;	m_direction = 1;	break;
+		case 4:		m_cur_pos.y--;	m_step_axis = y_axis;	m_direction = 0;	break;
+		case 5:		m_cur_pos.x--;	m_step_axis = x_axis;	m_direction = 0;	break;
+		case 6:		m_cur_pos.y--;	m_step_axis = y_axis;	m_direction = 0;	break;
+		case 7:		m_cur_pos.x++;	m_step_axis = x_axis;	m_direction = 1;	break;
 	}
 
 	gpio_set_level(DIR_PIN, m_direction);
@@ -332,22 +341,22 @@ void axis::circular_interpolation_2D()
 	if(m_CW) mask += 1;
 	
 	switch(mask) {
-		case 0:		m_cur_pos.y -= 1;	m_step_axis = y_axis;	m_direction = 0;	break;
-		case 1:		m_cur_pos.x -= 1;	m_step_axis = x_axis;	m_direction = 0;	break;
-		case 2:		m_cur_pos.x -= 1;	m_step_axis = x_axis;	m_direction = 0;	break;
-		case 3:		m_cur_pos.y += 1;	m_step_axis = y_axis;	m_direction = 1;	break;
-		case 4:		m_cur_pos.x += 1;	m_step_axis = x_axis;	m_direction = 1;	break;
-		case 5:		m_cur_pos.y -= 1;	m_step_axis = y_axis;	m_direction = 0;	break;
-		case 6:		m_cur_pos.y += 1;	m_step_axis = y_axis;	m_direction = 1;	break;
-		case 7:		m_cur_pos.x += 1;	m_step_axis = x_axis;	m_direction = 1;	break;
-		case 8:		m_cur_pos.x += 1;	m_step_axis = x_axis;	m_direction = 1;	break;
-		case 9:		m_cur_pos.y += 1;	m_step_axis = y_axis;	m_direction = 1;	break;
-		case 10:	m_cur_pos.y -= 1;	m_step_axis = y_axis;	m_direction = 0;	break;
-		case 11:	m_cur_pos.x += 1;	m_step_axis = x_axis;	m_direction = 1;	break;
-		case 12:	m_cur_pos.y += 1;	m_step_axis = y_axis;	m_direction = 1;	break;
-		case 13:	m_cur_pos.x -= 1;	m_step_axis = x_axis;	m_direction = 0;	break;
-		case 14:	m_cur_pos.x -= 1;	m_step_axis = x_axis;	m_direction = 0;	break;
-		case 15:	m_cur_pos.y -= 1;	m_step_axis = y_axis;	m_direction = 0;	break;
+		case 0:		m_cur_pos.y--;	m_step_axis = y_axis;	m_direction = 0;	break;
+		case 1:		m_cur_pos.x--;	m_step_axis = x_axis;	m_direction = 0;	break;
+		case 2:		m_cur_pos.x--;	m_step_axis = x_axis;	m_direction = 0;	break;
+		case 3:		m_cur_pos.y++;	m_step_axis = y_axis;	m_direction = 1;	break;
+		case 4:		m_cur_pos.x++;	m_step_axis = x_axis;	m_direction = 1;	break;
+		case 5:		m_cur_pos.y--;	m_step_axis = y_axis;	m_direction = 0;	break;
+		case 6:		m_cur_pos.y++;	m_step_axis = y_axis;	m_direction = 1;	break;
+		case 7:		m_cur_pos.x++;	m_step_axis = x_axis;	m_direction = 1;	break;
+		case 8:		m_cur_pos.x++;	m_step_axis = x_axis;	m_direction = 1;	break;
+		case 9:		m_cur_pos.y++;	m_step_axis = y_axis;	m_direction = 1;	break;
+		case 10:	m_cur_pos.y--;	m_step_axis = y_axis;	m_direction = 0;	break;
+		case 11:	m_cur_pos.x++;	m_step_axis = x_axis;	m_direction = 1;	break;
+		case 12:	m_cur_pos.y++;	m_step_axis = y_axis;	m_direction = 1;	break;
+		case 13:	m_cur_pos.x--;	m_step_axis = x_axis;	m_direction = 0;	break;
+		case 14:	m_cur_pos.x--;	m_step_axis = x_axis;	m_direction = 0;	break;
+		case 15:	m_cur_pos.y--;	m_step_axis = y_axis;	m_direction = 0;	break;
 	}
 
 	gpio_set_level(DIR_PIN, m_direction);
@@ -355,6 +364,7 @@ void axis::circular_interpolation_2D()
 
 void axis::update_divider(timer_group_t TIMER_GROUP)
 {
+
 	timer_get_counter_time_sec(TIMER_GROUP, SECONDS_TIMER, &m_cur_time);
 
 	if(m_cur_time > m_accel_time && m_cur_pulse > m_decel_pulse)
@@ -388,13 +398,14 @@ void axis::update_divider(timer_group_t TIMER_GROUP)
 	{
 		timer_set_counter_value(TIMER_GROUP, SECONDS_TIMER, 0);
 	}
+
 }
 
 void axis::vector_move_isr(void* arg)
 {
 	timer_spinlock_take(VECTOR_GROUP);
 
-	if(m_axis == m_step_axis)
+	if(m_axis == m_step_axis || m_jog_mode)
 	{
 		gpio_set_level(PULSE_PIN, 1);
 		m_step_position += (m_direction)? 1 : -1;
