@@ -8,7 +8,7 @@ namespace DEVICE
 
 Laser::Laser(QWidget* parent) : QGroupBox(parent)
 {
-	//gpioInitialise();
+	gpioInitialise();
 	
 	gpioSetPWMfrequency(LASER_PIN, 5000);
 	
@@ -20,16 +20,16 @@ Laser::Laser(QWidget* parent) : QGroupBox(parent)
 	
 	QLabel* label = new QLabel("Laser Power:");
 	
-	QHBoxLayout* hbox = new QHBoxLayout(this);
+	QHBoxLayout* hbox = new QHBoxLayout();
 	hbox->addWidget(label);
 	hbox->addWidget(power_edit);
 
-	QVBoxLayout* vbox = new QVBoxLayout(this);
+	QVBoxLayout* vbox = new QVBoxLayout();
 	vbox->addWidget(increase_button);
 	vbox->addWidget(decrease_button);
 	hbox->addLayout(vbox);
 
-	QVBoxLayout* onoff = new QVBoxLayout(this);
+	QVBoxLayout* onoff = new QVBoxLayout();
 	QPushButton* on_button = new QPushButton("ON");
 	QPushButton* off_button = new QPushButton("OFF");
 	
