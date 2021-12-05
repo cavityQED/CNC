@@ -13,6 +13,7 @@ endif()
 
 add_subdirectory(utilities)
 add_subdirectory(action)
+add_subdirectory(control)
 add_subdirectory(device)
 
 include_directories(${CMAKE_SOURCE_DIR})
@@ -26,6 +27,7 @@ set(libdocs	MainWindow.h
 set(LINKED_LIBRARIES	Qt5::Core
 						Qt5::Widgets
 						actionLib
+						controlLib
 						deviceLib)
 
 add_library(cncLib ${libdocs})

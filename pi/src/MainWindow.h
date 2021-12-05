@@ -7,6 +7,7 @@
 
 #include "device/laser.h"
 #include "device/stepperMotor.h"
+#include "control/modeSelect.h"
 
 #include <QAction>
 #include <QMenu>
@@ -16,21 +17,34 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
+#include <signal.h>
 
 #define ESP_MOVED_SIGNAL 25
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
 public:
+
+	static void shutdown(int signum)
+	{
+		gpioTerminate();
+		exit(signum);
+	}
+
+
+
 	MainWindow(QWidget *parent = 0) : QMainWindow(parent){
 
 		pos = new PositionReadout;
 		laser = new CNC::DEVICE::Laser;
 		jog = new JogController;
 
+		CNC::CONTROL_WIDGET::ModeSelect* mode = new CNC::CONTROL_WIDGET::ModeSelect();
+
 		QVBoxLayout *vLayout = new QVBoxLayout;
 		vLayout->addWidget(pos);
 		vLayout->addWidget(laser);
+		vLayout->addWidget(mode);
 		QHBoxLayout *layout = new QHBoxLayout;
 		layout->addLayout(vLayout);
 		layout->addWidget(jog);
@@ -42,6 +56,7 @@ public:
 		setStyleSheet("QWidget{background-color: #DDEFF2;}");	
 
 		gpioInitialise();
+		gpioSetSignalFunc(SIGINT, shutdown);
 		x_axis = new CNC::DEVICE::stepperMotor(xparams);
 		y_axis = new CNC::DEVICE::stepperMotor(yparams);
 
@@ -69,6 +84,28 @@ public:
 		run->setShortcut(Qt::Key_F5);
 		connect(run, &QAction::triggered, program, &CNC::Program::start);
 		addAction(run);
+
+
+		setStyleSheet(	"QPushButton{"	
+							"background-color: #75B8C8;"
+							"border-style: outset;"
+							"border-width: 3px;"
+							"border-color: #408DA0;"
+							"border-radius: 4px;"
+							"font: bold 18px;"
+							"outline: 0;"
+							"min-width: 40px;"
+							"max-width: 40px;"
+							"min-height: 40px;"
+							"max-height: 40px;}"
+						
+						"QPushButton:pressed{"
+							"background-color: #408DA0;"
+							"border-style: inset;}"
+						
+						"QPushButton:checked{"
+							"background-color: #0EFF5E;"
+							"border-color: #049434;}");
 	}
 	
 	~MainWindow() {std::cout << "MainWindow destroyed\n";}
@@ -82,8 +119,8 @@ private:
 	PositionReadout *pos;
 	MotorController *controller;
 	
-	CNC::DEVICE::stepperMotor::params_t xparams {5, 200, 200, CNC::DEVICE::ESP::AXIS::x_axis};
-	CNC::DEVICE::stepperMotor::params_t yparams {6, 200, 200, CNC::DEVICE::ESP::AXIS::y_axis};
+	CNC::DEVICE::stepperMotor::params_t xparams {13, 200, 200, CNC::DEVICE::ESP::AXIS::x_axis};
+	CNC::DEVICE::stepperMotor::params_t yparams {19, 200, 200, CNC::DEVICE::ESP::AXIS::y_axis};
 	
 	CNC::DEVICE::stepperMotor*	x_axis;
 	CNC::DEVICE::stepperMotor*	y_axis;

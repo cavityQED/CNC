@@ -106,9 +106,9 @@ public:
 public:
 	/*	Getters	*/
 
-	int 	step_position() 	{return m_step_position;}
-	bool 	in_motion() 		{return m_motion;}
-	bool	direction()			{return m_direction;}
+	int 	step_position() const {return m_step_position;}
+	bool 	in_motion() 	const {return m_motion;}
+	bool	direction()		const {return m_direction;}
 
 public:
 	/*	Set the move mode	*/

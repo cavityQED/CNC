@@ -139,7 +139,7 @@ void stepperMotor::esp_receive()
 	m_inMotion = (bool)recvBuffer[2];
 
 	m_mmPosition = (double)m_stepPosition/(double)m_params.spmm;
-	std::cout << "Position: " << m_mmPosition << '\n';
+	std::cout << (int)m_params.axis << " Position: " << m_mmPosition << '\n';
 	emit positionChange(m_mmPosition);
 }
 

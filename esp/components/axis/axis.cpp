@@ -75,6 +75,8 @@ void axis::setup_gpio()
 	gpio_pad_select_gpio(EN_PIN);
 	m_esp_err = gpio_set_direction(EN_PIN, GPIO_MODE_OUTPUT);
 	check_error("EN_PIN Configure:");
+
+	gpio_set_level(EN_PIN, 1);
 }
 
 void axis::setup_timers()
@@ -278,6 +280,7 @@ void axis::jog_move(bool dir)
 	std::cout << "\tInitial Divider:\t"		<< m_divider_max << '\n';
 
 	gpio_set_level(DIR_PIN, m_direction);
+	ets_delay_us(8);
 
 	reset_timers();
 	timer_set_divider(VECTOR_GROUP, PULSE_TIMER, m_divider_max);
@@ -316,6 +319,7 @@ void axis::linear_interpolation_2D()
 	}
 
 	gpio_set_level(DIR_PIN, m_direction);
+	ets_delay_us(8);
 }
 
 void axis::circular_interpolation_2D()
@@ -360,6 +364,7 @@ void axis::circular_interpolation_2D()
 	}
 
 	gpio_set_level(DIR_PIN, m_direction);
+	ets_delay_us(8);
 }
 
 void axis::update_divider(timer_group_t TIMER_GROUP)
@@ -409,14 +414,14 @@ void axis::vector_move_isr(void* arg)
 	{
 		gpio_set_level(PULSE_PIN, 1);
 		m_step_position += (m_direction)? 1 : -1;
-		
+		ets_delay_us(8);
+
 		if(++m_cur_pulse == m_final_pulse)
 		{
 			timer_pause(VECTOR_GROUP, PULSE_TIMER);
 			timer_pause(VECTOR_GROUP, SECONDS_TIMER);
 			m_motion = false;
 		}
-		gpio_set_level(PULSE_PIN, 0);
 	}
 
 	if(m_line_mode)
@@ -428,6 +433,7 @@ void axis::vector_move_isr(void* arg)
 	timer_group_clr_intr_status_in_isr	(VECTOR_GROUP, PULSE_TIMER);
 	timer_group_enable_alarm_in_isr		(VECTOR_GROUP, PULSE_TIMER);
 	timer_spinlock_give					(VECTOR_GROUP);
+	gpio_set_level(PULSE_PIN, 0);
 }
 
 void axis::syncSem_release_isr(void* arg)

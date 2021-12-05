@@ -82,7 +82,7 @@ protected:
 
 	int		m_timer;
 	int 	m_programStep = 0;			//Current program step
-	int		m_programTimerPeriod = 5;	//Period in ms of the program timer
+	int		m_programTimerPeriod = 50;	//Period in ms of the program timer
 
 };
 
