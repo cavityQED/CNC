@@ -41,9 +41,12 @@ enum AXIS_FUNCTION_CODE {
 	ENA_SYNC_MODE,
 
 	VECTOR_MOVE,
+	SCALAR_MOVE,
 	JOG_MOVE,
 	STOP,
 	RECEIVE,
+
+	FIND_ZERO,
 };
 
 class SpiClient {

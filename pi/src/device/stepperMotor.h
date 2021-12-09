@@ -33,9 +33,12 @@ enum esp32FUNCTION
 	ENA_SYNC_MODE,
 
 	VECTOR_MOVE,
+	SCALAR_MOVE,
 	JOG_MOVE,
 	STOP,
 	RECEIVE,
+
+	FIND_ZERO,
 };
 
 enum AXIS
@@ -85,6 +88,7 @@ public:
 						bool dir = 0);
 
 	void setJogDistance(double mm)	{esp_set_jog_steps(mm*m_params.spmm);}
+	void setStepOffset(int steps)	{m_stepOffset = steps;}
 
 public:
 
@@ -113,8 +117,11 @@ public:
 	void esp_enable_curv_mode	(bool enable);
 	void esp_enable_sync_mode	(bool enable);
 
+	void esp_vector_move		(double dx, double dy, double dz, double f);
 	void esp_receive			();
 	void esp_stop				();
+
+	void esp_find_zero			();
 
 
 public:
@@ -128,15 +135,18 @@ signals:
 public:
 
 	//Getters
-	bool		isMoving()		{return m_inMotion;}
-	bool		stepPosition()	{return m_stepPosition;}
-	bool		x_axis()		{return m_params.axis;}
-	params_t&	params()		{return m_params;}
+	int			stepPosition()		{return m_stepPosition - m_stepOffset;}
+	int			absStepPosition()	{return m_stepPosition;}
+	bool		isMoving()			{return m_inMotion;}
+	bool		x_axis()			{return m_params.axis;}
+	double		mmPosition()		{return stepPosition()/(double)m_params.spmm;}
+	params_t&	params()			{return m_params;}
 
 protected:
 
 	params_t	m_params;
 	int			m_stepPosition;		//Absolute motor position in steps from zero
+	int			m_stepOffset = 0;	//Offset for work coordinates
 	double		m_mmPosition;		//Absolute motor position in mm from zero
 	bool		m_inMotion;			//True if the motor is in motion
 	bool		m_sync;				//True if action is part of a sync action

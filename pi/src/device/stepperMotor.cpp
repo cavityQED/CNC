@@ -130,6 +130,16 @@ void stepperMotor::esp_enable_sync_mode(bool enable)
 	spiSend(m_params.device_pin);
 }
 
+void stepperMotor::esp_vector_move(double dx, double dy, double dz, double f)
+{
+	sendBuffer[0] = ESP::VECTOR_MOVE;
+	sendBuffer[1] = dx * m_params.spmm;
+	sendBuffer[2] = dy * m_params.spmm;
+	sendBuffer[3] = dz * m_params.spmm;
+	sendBuffer[4] = 1000000 / (int)(f * m_params.spmm);
+	spiSend(m_params.device_pin);
+}
+
 void stepperMotor::esp_receive()
 {
 	sendBuffer[0] = ESP::RECEIVE;
@@ -146,6 +156,13 @@ void stepperMotor::esp_receive()
 void stepperMotor::esp_stop()
 {
 	sendBuffer[0] = ESP::STOP;
+	spiSend(m_params.device_pin);
+	startTimer(m_timerPeriod);
+}
+
+void stepperMotor::esp_find_zero()
+{
+	sendBuffer[0] = ESP::FIND_ZERO;
 	spiSend(m_params.device_pin);
 	startTimer(m_timerPeriod);
 }

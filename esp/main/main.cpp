@@ -4,35 +4,40 @@
 #include "freertos/queue.h"
 
 #define DEVICE_SELECT	(gpio_num_t) 25
-#define ZERO_INTERLOCK	(gpio_num_t) 33
+#define ZERO_INTERLOCK	(gpio_num_t) 22
 
 static xQueueHandle evt_queue;
 static std::vector<int> msg;
 axis gen_axis;
 SpiClient spi;
 
-enum INTERRUPT_TYPE {
+enum INTERRUPT_TYPE
+{
 	GET_MESSAGE,
 	ZERO_STOP
 };
 
-typedef struct {
+typedef struct
+{
 	INTERRUPT_TYPE type;
 } event_info_t;
 
-void IRAM_ATTR msg_ready(void* arg) {
+void IRAM_ATTR msg_ready(void* arg)
+{
 	event_info_t evt;
 	evt.type = GET_MESSAGE;
 	xQueueSendFromISR(evt_queue, &evt, NULL);
 }
 
-void IRAM_ATTR zero_interlock(void* arg) {
+void IRAM_ATTR zero_interlock(void* arg)
+{
 	event_info_t evt;
 	evt.type = ZERO_STOP;
 	xQueueSendFromISR(evt_queue, &evt, NULL);
 }
 
-void get_message() {
+void get_message()
+{
 	std::cout << "Getting Message\n";
 	spi.set_sendbuffer_value(1, gen_axis.step_position());
 	spi.set_sendbuffer_value(2, gen_axis.in_motion());
@@ -121,12 +126,9 @@ void get_message() {
 		case VECTOR_MOVE:
 		{
 			gen_axis.enable_sync_mode(true);
-			gen_axis.vector_move_config(	{msg[1], msg[2], msg[3]},	//Start Position
-											{msg[4], msg[5], msg[6]},	//End Position
-											msg[7],						//Pulse Period
-											msg[8],						//Radius
-											(bool)msg[9]);				//Direction
-			gen_axis.vector_move();
+			gen_axis.enable_line_mode(true);
+
+			gen_axis.vector_move(	{msg[1], msg[2], msg[3]}, msg[4]	);
 			break;
 		}
 
@@ -147,6 +149,12 @@ void get_message() {
 			break;
 		}
 
+		case FIND_ZERO:
+		{
+			int final_pulse = gen_axis.spmm() * gen_axis.max_mm();
+			gen_axis.scalar_move(final_pulse, false, 500);
+		}
+
 		default:
 			break;
 		}
@@ -154,16 +162,32 @@ void get_message() {
 
 static void main_task(void* arg) {
 	event_info_t evt;
-	while(1) {	
+	while(1)
+	{	
 		std::cout << "\nMain Task Waiting.....\n";
 		xQueueReceive(evt_queue, &evt, portMAX_DELAY);
-		switch(evt.type) {
+		
+		switch(evt.type)
+		{
 			case GET_MESSAGE:
+			{
 				get_message();
 				break;
+			}
+
 			case ZERO_STOP:
-				//gen_axis.stop_zero_interlock();
+			{
+				std::cout << "LIMIT SWITCH HIT\n";
+
+				int steps = gen_axis.spmm();
+				gen_axis.reset_timers();
+				gen_axis.set_motion(false);
+				gen_axis.set_position(-steps);
+				gen_axis.scalar_move(steps, true);
+				gen_axis.set_homed(true);
 				break;
+			}
+
 			default:
 				break;
 		}

@@ -89,7 +89,7 @@ void SpiClient::set_sendbuffer_value(int index, int value) {
 }
 
 void SpiClient::printFunction(AXIS_FUNCTION_CODE code) {
-	std::cout << "Message: ";
+	std::cout << "\tMessage:\t";
 	switch(code) {
 		case SET_AXIS:				std::cout << "Set Axis";				break;
 		case SET_STEPS_PER_MM:		std::cout << "Set steps/mm";			break;
@@ -107,6 +107,7 @@ void SpiClient::printFunction(AXIS_FUNCTION_CODE code) {
 		case JOG_MOVE:				std::cout << "Jog Move";				break;
 		case STOP:					std::cout << "Stop";					break;
 		case RECEIVE:				std::cout << "Receive";					break;
+		case FIND_ZERO:				std::cout << "Find Zero";				break;
 		default:					std::cout << "Unrecognized Function";	break;
 	}
 	std::cout << '\n';

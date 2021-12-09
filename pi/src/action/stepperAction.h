@@ -13,6 +13,13 @@ class StepperAction : public Action
 
 public:
 
+	struct axes_t
+	{
+		CNC::DEVICE::stepperMotor* x = nullptr;
+		CNC::DEVICE::stepperMotor* y = nullptr;
+		CNC::DEVICE::stepperMotor* z = nullptr;
+	};
+
 	struct stepperConfig
 	{
 		double xi	= 0;
@@ -32,6 +39,7 @@ public:
 		CNC::codeBlock				block;
 	};
 
+	StepperAction(const CNC::codeBlock& block, const axes_t& axes, QWidget* parent = nullptr);
 	StepperAction(CNC::DEVICE::stepperMotor* motor, CNC::codeBlock block, QWidget* parent = nullptr);
 	StepperAction(CNC::StepperAction::stepperConfig& config, QWidget* parent = nullptr);
 	~StepperAction() {}
@@ -41,14 +49,21 @@ public:
 
 public:
 
+	void setAxes(const axes_t& a)	{m_axes = a;}
+
 public slots:
 	
 	virtual void execute() override;
 
 protected:
 
+	axes_t			m_axes;
+	CNC::codeBlock	m_block;
+	stepperConfig	m_config;
+
+	int				m_syncPin = 18;
+
 	CNC::DEVICE::stepperMotor*	m_stepper;
-	stepperConfig				m_config;
 
 	bool	m_dir;				//Direction - true for positive move, false for negative
 	int		m_steps;			//Number of steps to move

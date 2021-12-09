@@ -23,6 +23,7 @@ bool			axis::m_line_mode			= false;
 bool			axis::m_curv_mode			= false;		
 bool			axis::m_sync_mode			= false;
 bool 			axis::m_CW					= false;
+bool			axis::m_homed				= false;
 
 AXIS			axis::m_step_axis			= x_axis;		
 AXIS			axis::m_axis				= x_axis;
@@ -99,7 +100,9 @@ void axis::setup_timers()
 	*		Initiate timer and register the interrupt handler 
 	*/
 	timer_init(VECTOR_GROUP, PULSE_TIMER, &timer_config);
+	timer_init(SCALAR_GROUP, PULSE_TIMER, &timer_config);
 	timer_isr_register(VECTOR_GROUP, PULSE_TIMER, vector_move_isr, NULL, ESP_INTR_FLAG_IRAM, NULL);
+	timer_isr_register(SCALAR_GROUP, PULSE_TIMER, scalar_move_isr, NULL, ESP_INTR_FLAG_IRAM, NULL);
 
 
 	/*	SECONDS_TIMER config
@@ -111,6 +114,7 @@ void axis::setup_timers()
 
 	/*	Initiate the seconds timers	*/
 	timer_init(VECTOR_GROUP, SECONDS_TIMER, &timer_config);
+	timer_init(SCALAR_GROUP, SECONDS_TIMER, &timer_config);
 }
 
 void axis::reset_timers()
@@ -122,6 +126,14 @@ void axis::reset_timers()
 
 	timer_pause					(VECTOR_GROUP, SECONDS_TIMER);
 	timer_set_counter_value		(VECTOR_GROUP, SECONDS_TIMER, 0);
+
+	timer_pause					(SCALAR_GROUP, PULSE_TIMER);
+	timer_enable_intr			(SCALAR_GROUP, PULSE_TIMER);
+	timer_set_counter_value		(SCALAR_GROUP, PULSE_TIMER, 0);
+	timer_set_alarm				(SCALAR_GROUP, PULSE_TIMER, TIMER_ALARM_EN);
+
+	timer_pause					(SCALAR_GROUP, SECONDS_TIMER);
+	timer_set_counter_value		(SCALAR_GROUP, SECONDS_TIMER, 0);
 }
 
 void axis::enable_jog_mode(bool enable)
@@ -249,9 +261,112 @@ void axis::vector_move()
 	m_motion = true;
 }
 
+void axis::vector_move(	const position_t& vec,
+						int final_period_us,
+						int start_period_us,
+						int accel)
+{
+	if(final_period_us < 0)
+		final_period_us = m_rapid_period_us;
+	
+	switch(m_axis)
+	{
+		case x_axis:
+			m_final_pulse = std::abs(vec.x);
+			break;
+		case y_axis:
+			m_final_pulse = std::abs(vec.y);
+			break;
+		case z_axis:
+			m_final_pulse = std::abs(vec.z);
+			break;
+		default:
+			break;
+	}
+
+	m_cur_time			= 0;
+	m_cur_pulse			= 0;
+	m_cur_pos			= {0, 0, 0};
+	m_end_pos			= vec;
+	m_accel				= accel;
+	m_init_period_us	= start_period_us;
+	m_decel_pulse		= m_final_pulse;
+	m_pulse_period_sec	= (double)final_period_us / 1000000.0;
+	m_accel_time 		= 1.0 / m_pulse_period_sec / (double)m_accel;
+	m_divider_max 		= m_divider_min * m_init_period_us / final_period_us;
+	m_slope 			= (double)(vec.y)/(double)(vec.x);
+	
+	std::cout << "*****Vector Move Setup*****\n";
+	std::cout << "\tEnd:\t\t\t"				<< vec;
+	std::cout << "\tAxis:\t\t\t"			<< (int)m_axis			<< '\n';
+	std::cout << "\tFinal Pulse:\t\t"		<< m_final_pulse 		<< '\n';
+	std::cout << "\tSlope:\t\t\t"			<< m_slope 				<< '\n';
+	std::cout << "\tPulse Period (us):\t"	<< final_period_us		<< "\n";
+	std::cout << "\tPulse Period (s):\t"	<< m_pulse_period_sec	<< "\n";
+	std::cout << "\tAccel Time (s):\t\t"	<< m_accel_time			<< '\n';
+	std::cout << "\tInitial Divider:\t"		<< m_divider_max		<< '\n';
+
+	if(m_line_mode)
+		linear_interpolation_2D();
+	else if(m_curv_mode)
+		circular_interpolation_2D();
+
+	reset_timers();
+	timer_set_divider(VECTOR_GROUP, PULSE_TIMER, m_divider_max);
+	timer_set_alarm_value(VECTOR_GROUP, PULSE_TIMER, final_period_us);
+
+	if(m_sync_mode)
+	{
+		m_spi->toggle_ready();
+		xSemaphoreTake(m_syncSem, portMAX_DELAY);
+		if(!m_final_pulse)
+			return;
+	}
+
+	timer_start(VECTOR_GROUP, PULSE_TIMER);
+	timer_start(VECTOR_GROUP, SECONDS_TIMER);
+	m_motion = true;
+}
+
+void axis::scalar_move(	int steps_to_move,
+						bool dir,
+						int final_wait_time,
+						int accel)
+{
+	if(m_motion)
+		return;
+
+	m_cur_time			= 0;
+	m_cur_pulse			= 0;
+	m_final_pulse		= steps_to_move;
+	m_decel_pulse		= m_final_pulse;
+	m_direction			= dir;
+	m_pulse_period_sec	= (double)final_wait_time / 1000000.0;
+	m_accel_time		= 1.0 / m_pulse_period_sec / (double)m_accel;
+	m_divider_max		= m_divider_min * m_init_period_us / final_wait_time;
+
+	std::cout << "*****Scalar Move*****\n";
+	std::cout << "\tSteps:\t\t\t"			<< steps_to_move << '\n';
+	std::cout << "\tPulse Period (us):\t"	<< final_wait_time << "\n";
+	std::cout << "\tPulse Period (s):\t"	<< m_pulse_period_sec << "\n";
+	std::cout << "\tAccel Time (s):\t\t"	<< m_accel_time << '\n';
+	std::cout << "\tInitial Divider:\t"		<< m_divider_max << '\n';
+
+	gpio_set_level(DIR_PIN, m_direction);
+	ets_delay_us(8);
+
+	reset_timers();
+	timer_set_divider(SCALAR_GROUP, PULSE_TIMER, m_divider_max);
+	timer_set_alarm_value(SCALAR_GROUP, PULSE_TIMER, final_wait_time);
+
+	timer_start(SCALAR_GROUP, PULSE_TIMER);
+	timer_start(SCALAR_GROUP, SECONDS_TIMER);
+	m_motion = true;
+}
+
 void axis::jog_move(bool dir)
 {
-	if(!m_jog_mode || m_motion)
+	if(!m_jog_mode)
 		return;
 
 	if(m_jog_mode && m_motion)
@@ -262,33 +377,7 @@ void axis::jog_move(bool dir)
 		return;
 	}
 
-	m_cur_time			= 0;
-	m_cur_pulse			= 0;
-	m_final_pulse		= m_jog_steps;
-	m_accel_pulse		= m_jog_steps / 5;
-	m_decel_pulse		= m_final_pulse; //m_final_pulse - m_accel_pulse;
-	m_direction			= dir;
-	m_pulse_period_sec	= (double)m_jog_period_us / 1000000.0;
-	m_accel_time		= 1.0 / m_pulse_period_sec / (double)m_accel;
-	m_divider_max		= m_divider_min * m_init_period_us / m_jog_period_us;
-
-	std::cout << "*****Jog Move Setup*****\n";
-	std::cout << "\tSteps:\t\t\t"			<< m_jog_steps << '\n';
-	std::cout << "\tPulse Period (us):\t"	<< m_jog_period_us << "\n";
-	std::cout << "\tPulse Period (s):\t"	<< m_pulse_period_sec << "\n";
-	std::cout << "\tAccel Time (s):\t\t"	<< m_accel_time << '\n';
-	std::cout << "\tInitial Divider:\t"		<< m_divider_max << '\n';
-
-	gpio_set_level(DIR_PIN, m_direction);
-	ets_delay_us(8);
-
-	reset_timers();
-	timer_set_divider(VECTOR_GROUP, PULSE_TIMER, m_divider_max);
-	timer_set_alarm_value(VECTOR_GROUP, PULSE_TIMER, m_jog_period_us);
-
-	timer_start(VECTOR_GROUP, PULSE_TIMER);
-	timer_start(VECTOR_GROUP, SECONDS_TIMER);
-	m_motion = true;
+	scalar_move(m_jog_steps, dir, m_jog_period_us);
 }
 
 void axis::linear_interpolation_2D()
@@ -296,7 +385,9 @@ void axis::linear_interpolation_2D()
 	if(m_cur_pos == m_end_pos)
 	{
 		timer_pause(VECTOR_GROUP, PULSE_TIMER);
+		timer_pause(VECTOR_GROUP, SECONDS_TIMER);
 		m_motion = false;
+		return;
 	}
 
 	int mask = 0;
@@ -434,6 +525,29 @@ void axis::vector_move_isr(void* arg)
 	timer_group_enable_alarm_in_isr		(VECTOR_GROUP, PULSE_TIMER);
 	timer_spinlock_give					(VECTOR_GROUP);
 	gpio_set_level(PULSE_PIN, 0);
+}
+
+void axis::scalar_move_isr(void* arg)
+{
+	timer_spinlock_take(SCALAR_GROUP);
+
+	gpio_set_level(PULSE_PIN, 1);
+	ets_delay_us(8);
+	gpio_set_level(PULSE_PIN, 0);
+
+	m_step_position += (m_direction)? 1 : -1;
+
+	if(++m_cur_pulse == m_final_pulse)
+	{
+		timer_pause(SCALAR_GROUP, PULSE_TIMER);
+		timer_pause(SCALAR_GROUP, SECONDS_TIMER);
+		m_motion = false;
+	}
+
+	update_divider(SCALAR_GROUP);
+	timer_group_clr_intr_status_in_isr	(SCALAR_GROUP, PULSE_TIMER);
+	timer_group_enable_alarm_in_isr		(SCALAR_GROUP, PULSE_TIMER);
+	timer_spinlock_give					(SCALAR_GROUP);
 }
 
 void axis::syncSem_release_isr(void* arg)

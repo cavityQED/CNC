@@ -26,18 +26,21 @@ void Program::timerEvent(QTimerEvent* e)
 
 	if(m_devices.x_axis != nullptr)
 	{
+		std::cout << "\tProgram Receiving X Info\n";
 		m_devices.x_axis->esp_receive();
 		m_programMotion = m_programMotion || m_devices.x_axis->isMoving();
 	}
 
 	if(m_devices.y_axis != nullptr)
 	{
+		std::cout << "\tProgram Receiving Y Info\n";
 		m_devices.y_axis->esp_receive();
 		m_programMotion = m_programMotion || m_devices.y_axis->isMoving();
 	}
 
 	if(m_devices.z_axis != nullptr)
 	{
+		std::cout << "\tProgram Receiving Z Info\n";
 		m_devices.z_axis->esp_receive();
 		m_programMotion = m_programMotion || m_devices.z_axis->isMoving();
 	}
@@ -143,7 +146,7 @@ void Program::loadBlocks()
 				//If so, reset the temp block
 				memset(&tmpBlock, 0, sizeof(CNC::codeBlock));
 
-				//Set captial letter code
+				//Set capital letter code
 				tmpBlock.letterCode = (*line_it >= 97)? *line_it - 32 : *line_it;
 				//Set the number code
 				tmpBlock.numberCode = get_double(++line_it);
@@ -195,17 +198,9 @@ void Program::loadActions()
 
 	double feed_rate = 0;
 
-	double dx = 0;
-	double dy = 0;
-	double dz = 0;
-
-	CNC::codeBlock 		code_block;
-
 	CNC::LaserAction*	laser_action;	
-	CNC::StepperAction*	x_action;		
-	CNC::StepperAction*	y_action;		
-	CNC::StepperAction*	z_action;		
-	CNC::SyncAction*	sync_action;		
+
+	CNC::StepperAction::axes_t	axes {m_devices.x_axis, m_devices.y_axis, m_devices.z_axis};
 
 	for(auto &b : m_programBlocks)
 	{
@@ -222,14 +217,20 @@ void Program::loadActions()
 				switch(b.numberCode)
 				{
 					case 0:
+					{	//Rapid Positioning
 						std::cout << "\n\nAdding G0 Rapid Move\n";
-						m_programActions.push_back(G0_rapid(b));
+						m_programActions.push_back(new StepperAction(b, axes));
 						std::cout << "Added G0 Move\n";
 						break;
+					}
+
 					case 1:
 					{	//Linear Interpolation
 						std::cout << "\n\nAdding G1 Linear Move\n";
-						m_programActions.push_back(G1_linearInterpolation(b));
+						
+						m_programActions.push_back(new StepperAction(b, axes));
+
+						//m_programActions.push_back(G1_linearInterpolation(b));
 						std::cout << "Added G1 Move\n";
 						break;
 					}
@@ -310,47 +311,6 @@ bool Program::is_supported_letter_code(const char c)
 *								*
 *								*
 ********************************/
-
-CNC::SyncAction* Program::G0_rapid(CNC::codeBlock& block)
-{
-	block.f = -1;
-	return G1_linearInterpolation(block);
-}
-
-CNC::SyncAction* Program::G1_linearInterpolation(const CNC::codeBlock& block)
-{
-	CNC::StepperAction::stepperConfig config;
-	config.block = std::move(block);
-
-	CNC::SyncAction* syncAction = new CNC::SyncAction(block);
-	syncAction->setSyncPin(18);
-
-	config.xf = (block.abs_x)? block.x - block.prev_x : block.u;
-	config.yf = (block.abs_y)? block.y - block.prev_y : block.v;
-	config.zf = (block.abs_z)? block.z - block.prev_z : block.w;
-
-	config.f = block.f;
-
-	if(m_devices.x_axis != nullptr)
-	{
-		config.motor = m_devices.x_axis;
-		syncAction->addAction(new CNC::StepperAction(config));
-	}
-
-	if(m_devices.y_axis != nullptr)
-	{
-		config.motor = m_devices.y_axis;
-		syncAction->addAction(new CNC::StepperAction(config));
-	}
-
-	if(m_devices.z_axis != nullptr)
-	{
-		config.motor = m_devices.z_axis;
-		syncAction->addAction(new CNC::StepperAction(config));
-	}
-
-	return syncAction;
-}
 
 CNC::SyncAction* Program::G2_circularInterpolationCW(const CNC::codeBlock& block)
 {

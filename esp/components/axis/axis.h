@@ -28,6 +28,7 @@
 
 //Timers
 #define VECTOR_GROUP	TIMER_GROUP_0
+#define SCALAR_GROUP	TIMER_GROUP_1
 #define PULSE_TIMER		TIMER_0
 #define SECONDS_TIMER	TIMER_1
 
@@ -102,10 +103,15 @@ public:
 	void	set_jog_speed	(int jog_us)	{m_jog_period_us = jog_us;}
 	void	set_rapid_speed	(int rapid_us)	{m_rapid_period_us = rapid_us;}
 	void	set_spi			(SpiClient *s)	{m_spi = s;}
+	void	set_homed		(bool home)		{m_homed = home;}
+	void	set_position	(int steps)		{m_step_position = steps;}
+	void	set_motion		(bool motion)	{m_motion = motion;}
 
 public:
 	/*	Getters	*/
 
+	int		spmm()			const {return m_spmm;}
+	int		max_mm()		const {return m_max_mm;}
 	int 	step_position() const {return m_step_position;}
 	bool 	in_motion() 	const {return m_motion;}
 	bool	direction()		const {return m_direction;}
@@ -128,6 +134,16 @@ public:
 								bool dir = false,
 								int accel = m_accel);
 	void vector_move();
+	void vector_move(	const position_t& vec,
+						int final_period_us,
+						int start_period_us = m_init_period_us,
+						int accel = m_accel);
+
+	void scalar_move(			int steps_to_move,
+								bool dir,
+								int final_wait_time = m_jog_period_us,
+								int accel = m_accel);
+
 	void jog_move(bool dir);
 
 public:
@@ -136,6 +152,7 @@ public:
 	static void IRAM_ATTR circular_interpolation_2D	();
 	static void IRAM_ATTR update_divider			(timer_group_t TIMER_GROUP);
 	static void IRAM_ATTR vector_move_isr			(void* arg);
+	static void IRAM_ATTR scalar_move_isr			(void* arg);
 	
 	/* Sync Semaphore Release Interrupt	*/
 	static void IRAM_ATTR syncSem_release_isr(void* arg);
@@ -177,6 +194,7 @@ protected:
 	static bool			m_direction;		//Motor direction
 	static bool			m_CW;				//True for CW curve, false for CCW
 	static bool			m_motion;			//Motor in motion or not
+	static bool			m_homed;			//True if axis has found home
 
 	static bool			m_jog_mode;			/****************/
 	static bool			m_line_mode;		/*	MOVE MODES	*/

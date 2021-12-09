@@ -8,6 +8,7 @@
 #include "device/laser.h"
 #include "device/stepperMotor.h"
 #include "control/modeSelect.h"
+#include "control/knob.h"
 
 #include <QAction>
 #include <QMenu>
@@ -85,6 +86,12 @@ public:
 		connect(run, &QAction::triggered, program, &CNC::Program::start);
 		addAction(run);
 
+		QAction* zero = new QAction;
+		zero->setShortcut(Qt::Key_H);
+		connect(zero, &QAction::triggered, x_axis, &CNC::DEVICE::stepperMotor::esp_find_zero);
+		addAction(zero);
+
+		knob_setup();
 
 		setStyleSheet(	"QPushButton{"	
 							"background-color: #75B8C8;"
