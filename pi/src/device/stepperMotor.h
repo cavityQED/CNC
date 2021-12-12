@@ -33,6 +33,7 @@ enum esp32FUNCTION
 	ENA_SYNC_MODE,
 
 	VECTOR_MOVE,
+	CIRCLE_MOVE,
 	SCALAR_MOVE,
 	JOG_MOVE,
 	STOP,
@@ -118,11 +119,15 @@ public:
 	void esp_enable_sync_mode	(bool enable);
 
 	void esp_vector_move		(double dx, double dy, double dz, double f);
+	void esp_circle_move		(double xi, double yi, double xf, double yf, double f, double r, bool cw);
 	void esp_receive			();
 	void esp_stop				();
 
 	void esp_find_zero			();
 
+public slots:
+
+	void setHome()				{esp_receive(); m_stepOffset = m_stepPosition; esp_receive();}
 
 public:
 

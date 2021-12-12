@@ -140,6 +140,19 @@ void stepperMotor::esp_vector_move(double dx, double dy, double dz, double f)
 	spiSend(m_params.device_pin);
 }
 
+void stepperMotor::esp_circle_move(double xi, double yi, double xf, double yf, double f, double r, bool cw)
+{
+	sendBuffer[0] = ESP::CIRCLE_MOVE;
+	sendBuffer[1] = std::round(xi * (double)m_params.spmm);
+	sendBuffer[2] = std::round(yi * (double)m_params.spmm);
+	sendBuffer[3] = std::round(xf * (double)m_params.spmm);
+	sendBuffer[4] = std::round(yf * (double)m_params.spmm);
+	sendBuffer[5] = 1000000 / (int)(f * m_params.spmm);
+	sendBuffer[6] = std::round(r * (double)m_params.spmm);
+	sendBuffer[7] = (int)cw;
+	spiSend(m_params.device_pin);
+}
+
 void stepperMotor::esp_receive()
 {
 	sendBuffer[0] = ESP::RECEIVE;
@@ -148,9 +161,7 @@ void stepperMotor::esp_receive()
 	m_stepPosition = recvBuffer[1];
 	m_inMotion = (bool)recvBuffer[2];
 
-	m_mmPosition = (double)m_stepPosition/(double)m_params.spmm;
-	std::cout << (int)m_params.axis << " Position: " << m_mmPosition << '\n';
-	emit positionChange(m_mmPosition);
+	emit positionChange(mmPosition());
 }
 
 void stepperMotor::esp_stop()

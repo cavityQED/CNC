@@ -40,12 +40,12 @@ public:
 		laser = new CNC::DEVICE::Laser;
 		jog = new JogController;
 
-		CNC::CONTROL_WIDGET::ModeSelect* mode = new CNC::CONTROL_WIDGET::ModeSelect();
+		//CNC::CONTROL_WIDGET::ModeSelect* mode = new CNC::CONTROL_WIDGET::ModeSelect();
 
 		QVBoxLayout *vLayout = new QVBoxLayout;
 		vLayout->addWidget(pos);
 		vLayout->addWidget(laser);
-		vLayout->addWidget(mode);
+		//vLayout->addWidget(mode);
 		QHBoxLayout *layout = new QHBoxLayout;
 		layout->addLayout(vLayout);
 		layout->addWidget(jog);
@@ -63,6 +63,9 @@ public:
 
 		connect(x_axis, &CNC::DEVICE::stepperMotor::positionChange, pos, &PositionReadout::setX);
 		connect(y_axis, &CNC::DEVICE::stepperMotor::positionChange, pos, &PositionReadout::setY);
+
+		connect(pos->x_zero(), &QPushButton::released, x_axis, &CNC::DEVICE::stepperMotor::setHome);
+		connect(pos->y_zero(), &QPushButton::released, y_axis, &CNC::DEVICE::stepperMotor::setHome);
 
 		jog->setXaxis(x_axis);
 		jog->setYaxis(y_axis);

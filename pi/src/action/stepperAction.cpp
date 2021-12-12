@@ -9,22 +9,15 @@ StepperAction::StepperAction(const CNC::codeBlock& block, const axes_t& axes, QW
 
 }
 
-StepperAction::StepperAction(CNC::DEVICE::stepperMotor* motor, CNC::codeBlock block, QWidget* parent)
-	: Action(block, parent), m_stepper(motor)
+StepperAction::StepperAction(const stepperConfig& config, const axes_t& axes, QWidget* parent)
+	: Action(parent), m_config(std::move(config)), m_axes(std::move(axes))
 {
-
+	m_block = std::move(config.block);
 }
-
-StepperAction::StepperAction(CNC::StepperAction::stepperConfig& config, QWidget* parent)
-	: Action(config.block, parent), m_config(std::move(config))
-{
-
-}
-
 
 void StepperAction::execute()
 {
-	std::cout << "\nStepper Action Executing......\n";
+	std::cout << "\tStepper Action Executing......\n";
 
 
 	switch(m_block.numberCode)
@@ -34,7 +27,7 @@ void StepperAction::execute()
 			//Rapid
 			m_block.f = -1;
 		}
-		
+
 		case 1:
 		{
 			//Linear Interpolation
@@ -74,17 +67,16 @@ void StepperAction::execute()
 		case 3:
 		{
 			//Circular Interpolation Counterclockwise
-			m_config.motor->esp_enable_curv_mode(true);
+			m_axes.x->esp_circle_move(m_config.xi, m_config.yi, m_config.xf, m_config.yf, m_config.f, m_config.r, m_config.dir);
+			m_axes.x->spiWaitForReady();
+			
+			m_axes.y->esp_circle_move(m_config.xi, m_config.yi, m_config.xf, m_config.yf, m_config.f, m_config.r, m_config.dir);
+			m_axes.y->spiWaitForReady();
 
-			m_config.motor->vectorMove(	m_config.xi,
-										m_config.yi,
-										m_config.zi,
-										m_config.xf,
-										m_config.yf,
-										m_config.zf,
-										m_config.f,
-										m_config.r,
-										m_config.dir);
+			//Trigger sync pin
+			gpioWrite(m_syncPin, 1);
+			gpioWrite(m_syncPin, 0);
+
 			break;
 		}
 
@@ -95,7 +87,7 @@ void StepperAction::execute()
 			//Unsupported G code
 			break;
 	}
-	std::cout << "\nStepper Action Executed\n";
+	std::cout << "\tStepper Action Executed\n";
 }
 
 }//CNC namespace

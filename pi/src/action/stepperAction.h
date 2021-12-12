@@ -40,12 +40,8 @@ public:
 	};
 
 	StepperAction(const CNC::codeBlock& block, const axes_t& axes, QWidget* parent = nullptr);
-	StepperAction(CNC::DEVICE::stepperMotor* motor, CNC::codeBlock block, QWidget* parent = nullptr);
-	StepperAction(CNC::StepperAction::stepperConfig& config, QWidget* parent = nullptr);
+	StepperAction(const stepperConfig& config, const axes_t& axes, QWidget* parent = nullptr);
 	~StepperAction() {}
-
-	virtual void enable_sync_mode(bool enable) override {m_stepper->esp_enable_sync_mode(enable);}
-	virtual void wait_for_ready() override				{m_stepper->spiWaitForReady();}
 
 public:
 
@@ -62,8 +58,6 @@ protected:
 	stepperConfig	m_config;
 
 	int				m_syncPin = 18;
-
-	CNC::DEVICE::stepperMotor*	m_stepper;
 
 	bool	m_dir;				//Direction - true for positive move, false for negative
 	int		m_steps;			//Number of steps to move

@@ -13,7 +13,7 @@ int				axis::m_rapid_period_us		= 100;
 int				axis::m_spmm				= 200;			
 int				axis::m_max_mm				= 300;			
 int				axis::m_init_period_us		= 2500;	
-int				axis::m_accel				= 80000;			
+int				axis::m_accel				= 40000;			
 int				axis::m_max_steps			= 60000;	
 
 bool			axis::m_direction			= false;		
@@ -39,9 +39,9 @@ double 			axis::m_slope				= 0;
 position_t		axis::m_cur_pos				= {0, 0, 0};			
 position_t		axis::m_end_pos				= {0, 0, 0};			
 position_t		axis::m_jog_pos				= {0, 0, 0};
-xQueueHandle	axis::m_syncSem				= xSemaphoreCreateBinary();
 SpiClient*		axis::m_spi					= nullptr;
 esp_err_t		axis::m_esp_err				= ESP_OK;
+xQueueHandle	axis::m_syncSem				= xSemaphoreCreateBinary();
 
 void axis::check_error(const char* msg)
 {
@@ -140,125 +140,47 @@ void axis::enable_jog_mode(bool enable)
 {
 	m_jog_mode = enable;
 	if(m_jog_mode) {
-		std::cout << "Jog Mode Enabled\n";
+		std::cout << "\tJog Mode Enabled\n";
 		enable_line_mode(false);
 		enable_curv_mode(false);
 		enable_sync_mode(false);
 	}
 	else
-		std::cout << "Jog Mode Disabled\n";
+		std::cout << "\tJog Mode Disabled\n";
 }
 
 void axis::enable_line_mode(bool enable)
 {
 	m_line_mode = enable;
 	if(m_line_mode) {
-		std::cout << "Line Mode Enabled\n";
+		std::cout << "\tLine Mode Enabled\n";
 		enable_jog_mode(false);
 		enable_curv_mode(false);
 	}
 	else
-		std::cout << "Step Mode Disabled\n";
+		std::cout << "\tStep Mode Disabled\n";
 }
 
 void axis::enable_curv_mode(bool enable)
 {
 	m_curv_mode = enable;
 	if(m_curv_mode) {
-		std::cout << "Curve Mode Enabled\n";
+		std::cout << "\tCurve Mode Enabled\n";
 		enable_jog_mode(false);
 		enable_line_mode(false);
 	}
 	else
-		std::cout << "Curve Mode Disabled\n";
+		std::cout << "\tCurve Mode Disabled\n";
 }
 
 void axis::enable_sync_mode(bool enable)
 {
 	m_sync_mode = enable;
 	if(m_sync_mode) {
-		std::cout << "Sync Mode Enabled\n";
+		std::cout << "\tSync Mode Enabled\n";
 	}
 	else
-		std::cout << "Sync Mode Disabled\n";
-}
-
-void axis::vector_move_config(	const position_t& start,
-								const position_t& end,
-								int final_wait_time,
-								int r,
-								bool dir,
-								int accel)
-{	
-	if(final_wait_time < 0)
-		final_wait_time = m_rapid_period_us;
-
-	switch(m_axis)
-	{
-		case x_axis:
-			m_final_pulse = std::abs(end.x - start.x);
-			break;
-		case y_axis:
-			m_final_pulse = std::abs(end.y - start.y);
-			break;
-		case z_axis:
-			m_final_pulse = std::abs(end.z - start.z);
-			break;
-		default:
-			break;
-	}
-
-	if(m_curv_mode)
-		m_final_pulse = TIMER_BASE_CLK;
-
-	m_cur_time 			= 0;
-	m_cur_pulse 		= 0;
-	m_radius			= r;
-	m_CW				= dir;
-	m_cur_pos 			= start;
-	m_end_pos 			= end;
-	m_accel				= accel;
-	m_decel_pulse		= m_final_pulse;
-	m_pulse_period_sec	= (double)final_wait_time / 1000000.0;
-	m_accel_time 		= 1.0 / m_pulse_period_sec / (double)m_accel;
-	m_divider_max 		= m_divider_min * m_init_period_us / final_wait_time;
-	m_slope 			= (double)(end.y - start.y)/(double)(end.x - start.x);
-
-	std::cout << "*****Vector Move Setup*****\n";
-	std::cout << "\tStart:\t\t\t"			<< m_cur_pos;
-	std::cout << "\tEnd:\t\t\t"				<< m_end_pos;
-	std::cout << "\tAxis:\t\t\t"			<< (int)m_axis			<< '\n';
-	std::cout << "\tRadius:\t\t\t"			<< m_radius				<< '\n';
-	std::cout << "\tFinal Pulse:\t\t"		<< m_final_pulse 		<< '\n';
-	std::cout << "\tSlope:\t\t\t"			<< m_slope 				<< '\n';
-	std::cout << "\tPulse Period (us):\t"	<< final_wait_time		<< "\n";
-	std::cout << "\tPulse Period (s):\t"	<< m_pulse_period_sec	<< "\n";
-	std::cout << "\tAccel Time (s):\t\t"	<< m_accel_time			<< '\n';
-	std::cout << "\tInitial Divider:\t"		<< m_divider_max		<< '\n';
-
-	if(m_line_mode)
-		linear_interpolation_2D();
-	else if(m_curv_mode)
-		circular_interpolation_2D();
-
-	reset_timers();
-	timer_set_divider(VECTOR_GROUP, PULSE_TIMER, m_divider_max);
-	timer_set_alarm_value(VECTOR_GROUP, PULSE_TIMER, final_wait_time);
-}
-
-void axis::vector_move()
-{
-	if(m_sync_mode)
-	{
-		m_spi->toggle_ready();
-		xSemaphoreTake(m_syncSem, portMAX_DELAY);
-		if(!m_final_pulse)
-			return;
-	}
-
-	timer_start(VECTOR_GROUP, PULSE_TIMER);
-	timer_start(VECTOR_GROUP, SECONDS_TIMER);
-	m_motion = true;
+		std::cout << "\tSync Mode Disabled\n";
 }
 
 void axis::vector_move(	const position_t& vec,
@@ -268,7 +190,7 @@ void axis::vector_move(	const position_t& vec,
 {
 	if(final_period_us < 0)
 		final_period_us = m_rapid_period_us;
-	
+
 	switch(m_axis)
 	{
 		case x_axis:
@@ -296,9 +218,9 @@ void axis::vector_move(	const position_t& vec,
 	m_divider_max 		= m_divider_min * m_init_period_us / final_period_us;
 	m_slope 			= (double)(vec.y)/(double)(vec.x);
 	
-	std::cout << "*****Vector Move Setup*****\n";
-	std::cout << "\tEnd:\t\t\t"				<< vec;
+	std::cout << "\t*****Vector Move Setup*****\n";
 	std::cout << "\tAxis:\t\t\t"			<< (int)m_axis			<< '\n';
+	std::cout << "\tEnd:\t\t\t"				<< vec;
 	std::cout << "\tFinal Pulse:\t\t"		<< m_final_pulse 		<< '\n';
 	std::cout << "\tSlope:\t\t\t"			<< m_slope 				<< '\n';
 	std::cout << "\tPulse Period (us):\t"	<< final_period_us		<< "\n";
@@ -306,10 +228,7 @@ void axis::vector_move(	const position_t& vec,
 	std::cout << "\tAccel Time (s):\t\t"	<< m_accel_time			<< '\n';
 	std::cout << "\tInitial Divider:\t"		<< m_divider_max		<< '\n';
 
-	if(m_line_mode)
-		linear_interpolation_2D();
-	else if(m_curv_mode)
-		circular_interpolation_2D();
+	linear_interpolation_2D();
 
 	reset_timers();
 	timer_set_divider(VECTOR_GROUP, PULSE_TIMER, m_divider_max);
@@ -328,9 +247,60 @@ void axis::vector_move(	const position_t& vec,
 	m_motion = true;
 }
 
+void axis::circle_move(	const position_t& start,
+						const position_t& end,
+						int final_period_us,
+						int r,
+						bool cw,
+						int start_period_us,
+						int accel)
+{
+	m_cur_time			= 0;
+	m_cur_pulse			= 0;
+	m_cur_pos			= start;
+	m_end_pos			= end;
+	m_accel				= accel;
+	m_radius			= r;
+	m_CW				= cw;
+	m_init_period_us	= start_period_us;
+	m_final_pulse		= TIMER_BASE_CLK;
+	m_decel_pulse		= TIMER_BASE_CLK;
+	m_pulse_period_sec	= (double)final_period_us / 1000000.0;
+	m_accel_time 		= 1.0 / m_pulse_period_sec / (double)m_accel;
+	m_divider_max 		= m_divider_min * m_init_period_us / final_period_us;
+	
+	std::cout << "\t*****Circle Move Setup*****\n";
+	std::cout << "\tAxis:\t\t\t"			<< (int)m_axis			<< '\n';
+	std::cout << "\tStart:\t\t\t" 			<< start;
+	std::cout << "\tEnd:\t\t\t"				<< end;
+	std::cout << "\tRadius:\t\t\t"			<< m_radius				<< '\n';
+	std::cout << "\tPulse Period (us):\t"	<< final_period_us		<< "\n";
+	std::cout << "\tPulse Period (s):\t"	<< m_pulse_period_sec	<< "\n";
+	std::cout << "\tAccel Time (s):\t\t"	<< m_accel_time			<< '\n';
+	std::cout << "\tInitial Divider:\t"		<< m_divider_max		<< '\n';
+
+	circular_interpolation_2D();
+
+	reset_timers();
+	timer_set_divider(VECTOR_GROUP, PULSE_TIMER, m_divider_max);
+	timer_set_alarm_value(VECTOR_GROUP, PULSE_TIMER, final_period_us);
+
+	if(m_sync_mode)
+	{
+		m_spi->toggle_ready();
+		xSemaphoreTake(m_syncSem, portMAX_DELAY);
+		if(!m_final_pulse)
+			return;
+	}
+
+	timer_start(VECTOR_GROUP, PULSE_TIMER);
+	timer_start(VECTOR_GROUP, SECONDS_TIMER);
+	m_motion = true;	
+}
+
 void axis::scalar_move(	int steps_to_move,
 						bool dir,
-						int final_wait_time,
+						int final_period_us,
 						int accel)
 {
 	if(m_motion)
@@ -341,13 +311,13 @@ void axis::scalar_move(	int steps_to_move,
 	m_final_pulse		= steps_to_move;
 	m_decel_pulse		= m_final_pulse;
 	m_direction			= dir;
-	m_pulse_period_sec	= (double)final_wait_time / 1000000.0;
+	m_pulse_period_sec	= (double)final_period_us / 1000000.0;
 	m_accel_time		= 1.0 / m_pulse_period_sec / (double)m_accel;
-	m_divider_max		= m_divider_min * m_init_period_us / final_wait_time;
+	m_divider_max		= m_divider_min * m_init_period_us / final_period_us;
 
-	std::cout << "*****Scalar Move*****\n";
+	std::cout << "\t*****Scalar Move*****\n";
 	std::cout << "\tSteps:\t\t\t"			<< steps_to_move << '\n';
-	std::cout << "\tPulse Period (us):\t"	<< final_wait_time << "\n";
+	std::cout << "\tPulse Period (us):\t"	<< final_period_us << "\n";
 	std::cout << "\tPulse Period (s):\t"	<< m_pulse_period_sec << "\n";
 	std::cout << "\tAccel Time (s):\t\t"	<< m_accel_time << '\n';
 	std::cout << "\tInitial Divider:\t"		<< m_divider_max << '\n';
@@ -357,7 +327,7 @@ void axis::scalar_move(	int steps_to_move,
 
 	reset_timers();
 	timer_set_divider(SCALAR_GROUP, PULSE_TIMER, m_divider_max);
-	timer_set_alarm_value(SCALAR_GROUP, PULSE_TIMER, final_wait_time);
+	timer_set_alarm_value(SCALAR_GROUP, PULSE_TIMER, final_period_us);
 
 	timer_start(SCALAR_GROUP, PULSE_TIMER);
 	timer_start(SCALAR_GROUP, SECONDS_TIMER);
@@ -415,10 +385,12 @@ void axis::linear_interpolation_2D()
 
 void axis::circular_interpolation_2D()
 {
-	if(m_cur_pos == m_end_pos && m_motion)
+	if(m_cur_pos == m_end_pos && m_cur_pulse > 0)
 	{
 		timer_pause(VECTOR_GROUP, PULSE_TIMER);
+		timer_pause(VECTOR_GROUP, SECONDS_TIMER);
 		m_motion = false;
+		return;
 	}
 
 	int fxy = (m_cur_pos.x*m_cur_pos.x) + (m_cur_pos.y*m_cur_pos.y) - (m_radius*m_radius);

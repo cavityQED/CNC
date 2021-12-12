@@ -13,8 +13,8 @@ void SyncAction::execute()
 	for(auto &a : m_actions)
 	{
 		//a->enable_sync_mode(true);
-		a->execute();
-		a->wait_for_ready();
+		//a->execute();
+		//a->wait_for_ready();
 	}
 
 

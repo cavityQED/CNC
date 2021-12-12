@@ -48,7 +48,9 @@ struct position_t
 
 	friend bool operator==(const position_t& p1, const position_t& p2)
 	{
-		return p1.x == p2.x && p1.y == p2.y && p1.z == p2.z;
+		double diff = std::sqrt((double)((p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y) + (p1.z-p2.z)));
+		return diff < 0.999;
+//		return p1.x == p2.x && p1.y == p2.y && p1.z == p2.z;
 	}
 
 	friend std::ostream& operator<<(std::ostream& out, const position_t& p)
@@ -127,22 +129,23 @@ public:
 public:
 	/*	Movers	*/
 
-	void vector_move_config(	const position_t& start,
-								const position_t& end,
-								int final_wait_time,
-								int r = m_radius,
-								bool dir = false,
-								int accel = m_accel);
-	void vector_move();
 	void vector_move(	const position_t& vec,
 						int final_period_us,
 						int start_period_us = m_init_period_us,
 						int accel = m_accel);
 
-	void scalar_move(			int steps_to_move,
-								bool dir,
-								int final_wait_time = m_jog_period_us,
-								int accel = m_accel);
+	void circle_move(	const position_t& start,
+						const position_t& end,
+						int final_period_us,
+						int r,
+						bool cw,
+						int start_period_us = m_init_period_us,
+						int accel = m_accel);
+
+	void scalar_move(	int steps_to_move,
+						bool dir,
+						int final_period_us = m_jog_period_us,
+						int accel = m_accel);
 
 	void jog_move(bool dir);
 

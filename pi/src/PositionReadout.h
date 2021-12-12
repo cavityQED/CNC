@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QLabel>
 #include <QLineEdit>
+#include <QPushButton>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QGroupBox>
@@ -29,7 +30,11 @@ public slots:
 	void setX(double x);
 	void setY(double y);
 	void setZ(double z);
-	
+
+	QPushButton* x_zero()	{return home_x;}
+	QPushButton* y_zero()	{return home_y;}
+	QPushButton* z_zero()	{return home_z;}
+		
 private:	
 	//Main Group Box
 	QGroupBox *axis_position_box;
@@ -52,6 +57,10 @@ private:
 	QHBoxLayout *x_pos_layout;
 	QHBoxLayout *y_pos_layout;
 	QHBoxLayout *z_pos_layout;
+
+	QPushButton*	home_x;
+	QPushButton*	home_y;
+	QPushButton*	home_z;
 	
 	QString unit;
 };

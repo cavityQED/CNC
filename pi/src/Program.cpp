@@ -26,21 +26,18 @@ void Program::timerEvent(QTimerEvent* e)
 
 	if(m_devices.x_axis != nullptr)
 	{
-		std::cout << "\tProgram Receiving X Info\n";
 		m_devices.x_axis->esp_receive();
 		m_programMotion = m_programMotion || m_devices.x_axis->isMoving();
 	}
 
 	if(m_devices.y_axis != nullptr)
 	{
-		std::cout << "\tProgram Receiving Y Info\n";
 		m_devices.y_axis->esp_receive();
 		m_programMotion = m_programMotion || m_devices.y_axis->isMoving();
 	}
 
 	if(m_devices.z_axis != nullptr)
 	{
-		std::cout << "\tProgram Receiving Z Info\n";
 		m_devices.z_axis->esp_receive();
 		m_programMotion = m_programMotion || m_devices.z_axis->isMoving();
 	}
@@ -56,7 +53,7 @@ void Program::execute_next()
 {
 	if(m_programStep < m_programActions.size())
 	{
-		std::cout << "********STEP " << m_programStep << "********\n";
+		std::cout << "\n********STEP " << m_programStep << "********\n";
 		m_programActions[m_programStep++]->execute();
 		m_timer = startTimer(m_programTimerPeriod);
 	}
@@ -227,10 +224,7 @@ void Program::loadActions()
 					case 1:
 					{	//Linear Interpolation
 						std::cout << "\n\nAdding G1 Linear Move\n";
-						
 						m_programActions.push_back(new StepperAction(b, axes));
-
-						//m_programActions.push_back(G1_linearInterpolation(b));
 						std::cout << "Added G1 Move\n";
 						break;
 					}
@@ -277,6 +271,9 @@ double Program::get_double(std::string::iterator &s)
 {
 	std::string d {""};	//Create empty string to store double
 
+	while(*s == ' ')
+		s++;
+
 	//Grab characters as long as reading a number
 	while((*s >= '0' && *s <= '9') || *s == '.' || *s == '-')
 	{
@@ -312,20 +309,17 @@ bool Program::is_supported_letter_code(const char c)
 *								*
 ********************************/
 
-CNC::SyncAction* Program::G2_circularInterpolationCW(const CNC::codeBlock& block)
+CNC::Action* Program::G2_circularInterpolationCW(const CNC::codeBlock& block)
 {
 	CNC::StepperAction::stepperConfig config;
 	config.block = std::move(block);
-
-	CNC::SyncAction* syncAction = new CNC::SyncAction(block);
-	syncAction->setSyncPin(18);
 
 	//Currently need the center of the circle to be zero for the esp to properly calculate steps
 	//So must use i, j, k in the g code
 	if(block.r)
 	{
 		std::cout << "Circle with radius unsupported; use I, J, and K\n";
-		return syncAction;
+		return new CNC::SyncAction(block);
 	}
 
 	else
@@ -348,29 +342,20 @@ CNC::SyncAction* Program::G2_circularInterpolationCW(const CNC::codeBlock& block
 	config.dir	= 1;
 	config.f	= block.f;
 
-	config.motor = m_devices.x_axis;
-	syncAction->addAction(new CNC::StepperAction(config));
-
-	config.motor = m_devices.y_axis;
-	syncAction->addAction(new CNC::StepperAction(config));
-
-	return syncAction;
+	return new StepperAction(config, {m_devices.x_axis, m_devices.y_axis, m_devices.z_axis});
 }
 
-CNC::SyncAction* Program::G3_circularInterpolationCCW(const CNC::codeBlock& block)
+CNC::Action* Program::G3_circularInterpolationCCW(const CNC::codeBlock& block)
 {
 	CNC::StepperAction::stepperConfig config;
 	config.block = std::move(block);
-
-	CNC::SyncAction* syncAction = new CNC::SyncAction(block);
-	syncAction->setSyncPin(18);
 
 	//Currently need the center of the circle to be zero for the esp to properly calculate steps
 	//So must use i, j, k in the g code
 	if(block.r)
 	{
 		std::cout << "Circle with radius unsupported; use I, J, and K\n";
-		return syncAction;
+		return new CNC::SyncAction(block);
 	}
 
 	else
@@ -383,7 +368,7 @@ CNC::SyncAction* Program::G3_circularInterpolationCCW(const CNC::codeBlock& bloc
 		config.yf = (block.abs_y)? block.y - block.prev_y : block.v;
 		config.zf = (block.abs_z)? block.z - block.prev_z : block.w;
 
-		config.xf -= block.i;
+ 		config.xf -= block.i;
 		config.yf -= block.j;
 		config.zf -= block.k;
 
@@ -393,13 +378,7 @@ CNC::SyncAction* Program::G3_circularInterpolationCCW(const CNC::codeBlock& bloc
 	config.dir	= 0;
 	config.f	= block.f;
 
-	config.motor = m_devices.x_axis;
-	syncAction->addAction(new CNC::StepperAction(config));
-
-	config.motor = m_devices.y_axis;
-	syncAction->addAction(new CNC::StepperAction(config));
-
-	return syncAction;
+	return new StepperAction(config, {m_devices.x_axis, m_devices.y_axis, m_devices.z_axis});
 }
 
 }//CNC namespace

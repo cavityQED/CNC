@@ -66,10 +66,10 @@ protected:
 protected:
 	//Functions to get action params from code blocks
 
-	CNC::SyncAction*  G0_rapid						(CNC::codeBlock& block) {}
-	CNC::SyncAction*  G1_linearInterpolation		(const CNC::codeBlock& block) {}
-	CNC::SyncAction*  G2_circularInterpolationCW	(const CNC::codeBlock& block);
-	CNC::SyncAction*  G3_circularInterpolationCCW	(const CNC::codeBlock& block);
+	CNC::Action*  G0_rapid						(CNC::codeBlock& block) {}
+	CNC::Action*  G1_linearInterpolation		(const CNC::codeBlock& block) {}
+	CNC::Action*  G2_circularInterpolationCW	(const CNC::codeBlock& block);
+	CNC::Action*  G3_circularInterpolationCCW	(const CNC::codeBlock& block);
 
 protected:
 

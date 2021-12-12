@@ -104,6 +104,8 @@ void SpiClient::printFunction(AXIS_FUNCTION_CODE code) {
 		case ENA_CURV_MODE:			std::cout << "Enable Curve Mode";		break;
 		case ENA_SYNC_MODE:			std::cout << "Enable Sync Mode";		break;
 		case VECTOR_MOVE:			std::cout << "Vector Move";				break;
+		case CIRCLE_MOVE:			std::cout << "Circle Move";				break;
+		case SCALAR_MOVE:			std::cout << "Scalar Move";				break;
 		case JOG_MOVE:				std::cout << "Jog Move";				break;
 		case STOP:					std::cout << "Stop";					break;
 		case RECEIVE:				std::cout << "Receive";					break;

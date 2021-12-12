@@ -9,9 +9,11 @@ PositionReadout::PositionReadout(QWidget *parent) : QWidget(parent) {
 void PositionReadout::createWidgets() {
 	//X Axis
 	QLabel	*x_label	= new QLabel("X:");
+	home_x				= new QPushButton("X Zero");
 	x_lineEdit			= new QLineEdit;
 	x_pos				= new QWidget;
 	x_pos_layout		= new QHBoxLayout;
+	x_pos_layout->addWidget(home_x);
 	x_pos_layout->addWidget(x_label);
 	x_pos_layout->addWidget(x_lineEdit);
 	x_pos_layout->setAlignment(Qt::AlignVCenter);
@@ -22,9 +24,11 @@ void PositionReadout::createWidgets() {
 	
 	//Y Axis
 	QLabel	*y_label	= new QLabel("Y:");
+	home_y				= new QPushButton("Y Zero");
 	y_lineEdit			= new QLineEdit;
 	y_pos				= new QWidget;
 	y_pos_layout		= new QHBoxLayout;
+	y_pos_layout->addWidget(home_y);
 	y_pos_layout->addWidget(y_label);
 	y_pos_layout->addWidget(y_lineEdit);
 	y_pos_layout->setAlignment(Qt::AlignVCenter);
@@ -35,9 +39,11 @@ void PositionReadout::createWidgets() {
 	
 	//Z Axis
 	QLabel	*z_label	= new QLabel("Z:");
+	home_z				= new QPushButton("Z Zero");
 	z_lineEdit			= new QLineEdit;
 	z_pos				= new QWidget;
 	z_pos_layout		= new QHBoxLayout;
+	z_pos_layout->addWidget(home_z);
 	z_pos_layout->addWidget(z_label);
 	z_pos_layout->addWidget(z_lineEdit);
 	z_pos_layout->setAlignment(Qt::AlignVCenter);

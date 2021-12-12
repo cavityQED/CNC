@@ -31,6 +31,7 @@ void IRAM_ATTR msg_ready(void* arg)
 
 void IRAM_ATTR zero_interlock(void* arg)
 {
+	gpio_intr_disable(ZERO_INTERLOCK);
 	event_info_t evt;
 	evt.type = ZERO_STOP;
 	xQueueSendFromISR(evt_queue, &evt, NULL);
@@ -132,6 +133,18 @@ void get_message()
 			break;
 		}
 
+		case CIRCLE_MOVE:
+		{
+			gen_axis.enable_sync_mode(true);
+			gen_axis.enable_curv_mode(true);
+			gen_axis.circle_move(	{msg[1], msg[2], 0},	//start position
+									{msg[3], msg[4], 0},	//end position
+									msg[5],					//feed rate (microseconds)
+									msg[6],					//radius
+									(bool)msg[7]);				//direction (CW or CCW)
+			break;
+		}
+
 		case JOG_MOVE:
 		{
 			gen_axis.jog_move((bool)msg[1]);
@@ -152,7 +165,7 @@ void get_message()
 		case FIND_ZERO:
 		{
 			int final_pulse = gen_axis.spmm() * gen_axis.max_mm();
-			gen_axis.scalar_move(final_pulse, false, 500);
+			gen_axis.scalar_move(final_pulse, false, 250);
 		}
 
 		default:
@@ -178,13 +191,13 @@ static void main_task(void* arg) {
 			case ZERO_STOP:
 			{
 				std::cout << "LIMIT SWITCH HIT\n";
-
-				int steps = gen_axis.spmm();
+				int steps = 3*gen_axis.spmm();
 				gen_axis.reset_timers();
 				gen_axis.set_motion(false);
 				gen_axis.set_position(-steps);
 				gen_axis.scalar_move(steps, true);
 				gen_axis.set_homed(true);
+				gpio_intr_enable(ZERO_INTERLOCK);
 				break;
 			}
 
@@ -200,12 +213,12 @@ extern "C" void app_main(void) {
 	
 	gpio_config_t io_conf;
 	memset(&io_conf, 0, sizeof(io_conf));
-	
+
 	io_conf.intr_type		= GPIO_INTR_POSEDGE;
 	io_conf.mode			= GPIO_MODE_INPUT;
 	io_conf.pull_down_en	= GPIO_PULLDOWN_ENABLE;
-	io_conf.pin_bit_mask	= (1ULL << ZERO_INTERLOCK) | (1 << DEVICE_SELECT);
-	
+	io_conf.pin_bit_mask	= (1 << ZERO_INTERLOCK) | (1 << DEVICE_SELECT);
+
 	gpio_config(&io_conf);
 	gpio_install_isr_service(0);
 	
