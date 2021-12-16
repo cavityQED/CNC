@@ -37,6 +37,7 @@ enum esp32FUNCTION
 	SCALAR_MOVE,
 	JOG_MOVE,
 	STOP,
+	PAUSE_TIMERS,
 	RECEIVE,
 
 	FIND_ZERO,
@@ -77,7 +78,6 @@ public:
 	*/
 	void configureStepper(params_t &p);
 
-	void jogMove(bool dir);
 	void vectorMove(	double xi,
 						double yi,
 						double zi,
@@ -88,7 +88,6 @@ public:
 						double r = 0,
 						bool dir = 0);
 
-	void setJogDistance(double mm)	{esp_set_jog_steps(mm*m_params.spmm);}
 	void setStepOffset(int steps)	{m_stepOffset = steps;}
 
 public:
@@ -120,14 +119,19 @@ public:
 
 	void esp_vector_move		(double dx, double dy, double dz, double f);
 	void esp_circle_move		(double xi, double yi, double xf, double yf, double f, double r, bool cw);
+	void esp_jog_move			(bool dir);
 	void esp_receive			();
 	void esp_stop				();
+	void esp_timer_pause		(bool pause);
 
 	void esp_find_zero			();
 
 public slots:
 
-	void setHome()				{esp_receive(); m_stepOffset = m_stepPosition; esp_receive();}
+	void setHome()					{	esp_receive(); m_stepOffset = m_stepPosition; esp_receive();	}
+	void jogMove(bool dir)			{	if(m_jogMode) esp_jog_move(dir);								}
+	void jogEnable(bool ena)		{	esp_enable_jog_mode(ena);										}
+	void setJogDistance(double mm)	{	esp_set_jog_steps(mm*m_params.spmm);						}
 
 public:
 

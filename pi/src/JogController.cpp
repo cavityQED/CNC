@@ -24,8 +24,15 @@ void JogController::createButtons() {
 	jog_low->setCheckable(true);
 	jog_med = new QPushButton("1");
 	jog_med->setCheckable(true);
-	jog_high = new QPushButton("2.5");
-	jog_high->setCheckable(true);
+	jog_max = new QPushButton("2.5");
+	jog_max->setCheckable(true);
+
+	QButtonGroup* group = new QButtonGroup(this);
+	group->addButton(jog_min);
+	group->addButton(jog_low);
+	group->addButton(jog_med);
+	group->addButton(jog_max);
+	group->setExclusive(true);
 }
 
 void JogController::setupBoxes() {
@@ -50,7 +57,7 @@ void JogController::setupBoxes() {
 	//Setup the Jog Speed Box
 	QVBoxLayout *jog_speed_layout	= new QVBoxLayout;
 	jog_speed_box			 		= new QGroupBox("Jog Speed");
-	jog_speed_layout->addWidget(jog_high);
+	jog_speed_layout->addWidget(jog_max);
 	jog_speed_layout->addWidget(jog_med);
 	jog_speed_layout->addWidget(jog_low);
 	jog_speed_layout->addWidget(jog_min);
@@ -81,7 +88,7 @@ void JogController::setShortcuts() {
 	z_pos->setShortcut(Qt::Key_9);
 	z_neg->setShortcut(Qt::Key_1);
 		
-	jog_high->setShortcut(Qt::Key_F2);
+	jog_max->setShortcut(Qt::Key_F2);
 	jog_med->setShortcut(Qt::Key_F3);
 	jog_low->setShortcut(Qt::Key_F4);
 }
@@ -94,12 +101,12 @@ void JogController::connectButtons() {
 	connect(z_pos, SIGNAL(pressed()), this, SLOT(zJogPos()));
 	connect(z_neg, SIGNAL(pressed()), this, SLOT(zJogNeg()));
 		
-	connect(jog_mode_box, SIGNAL(toggled(bool)), this, SLOT(enableJogMode(bool)));
+	connect(jog_mode_box, SIGNAL(toggled(bool)), this, SIGNAL(jog_enable(bool)));
 	
 	connect(jog_min, SIGNAL(clicked(bool)), this, SLOT(setJogSpeedMin(bool)));
 	connect(jog_low, SIGNAL(clicked(bool)), this, SLOT(setJogSpeedLow(bool)));
 	connect(jog_med, SIGNAL(clicked(bool)), this, SLOT(setJogSpeedMed(bool)));
-	connect(jog_high, SIGNAL(clicked(bool)), this, SLOT(setJogSpeedHigh(bool)));
+	connect(jog_max, SIGNAL(clicked(bool)), this, SLOT(setJogSpeedMax(bool)));
 }
 
 void JogController::setStyleSheets() {

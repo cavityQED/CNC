@@ -49,7 +49,7 @@ struct position_t
 	friend bool operator==(const position_t& p1, const position_t& p2)
 	{
 		double diff = std::sqrt((double)((p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y) + (p1.z-p2.z)));
-		return diff < 0.999;
+		return diff < 0.5;
 //		return p1.x == p2.x && p1.y == p2.y && p1.z == p2.z;
 	}
 
@@ -73,6 +73,7 @@ public:
 	void setup_gpio();
 	void setup_timers();
 	void reset_timers();
+	void pause_timers(bool pause);
 
 	/*	Check error function; prints the input and then the error	*/
 	void check_error(const char* msg);

@@ -71,11 +71,19 @@ void Program::start()
 
 void Program::pause()
 {
+	if(m_devices.x_axis)
+		m_devices.x_axis->esp_timer_pause(true);
+	if(m_devices.y_axis)
+		m_devices.y_axis->esp_timer_pause(true);
 	killTimer(m_timer);
 }
 
 void Program::resume()
 {
+	if(m_devices.x_axis)
+		m_devices.x_axis->esp_timer_pause(false);
+	if(m_devices.y_axis)
+		m_devices.y_axis->esp_timer_pause(false);
 	m_timer = startTimer(m_programTimerPeriod);
 }
 

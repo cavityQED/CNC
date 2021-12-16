@@ -22,17 +22,6 @@ void stepperMotor::configureStepper(params_t &p)
 	esp_set_max_steps		(p.max_mm * p.spmm);
 }
 
-void stepperMotor::jogMove(bool dir)
-{
-	if(!m_jogMode)
-		return;
-
-	sendBuffer[0] = ESP::JOG_MOVE;
-	sendBuffer[1] = (int)dir;
-	spiSend(m_params.device_pin);
-	startTimer(m_timerPeriod);
-}
-
 void stepperMotor::vectorMove(	double xi,
 								double yi,
 								double zi,
@@ -153,6 +142,14 @@ void stepperMotor::esp_circle_move(double xi, double yi, double xf, double yf, d
 	spiSend(m_params.device_pin);
 }
 
+void stepperMotor::esp_jog_move(bool dir)
+{
+	sendBuffer[0] = ESP::JOG_MOVE;
+	sendBuffer[1] = (int)dir;
+	spiSend(m_params.device_pin);
+	startTimer(m_timerPeriod);
+}
+
 void stepperMotor::esp_receive()
 {
 	sendBuffer[0] = ESP::RECEIVE;
@@ -169,6 +166,13 @@ void stepperMotor::esp_stop()
 	sendBuffer[0] = ESP::STOP;
 	spiSend(m_params.device_pin);
 	startTimer(m_timerPeriod);
+}
+
+void stepperMotor::esp_timer_pause(bool pause)
+{
+	sendBuffer[0] = ESP::PAUSE_TIMERS;
+	sendBuffer[1] = (int)pause;
+	spiSend(m_params.device_pin);
 }
 
 void stepperMotor::esp_find_zero()

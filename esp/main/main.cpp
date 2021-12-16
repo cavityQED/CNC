@@ -156,6 +156,12 @@ void get_message()
 			break;
 		}
 
+		case PAUSE_TIMERS:
+		{
+			gen_axis.pause_timers(msg[1]);
+			break;
+		}
+
 		case RECEIVE:
 		{
 			gen_axis.print_info();

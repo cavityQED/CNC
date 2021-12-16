@@ -67,8 +67,12 @@ public:
 		connect(pos->x_zero(), &QPushButton::released, x_axis, &CNC::DEVICE::stepperMotor::setHome);
 		connect(pos->y_zero(), &QPushButton::released, y_axis, &CNC::DEVICE::stepperMotor::setHome);
 
-		jog->setXaxis(x_axis);
-		jog->setYaxis(y_axis);
+		connect(jog, &JogController::jog_x, x_axis, &CNC::DEVICE::stepperMotor::jogMove);
+		connect(jog, &JogController::jog_y, y_axis, &CNC::DEVICE::stepperMotor::jogMove);
+		connect(jog, &JogController::set_jog_distance, x_axis, &CNC::DEVICE::stepperMotor::setJogDistance);
+		connect(jog, &JogController::set_jog_distance, y_axis, &CNC::DEVICE::stepperMotor::setJogDistance);
+		connect(jog, &JogController::jog_enable, x_axis, &CNC::DEVICE::stepperMotor::jogEnable);
+		connect(jog, &JogController::jog_enable, y_axis, &CNC::DEVICE::stepperMotor::jogEnable);
 
 		x_axis->esp_receive();
 		y_axis->esp_receive();
@@ -93,6 +97,16 @@ public:
 		zero->setShortcut(Qt::Key_H);
 		connect(zero, &QAction::triggered, x_axis, &CNC::DEVICE::stepperMotor::esp_find_zero);
 		addAction(zero);
+
+		QAction* pause = new QAction;
+		pause->setShortcut(Qt::Key_P);
+		connect(pause, &QAction::triggered, program, &CNC::Program::pause);
+		addAction(pause);
+
+		QAction* resume = new QAction;
+		resume->setShortcut(Qt::Key_R);
+		connect(resume, &QAction::triggered, program, &CNC::Program::resume);
+		addAction(resume);
 
 		knob_setup();
 

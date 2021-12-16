@@ -120,7 +120,7 @@ void axis::setup_timers()
 void axis::reset_timers()
 {
 	timer_pause					(VECTOR_GROUP, PULSE_TIMER);
-	timer_enable_intr			(VECTOR_GROUP, PULSE_TIMER);
+	timer_disable_intr			(VECTOR_GROUP, PULSE_TIMER);
 	timer_set_counter_value		(VECTOR_GROUP, PULSE_TIMER, 0);
 	timer_set_alarm				(VECTOR_GROUP, PULSE_TIMER, TIMER_ALARM_EN);
 
@@ -128,12 +128,31 @@ void axis::reset_timers()
 	timer_set_counter_value		(VECTOR_GROUP, SECONDS_TIMER, 0);
 
 	timer_pause					(SCALAR_GROUP, PULSE_TIMER);
-	timer_enable_intr			(SCALAR_GROUP, PULSE_TIMER);
+	timer_disable_intr			(SCALAR_GROUP, PULSE_TIMER);
 	timer_set_counter_value		(SCALAR_GROUP, PULSE_TIMER, 0);
 	timer_set_alarm				(SCALAR_GROUP, PULSE_TIMER, TIMER_ALARM_EN);
 
 	timer_pause					(SCALAR_GROUP, SECONDS_TIMER);
 	timer_set_counter_value		(SCALAR_GROUP, SECONDS_TIMER, 0);
+}
+
+void axis::pause_timers(bool pause)
+{
+	if(!pause && m_motion)
+	{
+		timer_start(VECTOR_GROUP, PULSE_TIMER);
+		timer_start(VECTOR_GROUP, SECONDS_TIMER);
+		timer_start(SCALAR_GROUP, PULSE_TIMER);
+		timer_start(SCALAR_GROUP, SECONDS_TIMER);
+	}
+	
+	else
+	{
+		timer_pause(VECTOR_GROUP, PULSE_TIMER);
+		timer_pause(VECTOR_GROUP, SECONDS_TIMER);
+		timer_pause(SCALAR_GROUP, PULSE_TIMER);
+		timer_pause(SCALAR_GROUP, SECONDS_TIMER);
+	}
 }
 
 void axis::enable_jog_mode(bool enable)
@@ -231,6 +250,7 @@ void axis::vector_move(	const position_t& vec,
 	linear_interpolation_2D();
 
 	reset_timers();
+	timer_enable_intr(VECTOR_GROUP, PULSE_TIMER);
 	timer_set_divider(VECTOR_GROUP, PULSE_TIMER, m_divider_max);
 	timer_set_alarm_value(VECTOR_GROUP, PULSE_TIMER, final_period_us);
 
@@ -282,6 +302,7 @@ void axis::circle_move(	const position_t& start,
 	circular_interpolation_2D();
 
 	reset_timers();
+	timer_enable_intr(VECTOR_GROUP, PULSE_TIMER);
 	timer_set_divider(VECTOR_GROUP, PULSE_TIMER, m_divider_max);
 	timer_set_alarm_value(VECTOR_GROUP, PULSE_TIMER, final_period_us);
 
@@ -326,6 +347,7 @@ void axis::scalar_move(	int steps_to_move,
 	ets_delay_us(8);
 
 	reset_timers();
+	timer_enable_intr(SCALAR_GROUP, PULSE_TIMER);
 	timer_set_divider(SCALAR_GROUP, PULSE_TIMER, m_divider_max);
 	timer_set_alarm_value(SCALAR_GROUP, PULSE_TIMER, final_period_us);
 
