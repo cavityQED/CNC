@@ -40,17 +40,17 @@ public slots:
 	void zJogPos() {}
 	void zJogNeg() {}
 	
-	void setJogSpeedMin(bool checked)	{	emit set_jog_distance(.01);	}
-	void setJogSpeedLow(bool checked)	{	emit set_jog_distance(.1);	}
-	void setJogSpeedMed(bool checked)	{	emit set_jog_distance(1);	} 
-	void setJogSpeedMax(bool checked)	{	emit set_jog_distance(2.5);	}
+	void setJogSpeedMin(bool checked)	{	emit jog_set_distance(.01);	}
+	void setJogSpeedLow(bool checked)	{	emit jog_set_distance(.1);	}
+	void setJogSpeedMed(bool checked)	{	emit jog_set_distance(1);	} 
+	void setJogSpeedMax(bool checked)	{	emit jog_set_distance(2.5);	}
 
 signals:
 
 	void jog_x				(bool dir);
 	void jog_y				(bool dir);
-	void jog_enable			(bool dir);
-	void set_jog_distance	(double mm);
+	void jog_enable			(bool enable);
+	void jog_set_distance	(double mm);
 
 private:
 	//Main Group Box

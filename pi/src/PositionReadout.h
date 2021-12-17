@@ -25,6 +25,7 @@ public:
 	void setStyleSheets();
 		
 public slots:
+
 	void setPosition(double x, double y, double z = 0);
 
 	void setX(double x);

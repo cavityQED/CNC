@@ -39,8 +39,7 @@ public:
 		pos = new PositionReadout;
 		laser = new CNC::DEVICE::Laser;
 		jog = new JogController;
-
-		//CNC::CONTROL_WIDGET::ModeSelect* mode = new CNC::CONTROL_WIDGET::ModeSelect();
+		knob = new Knob(17, 27, this);
 
 		QVBoxLayout *vLayout = new QVBoxLayout;
 		vLayout->addWidget(pos);
@@ -61,18 +60,18 @@ public:
 		x_axis = new CNC::DEVICE::stepperMotor(xparams);
 		y_axis = new CNC::DEVICE::stepperMotor(yparams);
 
-		connect(x_axis, &CNC::DEVICE::stepperMotor::positionChange, pos, &PositionReadout::setX);
-		connect(y_axis, &CNC::DEVICE::stepperMotor::positionChange, pos, &PositionReadout::setY);
+		connect(x_axis,			&CNC::DEVICE::stepperMotor::positionChange, 	pos,	&PositionReadout::setX);
+		connect(y_axis,			&CNC::DEVICE::stepperMotor::positionChange, 	pos,	&PositionReadout::setY);
 
-		connect(pos->x_zero(), &QPushButton::released, x_axis, &CNC::DEVICE::stepperMotor::setHome);
-		connect(pos->y_zero(), &QPushButton::released, y_axis, &CNC::DEVICE::stepperMotor::setHome);
+		connect(pos->x_zero(),	&QPushButton::released,				x_axis,		&CNC::DEVICE::stepperMotor::setHome);
+		connect(pos->y_zero(),	&QPushButton::released,				y_axis,		&CNC::DEVICE::stepperMotor::setHome);
 
-		connect(jog, &JogController::jog_x, x_axis, &CNC::DEVICE::stepperMotor::jogMove);
-		connect(jog, &JogController::jog_y, y_axis, &CNC::DEVICE::stepperMotor::jogMove);
-		connect(jog, &JogController::set_jog_distance, x_axis, &CNC::DEVICE::stepperMotor::setJogDistance);
-		connect(jog, &JogController::set_jog_distance, y_axis, &CNC::DEVICE::stepperMotor::setJogDistance);
-		connect(jog, &JogController::jog_enable, x_axis, &CNC::DEVICE::stepperMotor::jogEnable);
-		connect(jog, &JogController::jog_enable, y_axis, &CNC::DEVICE::stepperMotor::jogEnable);
+		connect(jog,			&JogController::jog_x,				x_axis,		&CNC::DEVICE::stepperMotor::jogMove);
+		connect(jog,			&JogController::jog_y,				y_axis,		&CNC::DEVICE::stepperMotor::jogMove);
+		connect(jog,			&JogController::jog_enable,			x_axis,		&CNC::DEVICE::stepperMotor::jogEnable);
+		connect(jog,			&JogController::jog_enable,			y_axis,		&CNC::DEVICE::stepperMotor::jogEnable);
+		connect(jog,			&JogController::jog_set_distance,	x_axis,		&CNC::DEVICE::stepperMotor::setJogDistance);
+		connect(jog,			&JogController::jog_set_distance,	y_axis,		&CNC::DEVICE::stepperMotor::setJogDistance);
 
 		x_axis->esp_receive();
 		y_axis->esp_receive();
@@ -108,7 +107,7 @@ public:
 		connect(resume, &QAction::triggered, program, &CNC::Program::resume);
 		addAction(resume);
 
-		knob_setup();
+		//knob_setup();
 
 		setStyleSheet(	"QPushButton{"	
 							"background-color: #75B8C8;"
@@ -142,6 +141,7 @@ private:
 	JogController *jog;
 	PositionReadout *pos;
 	MotorController *controller;
+	Knob* knob;
 	
 	CNC::DEVICE::stepperMotor::params_t xparams {13, 200, 200, CNC::DEVICE::ESP::AXIS::x_axis};
 	CNC::DEVICE::stepperMotor::params_t yparams {19, 200, 200, CNC::DEVICE::ESP::AXIS::y_axis};

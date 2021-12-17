@@ -145,7 +145,7 @@ void axis::pause_timers(bool pause)
 		timer_start(SCALAR_GROUP, PULSE_TIMER);
 		timer_start(SCALAR_GROUP, SECONDS_TIMER);
 	}
-	
+
 	else
 	{
 		timer_pause(VECTOR_GROUP, PULSE_TIMER);
@@ -361,7 +361,7 @@ void axis::jog_move(bool dir)
 	if(!m_jog_mode)
 		return;
 
-	if(m_jog_mode && m_motion)
+	if(m_jog_mode && m_motion && dir == m_direction)
 	{
 		m_decel_pulse += m_jog_steps;
 		m_final_pulse += m_jog_steps;
