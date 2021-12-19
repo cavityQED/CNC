@@ -77,7 +77,12 @@ void axis::setup_gpio()
 	m_esp_err = gpio_set_direction(EN_PIN, GPIO_MODE_OUTPUT);
 	check_error("EN_PIN Configure:");
 
+	gpio_pad_select_gpio(MOTION_PIN);
+	m_esp_err = gpio_set_direction(MOTION_PIN, GPIO_MODE_OUTPUT);
+	check_error("MOTION_PIN Configure:");
+
 	gpio_set_level(EN_PIN, 1);
+	gpio_set_level(MOTION_PIN, 0);
 }
 
 void axis::setup_timers()
@@ -265,6 +270,7 @@ void axis::vector_move(	const position_t& vec,
 	timer_start(VECTOR_GROUP, PULSE_TIMER);
 	timer_start(VECTOR_GROUP, SECONDS_TIMER);
 	m_motion = true;
+	gpio_set_level(MOTION_PIN, 1);
 }
 
 void axis::circle_move(	const position_t& start,
@@ -317,6 +323,7 @@ void axis::circle_move(	const position_t& start,
 	timer_start(VECTOR_GROUP, PULSE_TIMER);
 	timer_start(VECTOR_GROUP, SECONDS_TIMER);
 	m_motion = true;	
+	gpio_set_level(MOTION_PIN, 1);
 }
 
 void axis::scalar_move(	int steps_to_move,
@@ -354,6 +361,7 @@ void axis::scalar_move(	int steps_to_move,
 	timer_start(SCALAR_GROUP, PULSE_TIMER);
 	timer_start(SCALAR_GROUP, SECONDS_TIMER);
 	m_motion = true;
+	gpio_set_level(MOTION_PIN, 1);
 }
 
 void axis::jog_move(bool dir)
@@ -379,6 +387,7 @@ void axis::linear_interpolation_2D()
 		timer_pause(VECTOR_GROUP, PULSE_TIMER);
 		timer_pause(VECTOR_GROUP, SECONDS_TIMER);
 		m_motion = false;
+		gpio_set_level(MOTION_PIN, 0);
 		return;
 	}
 
@@ -412,6 +421,7 @@ void axis::circular_interpolation_2D()
 		timer_pause(VECTOR_GROUP, PULSE_TIMER);
 		timer_pause(VECTOR_GROUP, SECONDS_TIMER);
 		m_motion = false;
+		gpio_set_level(MOTION_PIN, 0);
 		return;
 	}
 
@@ -449,7 +459,7 @@ void axis::circular_interpolation_2D()
 	}
 
 	gpio_set_level(DIR_PIN, m_direction);
-	ets_delay_us(8);
+	ets_delay_us(10);
 }
 
 void axis::update_divider(timer_group_t TIMER_GROUP)
@@ -500,12 +510,14 @@ void axis::vector_move_isr(void* arg)
 		gpio_set_level(PULSE_PIN, 1);
 		m_step_position += (m_direction)? 1 : -1;
 		ets_delay_us(8);
+		gpio_set_level(PULSE_PIN, 0);
 
 		if(++m_cur_pulse == m_final_pulse)
 		{
 			timer_pause(VECTOR_GROUP, PULSE_TIMER);
 			timer_pause(VECTOR_GROUP, SECONDS_TIMER);
 			m_motion = false;
+			gpio_set_level(MOTION_PIN, 0);
 		}
 	}
 
@@ -518,7 +530,6 @@ void axis::vector_move_isr(void* arg)
 	timer_group_clr_intr_status_in_isr	(VECTOR_GROUP, PULSE_TIMER);
 	timer_group_enable_alarm_in_isr		(VECTOR_GROUP, PULSE_TIMER);
 	timer_spinlock_give					(VECTOR_GROUP);
-	gpio_set_level(PULSE_PIN, 0);
 }
 
 void axis::scalar_move_isr(void* arg)
@@ -536,6 +547,7 @@ void axis::scalar_move_isr(void* arg)
 		timer_pause(SCALAR_GROUP, PULSE_TIMER);
 		timer_pause(SCALAR_GROUP, SECONDS_TIMER);
 		m_motion = false;
+		gpio_set_level(MOTION_PIN, 0);
 	}
 
 	update_divider(SCALAR_GROUP);

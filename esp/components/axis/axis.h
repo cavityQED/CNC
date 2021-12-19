@@ -25,6 +25,7 @@
 #define DIR_PIN		(gpio_num_t) 2
 #define EN_PIN		(gpio_num_t) 4
 #define SYNC_PIN	(gpio_num_t) 26
+#define MOTION_PIN	(gpio_num_t) 21
 
 //Timers
 #define VECTOR_GROUP	TIMER_GROUP_0
