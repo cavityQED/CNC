@@ -55,7 +55,7 @@ void SpiClient::get_message(std::vector<int> &msg) {
 	spi_transaction.rx_buffer	= &msg[0];
 	
 	//Wait for the message
-	esp_err_t err = spi_slave_transmit(SPI3_HOST, &spi_transaction, portMAX_DELAY);
+	esp_err_t err = spi_slave_transmit(SPI3_HOST, &spi_transaction, portMAX_DELAY/*pdMS_TO_TICKS(5)*/);
 	
 	//If no errors, return
 	if(err == ESP_OK) {

@@ -18,9 +18,9 @@ public:
 		knob->cur() += (gpioRead(knob->pin2()) << 1);
 
 		if(knob->cur() == 3 && knob->pre() == 2)
-			knob->emit cw_turn();
+			knob->emit turn(true);
 		else if(knob->cur() == 3 && knob->pre() == 1)
-			knob->emit ccw_turn();
+			knob->emit turn(false);
 
 		knob->pre() = knob->cur();
 		knob->cur() = 0;
@@ -50,8 +50,7 @@ public:
 
 signals:
 
-	void cw_turn();
-	void ccw_turn();
+	void turn(bool cw);
 
 protected:
 

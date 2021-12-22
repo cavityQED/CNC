@@ -145,6 +145,12 @@ void get_message()
 			break;
 		}
 
+		case SCALAR_MOVE:
+		{
+			gen_axis.scalar_move(msg[1], (bool)msg[2]);
+			break;
+		}
+
 		case JOG_MOVE:
 		{
 			gen_axis.jog_move((bool)msg[1]);

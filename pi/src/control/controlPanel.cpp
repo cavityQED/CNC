@@ -8,16 +8,21 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent)
 	setupModeGroup();
 	setupArrowGroup();
 	setupJogGroup();
+	setupTextBox();
 
 	QVBoxLayout* vbox = new QVBoxLayout();
 	vbox->addWidget(m_mode_group);
 	vbox->addWidget(m_arrow_group);
 
-	m_main_layout = new QHBoxLayout();
-	m_main_layout->addLayout(vbox);
-	m_main_layout->addWidget(m_jog_group);
+	QHBoxLayout* hbox = new QHBoxLayout();
+	hbox->addLayout(vbox);
+	hbox->addWidget(m_jog_group);
 
-	setLayout(m_main_layout);
+	QVBoxLayout* main = new QVBoxLayout();
+	main->addWidget(m_textBox);
+	main->addLayout(hbox);
+
+	setLayout(main);
 
 	setStyleSheet(	"QPushButton{"	
 						"background-color: #75B8C8;"
@@ -131,12 +136,21 @@ void ControlPanel::setupJogGroup()
 	m_jog10_button		= new QPushButton("10");
 	m_jog1_button		= new QPushButton("1");
 
+	connect(m_jog100_button,	&QPushButton::clicked, [this] {jogSpeed(100);	});
+	connect(m_jog10_button,		&QPushButton::clicked, [this] {jogSpeed(10);	});
+	connect(m_jog1_button,		&QPushButton::clicked, [this] {jogSpeed(1);		});
+
 	m_jogXpos_button	= new QPushButton("X+");
 	m_jogXneg_button	= new QPushButton("X-");
 	m_jogYpos_button	= new QPushButton("Y+");
 	m_jogYneg_button	= new QPushButton("Y-");
 	m_jogZpos_button	= new QPushButton("Z+");
 	m_jogZneg_button	= new QPushButton("Z-");
+
+	m_jogXpos_button->setShortcut(Qt::Key_6);
+	m_jogXneg_button->setShortcut(Qt::Key_4);
+	m_jogYpos_button->setShortcut(Qt::Key_8);
+	m_jogYneg_button->setShortcut(Qt::Key_2);
 
 	connect(m_jogXpos_button,	&QPushButton::clicked, [this] {axisButton(CNC::AXIS::X, true);	});
 	connect(m_jogXneg_button,	&QPushButton::clicked, [this] {axisButton(CNC::AXIS::X, false);	});
@@ -172,6 +186,13 @@ void ControlPanel::setupJogGroup()
 	//Create the jog group and set the layout
 	m_jog_group = new QGroupBox();
 	m_jog_group->setLayout(jog_layout);
+}
+
+void ControlPanel::setupTextBox()
+{
+	m_textBox = new QTextEdit();
+	m_textBox->setFontPointSize(16);
+	m_textBox->setStyleSheet("font-size: 16pt");
 }
 
 }//CNC namespace

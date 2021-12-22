@@ -18,11 +18,18 @@ public:
 	void setupModeGroup();
 	void setupArrowGroup();
 	void setupJogGroup();
+	void setupTextBox();
+
+public:
+
+	QTextEdit* textBox() {return m_textBox;}
 
 signals:
 
 	void modeChange(CNC::MODE mode);
 	void axisButton(CNC::AXIS a, bool dir);
+	void jogSpeed(int speed);
+
 
 protected:
 
@@ -57,8 +64,7 @@ protected:
 	QPushButton*	m_run_button;
 	QPushButton*	m_hold_button;
 
-	QHBoxLayout*	m_main_layout;
-
+	QTextEdit*		m_textBox;
 };
 
 }//CNC namespace

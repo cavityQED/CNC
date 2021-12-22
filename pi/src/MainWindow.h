@@ -36,7 +36,6 @@ public:
 
 		pos = new PositionReadout;
 		laser = new CNC::DEVICE::Laser;
-		jog = new JogController;
 		knob = new Knob(17, 27, this);
 		panel = new CNC::ControlPanel;
 
@@ -45,7 +44,6 @@ public:
 		vLayout->addWidget(laser);
 		QHBoxLayout *layout = new QHBoxLayout;
 		layout->addLayout(vLayout);
-		layout->addWidget(jog);
 		layout->addWidget(panel);		
 	
 		QWidget *central = new QWidget;
@@ -65,17 +63,10 @@ public:
 		connect(pos->x_zero(),	&QPushButton::released,				x_axis,		&CNC::DEVICE::stepperMotor::setHome);
 		connect(pos->y_zero(),	&QPushButton::released,				y_axis,		&CNC::DEVICE::stepperMotor::setHome);
 
-		connect(jog,			&JogController::jog_x,				x_axis,		&CNC::DEVICE::stepperMotor::jogMove);
-		connect(jog,			&JogController::jog_y,				y_axis,		&CNC::DEVICE::stepperMotor::jogMove);
-		connect(jog,			&JogController::jog_enable,			x_axis,		&CNC::DEVICE::stepperMotor::jogEnable);
-		connect(jog,			&JogController::jog_enable,			y_axis,		&CNC::DEVICE::stepperMotor::jogEnable);
-		connect(jog,			&JogController::jog_set_distance,	x_axis,		&CNC::DEVICE::stepperMotor::setJogDistance);
-		connect(jog,			&JogController::jog_set_distance,	y_axis,		&CNC::DEVICE::stepperMotor::setJogDistance);
-
-		connect(knob, 			&Knob::cw_turn, 						this, 		&MainWindow::cw);
-		connect(knob, 			&Knob::ccw_turn, 						this, 		&MainWindow::ccw);
+		connect(knob, 			&Knob::turn,	 						this, 		&MainWindow::knobTurn);
 		connect(panel,			&CNC::ControlPanel::modeChange,			this,		&MainWindow::setMode);
 		connect(panel,			&CNC::ControlPanel::axisButton,			this,		&MainWindow::axisEvent);
+		connect(panel,			&CNC::ControlPanel::jogSpeed,			this,		&MainWindow::setJogSpeed);
 
 		x_axis->esp_receive();
 		y_axis->esp_receive();
@@ -90,6 +81,7 @@ public:
 		program->loadBlocks();
 		program->printBlocks();
 		program->loadActions();
+		panel->textBox()->setPlainText(program->contents());
 
 		QAction* run = new QAction;
 		run->setShortcut(Qt::Key_F5);
@@ -110,6 +102,11 @@ public:
 		resume->setShortcut(Qt::Key_R);
 		connect(resume, &QAction::triggered, program, &CNC::Program::resume);
 		addAction(resume);
+
+		QAction* load = new QAction;
+		load->setShortcut(Qt::CTRL + Qt::Key_L);
+		connect(load, &QAction::triggered, this, &MainWindow::loadProgramFromTextBox);
+		addAction(load);
 
 		setStyleSheet(	"QPushButton{"	
 							"background-color: #75B8C8;"
@@ -139,8 +136,11 @@ public:
 			
 public slots:
 
-	void cw() {std::cout << "Clockwise\n";}
-	void ccw() {std::cout << "Counterclockwise\n";}
+	void knobTurn(bool cw)
+	{
+		if(m_mode == CNC::MODE::JOG)
+			x_axis->jogMove(cw);
+	}
 
 	void setMode(CNC::MODE m)
 	{
@@ -154,6 +154,8 @@ public slots:
 				break;
 			case CNC::MODE::JOG:
 				std::cout << "JOG mode set\n";
+				x_axis->jogEnable(true);
+				y_axis->jogEnable(true);
 				break;
 			case CNC::MODE::EDIT:
 				std::cout << "EDIT mode set\n";
@@ -162,6 +164,7 @@ public slots:
 				std::cout << "MDI mode set\n";
 				break;
 		}
+		m_mode = m;
 	}
 
 	void axisEvent(CNC::AXIS a, bool dir)
@@ -169,16 +172,49 @@ public slots:
 		switch(a)
 		{
 			case CNC::AXIS::X:
-				x_axis->jogMove(dir);
+				if(m_mode == CNC::MODE::JOG)
+					x_axis->jogMove(dir);
+				else if(m_mode == CNC::MODE::HOME)
+					x_axis->esp_find_zero();
 				break;
 			case CNC::AXIS::Y:
-				y_axis->jogMove(dir);
+				if(m_mode == CNC::MODE::JOG)
+					y_axis->jogMove(dir);
+				else if(m_mode == CNC::MODE::HOME)
+					y_axis->esp_find_zero();
 				break;
 		}
 	}
 
+	void setJogSpeed(int speed)
+	{
+		switch(speed)
+		{
+			case 100:
+				x_axis->setJogDistance(2.5);
+				y_axis->setJogDistance(2.5);
+				break;
+
+			case 10:
+				x_axis->setJogDistance(1);
+				y_axis->setJogDistance(1);
+				break;
+
+			case 1:
+				x_axis->setJogDistance(0.1);
+				y_axis->setJogDistance(0.1);
+				break;
+		}
+	}
+
+	void loadProgramFromTextBox()
+	{
+		program->loadBlocks(panel->textBox()->document()->toPlainText().toStdString());
+		program->printBlocks();
+		program->loadActions();
+	}
+
 private:
-	JogController *jog;
 	PositionReadout *pos;
 	MotorController *controller;
 	Knob* knob;
@@ -194,9 +230,7 @@ private:
 
 	CNC::Program* program;
 
-	double cur_xpos;
-	double cur_ypos;
-	
+	CNC::MODE	m_mode = CNC::MODE::NOP;
 };
 
 #endif

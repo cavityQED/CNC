@@ -2,6 +2,7 @@
 #define STEPPERMOTOR_H
 
 #include "spiDevice.h"
+#include "common.h"
 
 #include <QTimerEvent>
 
@@ -128,10 +129,11 @@ public:
 
 public slots:
 
+	void setMode(CNC::MODE m)		{	m_mode = m;														}
 	void setHome()					{	esp_receive(); m_stepOffset = m_stepPosition; esp_receive();	}
-	void jogMove(bool dir)			{	if(m_jogMode) esp_jog_move(dir);								}
+	void jogMove(bool dir)			{	esp_jog_move(dir);												}
 	void jogEnable(bool ena)		{	esp_enable_jog_mode(ena);										}
-	void setJogDistance(double mm)	{	esp_set_jog_steps(mm*m_params.spmm);						}
+	void setJogDistance(double mm)	{	esp_set_jog_steps(mm*m_params.spmm);							}
 
 public:
 
@@ -159,6 +161,7 @@ protected:
 	double		m_mmPosition;		//Absolute motor position in mm from zero
 	bool		m_inMotion;			//True if the motor is in motion
 	bool		m_sync;				//True if action is part of a sync action
+	bool		m_homed = false;	//True if the motor has been homed out
 
 	int			m_jogSteps;			//Number of steps to move on a jog
 	int			m_jogTime;			//Jog step wait time in us
@@ -168,6 +171,9 @@ protected:
 	bool		m_lineMode = false;
 	bool		m_curvMode = false;
 	bool		m_syncMode = false;
+
+	CNC::MODE	m_mode 		= CNC::MODE::HOME;
+
 
 	static const int m_timerPeriod = 10;
 };

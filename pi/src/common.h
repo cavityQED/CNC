@@ -12,6 +12,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QGridLayout>
+#include <QTextEdit>
 
 #include <vector>
 #include <cmath>
@@ -27,6 +28,7 @@ namespace CNC
 		AUTO,
 		EDIT,
 		MDI,
+		NOP
 	};
 
 	enum AXIS

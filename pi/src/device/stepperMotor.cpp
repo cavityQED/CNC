@@ -177,9 +177,29 @@ void stepperMotor::esp_timer_pause(bool pause)
 
 void stepperMotor::esp_find_zero()
 {
-	sendBuffer[0] = ESP::FIND_ZERO;
-	spiSend(m_params.device_pin);
-	startTimer(m_timerPeriod);
+	esp_receive();
+
+	if(m_stepPosition == 0 && m_homed)
+		return;
+	
+	else if(!m_homed)
+	{
+		sendBuffer[0] = ESP::FIND_ZERO;
+		spiSend(m_params.device_pin);
+		startTimer(m_timerPeriod);
+
+		//Shouldn't really put this here in case it doesn't actually find home
+		m_homed = true;
+	}
+
+	else if(m_stepPosition && m_homed)
+	{
+		sendBuffer[0] = ESP::SCALAR_MOVE;
+		sendBuffer[1] = std::abs(m_stepPosition);
+		sendBuffer[2] = std::signbit(m_stepPosition);
+		spiSend(m_params.device_pin);
+		startTimer(m_timerPeriod);
+	}
 }
 
 void stepperMotor::timerEvent(QTimerEvent* e)
