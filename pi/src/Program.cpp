@@ -3,6 +3,12 @@
 namespace CNC
 {
 
+Program::Program(QWidget* parent)
+	: QWidget(parent)
+{
+
+}
+
 Program::Program(const std::string filename, QWidget* parent)
 	: QWidget(parent), m_filename(filename)
 {
@@ -110,6 +116,12 @@ void Program::reset()
 void Program::load()
 {
 	loadBlocks();
+	loadActions();
+}
+
+void Program::load(const std::string& codeFileContents)
+{
+	loadBlocks(codeFileContents);
 	loadActions();
 }
 

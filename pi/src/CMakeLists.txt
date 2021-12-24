@@ -11,7 +11,6 @@ if(Qt5Core_FOUND)
 	message(STATUS "${Qt5Widgets_INCLUDE_DIRS}")
 endif()
 
-add_subdirectory(utilities)
 add_subdirectory(action)
 add_subdirectory(control)
 add_subdirectory(device)
@@ -31,7 +30,7 @@ set(LINKED_LIBRARIES	Qt5::Core
 						deviceLib)
 
 add_library(cncLib ${libdocs})
-target_link_libraries(cncLib Qt5::Core Qt5::Widgets wiringPi pthread rt utilities pigpio ${LINKED_LIBRARIES})
+target_link_libraries(cncLib Qt5::Core Qt5::Widgets wiringPi pthread rt pigpio ${LINKED_LIBRARIES})
 target_compile_options(cncLib PRIVATE "-Wno-psabi")
  
 add_executable(cnc testing_main.cpp)

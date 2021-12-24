@@ -159,6 +159,7 @@ void get_message()
 
 		case STOP:
 		{
+			gen_axis.stop();
 			break;
 		}
 

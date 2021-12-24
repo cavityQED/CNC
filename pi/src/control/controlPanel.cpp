@@ -8,6 +8,7 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent)
 	setupModeGroup();
 	setupArrowGroup();
 	setupJogGroup();
+	setupControlGroup();
 	setupTextBox();
 
 	QVBoxLayout* vbox = new QVBoxLayout();
@@ -15,6 +16,7 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent)
 	vbox->addWidget(m_arrow_group);
 
 	QHBoxLayout* hbox = new QHBoxLayout();
+	hbox->addWidget(m_control_group);
 	hbox->addLayout(vbox);
 	hbox->addWidget(m_jog_group);
 
@@ -52,7 +54,7 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent)
 						"padding-left: 5px;"
 						"padding-top: 5px;"
 						"outline: 0;"
-						"font: bold 12px;}"
+						"font: bold 12pt;}"
 						
 					"QGroupBox::title{"
 						"subcontrol-position: top left;"
@@ -105,7 +107,7 @@ void ControlPanel::setupModeGroup()
 	mode_layout->addWidget(m_two_button, 1, 2);
 
 	//Create the mode group box and set the layout
-	m_mode_group = new QGroupBox(tr("MODE SELECT"));
+	m_mode_group = new QGroupBox();
 	m_mode_group->setLayout(mode_layout);
 }
 
@@ -186,6 +188,25 @@ void ControlPanel::setupJogGroup()
 	//Create the jog group and set the layout
 	m_jog_group = new QGroupBox();
 	m_jog_group->setLayout(jog_layout);
+}
+
+void ControlPanel::setupControlGroup()
+{
+	m_run_button	= new QPushButton("RUN");
+	m_hold_button	= new QPushButton("HOLD");
+	m_reset_button	= new QPushButton("RESET");
+
+	connect(m_run_button,	&QPushButton::clicked, this, &ControlPanel::run);
+	connect(m_hold_button,	&QPushButton::clicked, this, &ControlPanel::pause);
+	connect(m_reset_button,	&QPushButton::clicked, this, &ControlPanel::reset);
+
+	QGridLayout* control_layout = new QGridLayout();
+	control_layout->addWidget(m_reset_button, 0, 0);
+	control_layout->addWidget(m_run_button, 3, 0);
+	control_layout->addWidget(m_hold_button, 3, 1);
+
+	m_control_group = new QGroupBox();
+	m_control_group->setLayout(control_layout);
 }
 
 void ControlPanel::setupTextBox()

@@ -63,10 +63,13 @@ public:
 		connect(pos->x_zero(),	&QPushButton::released,				x_axis,		&CNC::DEVICE::stepperMotor::setHome);
 		connect(pos->y_zero(),	&QPushButton::released,				y_axis,		&CNC::DEVICE::stepperMotor::setHome);
 
-		connect(knob, 			&Knob::turn,	 						this, 		&MainWindow::knobTurn);
-		connect(panel,			&CNC::ControlPanel::modeChange,			this,		&MainWindow::setMode);
-		connect(panel,			&CNC::ControlPanel::axisButton,			this,		&MainWindow::axisEvent);
-		connect(panel,			&CNC::ControlPanel::jogSpeed,			this,		&MainWindow::setJogSpeed);
+		connect(knob, 	&Knob::turn,	 					this,	&MainWindow::knobTurn);
+		connect(panel,	&CNC::ControlPanel::modeChange,		this,	&MainWindow::setMode);
+		connect(panel,	&CNC::ControlPanel::axisButton,		this,	&MainWindow::axisEvent);
+		connect(panel,	&CNC::ControlPanel::jogSpeed,		this,	&MainWindow::setJogSpeed);
+		connect(panel,	&CNC::ControlPanel::run, 			this,	&MainWindow::run);
+		connect(panel,	&CNC::ControlPanel::pause,			this,	&MainWindow::pause);
+		connect(panel,	&CNC::ControlPanel::reset,			this,	&MainWindow::reset);
 
 		x_axis->esp_receive();
 		y_axis->esp_receive();
@@ -76,11 +79,12 @@ public:
 		devices.y_axis = y_axis;
 		devices.laser = laser;
 
+		mdi_program = new CNC::Program();
+		mdi_program->setDevices(devices);
 		program = new CNC::Program("cnc.nc", this);
 		program->setDevices(devices);
-		program->loadBlocks();
+		program->load();
 		program->printBlocks();
-		program->loadActions();
 		panel->textBox()->setPlainText(program->contents());
 
 		QAction* run = new QAction;
@@ -114,7 +118,7 @@ public:
 							"border-width: 3px;"
 							"border-color: #408DA0;"
 							"border-radius: 4px;"
-							"font: bold 18px;"
+							"font: bold 12pt;"
 							"outline: 0;"
 							"min-width: 40px;"
 							"max-width: 40px;"
@@ -149,22 +153,37 @@ public slots:
 			case CNC::MODE::HOME:
 				std::cout << "HOME mode set\n";
 				break;
+
 			case CNC::MODE::AUTO:
+			{
+				panel->textBox()->setText(program->contents());
+				panel->textBox()->setReadOnly(true);
 				std::cout << "AUTO mode set\n";
 				break;
+			}
+
 			case CNC::MODE::JOG:
+			{
 				std::cout << "JOG mode set\n";
 				x_axis->jogEnable(true);
 				y_axis->jogEnable(true);
 				break;
+			}
+
 			case CNC::MODE::EDIT:
 				std::cout << "EDIT mode set\n";
 				break;
+
 			case CNC::MODE::MDI:
+			{
+				panel->textBox()->setText("");
+				panel->textBox()->setReadOnly(false);
 				std::cout << "MDI mode set\n";
 				break;
+			}
 		}
 		m_mode = m;
+		reset();
 	}
 
 	void axisEvent(CNC::AXIS a, bool dir)
@@ -172,17 +191,26 @@ public slots:
 		switch(a)
 		{
 			case CNC::AXIS::X:
+			{
 				if(m_mode == CNC::MODE::JOG)
 					x_axis->jogMove(dir);
+			
 				else if(m_mode == CNC::MODE::HOME)
 					x_axis->esp_find_zero();
+			
 				break;
+			}
+
 			case CNC::AXIS::Y:
+			{	
 				if(m_mode == CNC::MODE::JOG)
 					y_axis->jogMove(dir);
+			
 				else if(m_mode == CNC::MODE::HOME)
 					y_axis->esp_find_zero();
+			
 				break;
+			}
 		}
 	}
 
@@ -207,30 +235,104 @@ public slots:
 		}
 	}
 
+	void run()
+	{
+		switch(m_mode)
+		{
+			case CNC::MODE::AUTO:
+			{
+				if(m_reset)
+				{
+					program->start();
+					m_reset = false;
+				}
+	
+				else
+					program->resume();
+
+				break;
+			}
+
+			case CNC::MODE::MDI:
+			{
+				if(m_reset)
+				{
+					loadProgramFromTextBox();
+					mdi_program->start();
+					m_reset = false;
+				}
+
+				else
+					mdi_program->resume();
+
+				break;
+			}
+		}
+	}
+
+	void pause()
+	{
+		switch(m_mode)
+		{
+			case CNC::MODE::AUTO:
+			{
+				program->pause();
+				break;
+			}
+
+			case CNC::MODE::MDI:
+			{
+				mdi_program->pause();
+				break;
+			}
+		}		
+	}
+
+	void reset()
+	{
+		switch(m_mode)
+		{
+			case CNC::MODE::AUTO:
+			{
+				std::cout << "\nResetting auto mode\n";
+				program->reset();
+				std::cout << "Reset auto mode\n";
+				m_reset = true;
+				break;
+			}
+
+			case CNC::MODE::MDI:
+			{
+				mdi_program->reset();
+				panel->textBox()->setText("");
+				m_reset = true;
+				break;
+			}
+		}
+	}
+
 	void loadProgramFromTextBox()
 	{
-		program->loadBlocks(panel->textBox()->document()->toPlainText().toStdString());
-		program->printBlocks();
-		program->loadActions();
+		mdi_program->loadBlocks(panel->textBox()->document()->toPlainText().toStdString());
+		mdi_program->printBlocks();
+		mdi_program->loadActions();
 	}
 
 private:
-	PositionReadout *pos;
-	MotorController *controller;
-	Knob* knob;
 
-	CNC::ControlPanel* panel;
-
-	CNC::DEVICE::stepperMotor::params_t xparams {13, 200, 200, CNC::DEVICE::ESP::AXIS::x_axis};
-	CNC::DEVICE::stepperMotor::params_t yparams {19, 200, 200, CNC::DEVICE::ESP::AXIS::y_axis};
-	
-	CNC::DEVICE::stepperMotor*	x_axis;
-	CNC::DEVICE::stepperMotor*	y_axis;
-	CNC::DEVICE::Laser*			laser;
-
-	CNC::Program* program;
-
-	CNC::MODE	m_mode = CNC::MODE::NOP;
+	bool									m_reset = true;
+	Knob*									knob;
+	CNC::Program*							program;
+	CNC::Program*							mdi_program;
+	CNC::MODE								m_mode {CNC::MODE::NOP};
+	PositionReadout* 						pos;
+	MotorController* 						controller;
+	CNC::ControlPanel* 						panel;
+	CNC::DEVICE::Laser*						laser;
+	CNC::DEVICE::stepperMotor*				x_axis;
+	CNC::DEVICE::stepperMotor*				y_axis;
+	CNC::DEVICE::stepperMotor::params_t 	xparams {13, 200, 200, CNC::DEVICE::ESP::AXIS::x_axis};
+	CNC::DEVICE::stepperMotor::params_t 	yparams {19, 200, 200, CNC::DEVICE::ESP::AXIS::y_axis};
 };
 
 #endif

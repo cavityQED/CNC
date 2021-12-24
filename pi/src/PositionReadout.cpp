@@ -9,7 +9,7 @@ PositionReadout::PositionReadout(QWidget *parent) : QWidget(parent) {
 void PositionReadout::createWidgets() {
 	//X Axis
 	QLabel	*x_label	= new QLabel("X:");
-	home_x				= new QPushButton("X Zero");
+	home_x				= new QPushButton("Zero");
 	x_lineEdit			= new QLineEdit;
 	x_pos				= new QWidget;
 	x_pos_layout		= new QHBoxLayout;
@@ -24,7 +24,7 @@ void PositionReadout::createWidgets() {
 	
 	//Y Axis
 	QLabel	*y_label	= new QLabel("Y:");
-	home_y				= new QPushButton("Y Zero");
+	home_y				= new QPushButton("Zero");
 	y_lineEdit			= new QLineEdit;
 	y_pos				= new QWidget;
 	y_pos_layout		= new QHBoxLayout;
@@ -39,7 +39,7 @@ void PositionReadout::createWidgets() {
 	
 	//Z Axis
 	QLabel	*z_label	= new QLabel("Z:");
-	home_z				= new QPushButton("Z Zero");
+	home_z				= new QPushButton("Zero");
 	z_lineEdit			= new QLineEdit;
 	z_pos				= new QWidget;
 	z_pos_layout		= new QHBoxLayout;

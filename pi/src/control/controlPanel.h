@@ -18,6 +18,7 @@ public:
 	void setupModeGroup();
 	void setupArrowGroup();
 	void setupJogGroup();
+	void setupControlGroup();
 	void setupTextBox();
 
 public:
@@ -30,6 +31,9 @@ signals:
 	void axisButton(CNC::AXIS a, bool dir);
 	void jogSpeed(int speed);
 
+	void run();
+	void pause();
+	void reset();
 
 protected:
 

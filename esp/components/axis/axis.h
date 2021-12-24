@@ -151,6 +151,8 @@ public:
 
 	void jog_move(bool dir);
 
+	void stop();
+
 public:
 
 	static void IRAM_ATTR linear_interpolation_2D	();

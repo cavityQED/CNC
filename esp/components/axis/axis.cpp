@@ -380,6 +380,13 @@ void axis::jog_move(bool dir)
 	scalar_move(m_jog_steps, dir, m_jog_period_us);
 }
 
+void axis::stop()
+{
+	reset_timers();
+	m_motion = false;
+	gpio_set_level(MOTION_PIN, 0);
+}
+
 void axis::linear_interpolation_2D()
 {
 	if(m_cur_pos == m_end_pos)

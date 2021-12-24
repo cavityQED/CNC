@@ -121,6 +121,9 @@ void stepperMotor::esp_enable_sync_mode(bool enable)
 
 void stepperMotor::esp_vector_move(double dx, double dy, double dz, double f)
 {
+	if(!f)
+		f = 5;
+
 	sendBuffer[0] = ESP::VECTOR_MOVE;
 	sendBuffer[1] = dx * m_params.spmm;
 	sendBuffer[2] = dy * m_params.spmm;
@@ -131,6 +134,9 @@ void stepperMotor::esp_vector_move(double dx, double dy, double dz, double f)
 
 void stepperMotor::esp_circle_move(double xi, double yi, double xf, double yf, double f, double r, bool cw)
 {
+	if(!f)
+		f = 5;
+	
 	sendBuffer[0] = ESP::CIRCLE_MOVE;
 	sendBuffer[1] = std::round(xi * (double)m_params.spmm);
 	sendBuffer[2] = std::round(yi * (double)m_params.spmm);

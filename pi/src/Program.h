@@ -32,6 +32,7 @@ public:
 		CNC::DEVICE::Laser*			laser = nullptr;
 	};
 
+	Program(QWidget* parent = nullptr);
 	Program(const std::string filename, QWidget* parent = nullptr);
 	~Program() {}
 
@@ -50,6 +51,7 @@ public slots:
 	void execute_next();
 
 	void load();
+	void load(const std::string& codeFileContents);
 	void loadBlocks();	//Read text stored at m_filename and translate to codeBlocks
 	void loadBlocks(const std::string& codeFileContents);
 	void loadActions();	//Convert list of code blocks into list of program actions
