@@ -45,7 +45,7 @@ SpiClient::SpiClient() {
 	sendbuf.resize(MAX_TRANSACTION_LENGTH);
 }
 	
-void SpiClient::get_message(std::vector<int> &msg) {	
+esp_err_t SpiClient::get_message(std::vector<int> &msg) {	
 	//Clear the transaction
 	memset(&spi_transaction, 0, sizeof(spi_transaction));
 	
@@ -55,16 +55,17 @@ void SpiClient::get_message(std::vector<int> &msg) {
 	spi_transaction.rx_buffer	= &msg[0];
 	
 	//Wait for the message
-	esp_err_t err = spi_slave_transmit(SPI3_HOST, &spi_transaction, portMAX_DELAY/*pdMS_TO_TICKS(5)*/);
+	esp_err_t err = spi_slave_transmit(SPI3_HOST, &spi_transaction, /*portMAX_DELAY*/pdMS_TO_TICKS(50));
 	
-	//If no errors, return
-	if(err == ESP_OK) {
-		return;
-	}
-	else {
+	//Check for error
+	if(err != ESP_OK)
+	{
 		std::cout << "SPI Transaction Error:\n";
 		std::cout << esp_err_to_name(err) << '\n';
+		gpio_set_level(READY, 0);
 	}
+
+	return err;
 }
 
 void SpiClient::get_data(std::vector<int> &data) {
@@ -94,21 +95,27 @@ void SpiClient::printFunction(AXIS_FUNCTION_CODE code) {
 		case SET_AXIS:				std::cout << "Set Axis";				break;
 		case SET_STEPS_PER_MM:		std::cout << "Set steps/mm";			break;
 		case SET_MAX_STEPS:			std::cout << "Set Max Steps";			break;
+	
 		case SET_DIRECTION:			std::cout << "Set Direction";			break;
 		case SET_ACCELERATION:		std::cout << "Set Acceleration";		break;
 		case SET_INITIAL_PERIOD:	std::cout << "Set Initial Period";		break;
+		
 		case SET_JOG_STEPS:			std::cout << "Set Jog Steps";			break;
 		case SET_JOG_SPEED:			std::cout << "Set Jog Speed";			break;
+		
 		case ENA_JOG_MODE:			std::cout << "Enable Jog Mode";			break;
 		case ENA_LINE_MODE:			std::cout << "Enable Line Mode";		break;
 		case ENA_CURV_MODE:			std::cout << "Enable Curve Mode";		break;
 		case ENA_SYNC_MODE:			std::cout << "Enable Sync Mode";		break;
+		
 		case VECTOR_MOVE:			std::cout << "Vector Move";				break;
 		case CIRCLE_MOVE:			std::cout << "Circle Move";				break;
 		case SCALAR_MOVE:			std::cout << "Scalar Move";				break;
 		case JOG_MOVE:				std::cout << "Jog Move";				break;
 		case STOP:					std::cout << "Stop";					break;
+		case PAUSE_TIMERS:			std::cout << "Timer Pause";				break;
 		case RECEIVE:				std::cout << "Receive";					break;
+	
 		case FIND_ZERO:				std::cout << "Find Zero";				break;
 		default:					std::cout << "Unrecognized Function";	break;
 	}

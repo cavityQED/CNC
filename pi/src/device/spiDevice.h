@@ -29,14 +29,26 @@ public:
 
 	static void release_spi_ready_semaphore(int gpio, int level, uint32_t tick)
 	{
-		sem_post(spi_ready_semaphore);
+		if(spi_waiting)
+		{
+			sem_post(spi_ready_semaphore);
+			std::cout << "SPI Semaphore Released\n";
+		}
+
+		else
+			std::cout << "SPI Semaphore FALSE RELEASE\n";
 	}
 
 	spiDevice(QWidget* parent = nullptr);
 	~spiDevice() {sem_unlink("spi_ready_semaphore");}
 
 	void spiSend(int devicePin);
-	void spiWaitForReady()		{sem_wait(spi_ready_semaphore);}
+	void spiWaitForReady()
+	{
+		spi_waiting = true;
+		sem_wait(spi_ready_semaphore);
+		spi_waiting = false;
+	}
 
 protected:
 
@@ -47,6 +59,7 @@ protected:
 	struct	spi_ioc_transfer 	spi;
 	std::vector<int>			sendBuffer;
 	std::vector<int>			recvBuffer;
+	static bool					spi_waiting;
 	static sem_t*				spi_ready_semaphore;
 };
 

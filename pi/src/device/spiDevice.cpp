@@ -6,6 +6,7 @@ namespace CNC
 namespace DEVICE
 {
 
+bool		spiDevice::spi_waiting = false;
 sem_t*		spiDevice::spi_ready_semaphore = sem_open("spi_ready_semaphore", O_CREAT, 0, 0);
 
 spiDevice::spiDevice(QWidget* parent) : QWidget(parent)
@@ -63,17 +64,24 @@ void spiDevice::spiSend(int devicePin)
 	spi.rx_buf	= (unsigned long)(&recvBuffer[0]);
 	spi.len		= sizeof(int)*sendBuffer.size();
 
+	spi_waiting = true;
+
 	//Trigger the device to recieve an SPI transaction
 	gpioWrite(devicePin, 1);
 
 	//Wait until the device is ready
+	std::cout << "Waiting for Device Ready on pin " << devicePin << '\n';
 	sem_wait(spi_ready_semaphore);
+	spi_waiting = false;
+	std::cout << "Sending Message.....\n";
 
 	//Send the message
-	ioctl(spi_cs_fd, SPI_IOC_MESSAGE(1), &spi);
+	if(!ioctl(spi_cs_fd, SPI_IOC_MESSAGE(1), &spi))
+		std::cout << "\tMessage Sent\n";
 
 	//Reset the device pin
 	gpioWrite(devicePin, 0);
+
 }
 
 }//DEVICE namespace

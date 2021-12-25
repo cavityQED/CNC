@@ -164,9 +164,9 @@ public slots:
 
 			case CNC::MODE::JOG:
 			{
-				std::cout << "JOG mode set\n";
 				x_axis->jogEnable(true);
 				y_axis->jogEnable(true);
+				std::cout << "JOG mode set\n";
 				break;
 			}
 
@@ -261,6 +261,9 @@ public slots:
 					mdi_program->start();
 					m_reset = false;
 				}
+
+				else if(!m_reset && mdi_program->eop())
+					mdi_program->start();
 
 				else
 					mdi_program->resume();

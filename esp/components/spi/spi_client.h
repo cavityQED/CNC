@@ -56,7 +56,7 @@ public:
 	SpiClient();
 	~SpiClient() {}
 	
-	void get_message(std::vector<int> &msg);	
+	esp_err_t get_message(std::vector<int> &msg);	
 	void get_data(std::vector<int> &data);
 	
 	void signal_pi() {

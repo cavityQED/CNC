@@ -42,8 +42,12 @@ void get_message()
 	std::cout << "Getting Message\n";
 	spi.set_sendbuffer_value(1, gen_axis.step_position());
 	spi.set_sendbuffer_value(2, gen_axis.in_motion());
-	spi.get_message(msg);
+	
+	while(gpio_get_level(DEVICE_SELECT) && spi.get_message(msg) != ESP_OK)
+		continue;
+
 	spi.printFunction((AXIS_FUNCTION_CODE)msg[0]);
+
 	switch((AXIS_FUNCTION_CODE) msg[0]) {
 
 		case SET_AXIS:
@@ -182,6 +186,7 @@ void get_message()
 		}
 
 		default:
+			std::cout << "\nDefault Message Handler Reached\n";
 			break;
 		}
 }

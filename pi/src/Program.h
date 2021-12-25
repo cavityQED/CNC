@@ -50,17 +50,22 @@ public slots:
 	void reset();
 	void execute_next();
 
+	void save();
 	void load();
 	void load(const std::string& codeFileContents);
 	void loadBlocks();	//Read text stored at m_filename and translate to codeBlocks
 	void loadBlocks(const std::string& codeFileContents);
 	void loadActions();	//Convert list of code blocks into list of program actions
 
+
 public:
 
-	const std::string	filename()	const {return m_filename;}
-	const QString&		contents()	const {return m_fileContents;}
-	size_t				blockSize()	const {return m_programBlocks.size();}
+	int					size()		const {return m_programActions.size();	}
+	int					counter()	const {return m_programStep;			}
+	bool				eop()		const {return m_programStep == size();	}
+	const std::string	filename()	const {return m_filename;				}
+	const QString&		contents()	const {return m_fileContents;			}
+	size_t				blockSize()	const {return m_programBlocks.size();	}
 
 protected:
 	//Helper functions for parsing code text file
