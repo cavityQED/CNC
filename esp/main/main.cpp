@@ -143,8 +143,8 @@ void get_message()
 			gen_axis.enable_curv_mode(true);
 			gen_axis.circle_move(	{msg[1], msg[2], 0},	//start position
 									{msg[3], msg[4], 0},	//end position
-									msg[5],					//feed rate (microseconds)
-									msg[6],					//radius
+									msg[5],					//radius
+									msg[6],					//feed rate (microseconds)
 									(bool)msg[7]);				//direction (CW or CCW)
 			break;
 		}
@@ -183,6 +183,7 @@ void get_message()
 		{
 			int final_pulse = gen_axis.spmm() * gen_axis.max_mm();
 			gen_axis.scalar_move(final_pulse, false, 250);
+			break;
 		}
 
 		default:

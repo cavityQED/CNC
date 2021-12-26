@@ -5,6 +5,7 @@
 #include <cmath>
 #include <string>
 #include <fstream>
+#include <sstream>
 #include <iostream>
 #include <stdlib.h>
 
@@ -72,14 +73,6 @@ protected:
 	double	get_double(std::string::iterator &s); //Returns the first double found starting at position s
 	double	get_double(std::string::const_iterator &s); //Returns the first double found starting at position s
 	bool	is_supported_letter_code(const char c); //Returns true if c is a supported letter code (G, M, etc.)
-
-protected:
-	//Functions to get action params from code blocks
-
-	CNC::Action*  G0_rapid						(CNC::codeBlock& block) {return new CNC::SyncAction(block);}
-	CNC::Action*  G1_linearInterpolation		(const CNC::codeBlock& block) {return new CNC::SyncAction(block);}
-	CNC::Action*  G2_circularInterpolationCW	(const CNC::codeBlock& block);
-	CNC::Action*  G3_circularInterpolationCCW	(const CNC::codeBlock& block);
 
 protected:
 

@@ -79,16 +79,6 @@ public:
 	*/
 	void configureStepper(params_t &p);
 
-	void vectorMove(	double xi,
-						double yi,
-						double zi,
-						double xf,
-						double yf,
-						double zf,
-						double f,
-						double r = 0,
-						bool dir = 0);
-
 	void setStepOffset(int steps)	{m_stepOffset = steps;}
 
 public:
@@ -119,7 +109,7 @@ public:
 	void esp_enable_sync_mode	(bool enable);
 
 	void esp_vector_move		(double dx, double dy, double dz, double f);
-	void esp_circle_move		(double xi, double yi, double xf, double yf, double f, double r, bool cw);
+	void esp_circle_move		(double xi, double yi, double xf, double yf, double r, double f, bool cw);
 	void esp_jog_move			(bool dir);
 	void esp_receive			();
 	void esp_stop				();

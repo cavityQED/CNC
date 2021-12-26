@@ -55,7 +55,7 @@ esp_err_t SpiClient::get_message(std::vector<int> &msg) {
 	spi_transaction.rx_buffer	= &msg[0];
 	
 	//Wait for the message
-	esp_err_t err = spi_slave_transmit(SPI3_HOST, &spi_transaction, /*portMAX_DELAY*/pdMS_TO_TICKS(50));
+	err = spi_slave_transmit(SPI3_HOST, &spi_transaction, pdMS_TO_TICKS(50));
 	
 	//Check for error
 	if(err != ESP_OK)
@@ -69,14 +69,14 @@ esp_err_t SpiClient::get_message(std::vector<int> &msg) {
 }
 
 void SpiClient::get_data(std::vector<int> &data) {
-	std::cout << "Getting " << 8*4*data.size() << " Bits of Data...\n";
+	std::cout << "Getting " << 8*sizeof(int)*data.size() << " Bits of Data...\n";
 	memset(&spi_transaction, 0, sizeof(spi_transaction));
 	
 	spi_transaction.length		= 8*sizeof(int)*data.size();
 	spi_transaction.tx_buffer	= &sendbuf[0];
 	spi_transaction.rx_buffer	= &data[0];
 	
-	esp_err_t err = spi_slave_transmit(SPI3_HOST, &spi_transaction, portMAX_DELAY);
+	err = spi_slave_transmit(SPI3_HOST, &spi_transaction, portMAX_DELAY);
 	if(err == ESP_OK)
 		std::cout << "Received " << spi_transaction.trans_len << " Bits of Data\n";
 	if(err != ESP_OK) {

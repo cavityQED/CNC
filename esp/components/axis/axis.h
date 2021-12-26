@@ -138,8 +138,8 @@ public:
 
 	void circle_move(	const position_t& start,
 						const position_t& end,
-						int final_period_us,
 						int r,
+						int final_period_us,
 						bool cw,
 						int start_period_us = m_init_period_us,
 						int accel = m_accel);

@@ -19,6 +19,13 @@ void StepperAction::execute()
 {
 	std::cout << "\tStepper Action Executing......\n";
 
+	if(m_axes.x)
+		m_axes.x->esp_receive();
+	if(m_axes.y)
+		m_axes.y->esp_receive();
+	if(m_axes.z)
+		m_axes.z->esp_receive();
+
 
 	switch(m_block.numberCode)
 	{
@@ -67,10 +74,25 @@ void StepperAction::execute()
 		case 3:
 		{
 			//Circular Interpolation Counterclockwise
-			m_axes.x->esp_circle_move(m_config.xi, m_config.yi, m_config.xf, m_config.yf, m_config.f, m_config.r, m_config.dir);
+
+			m_config.xi = -m_block.i;
+			m_config.yi = -m_block.j;
+
+			m_config.xf = (m_block.abs_x)? m_block.x - m_axes.x->mmPosition() : m_block.u;
+			m_config.yf = (m_block.abs_y)? m_block.y - m_axes.y->mmPosition() : m_block.v;
+
+	 		m_config.xf -= m_block.i;
+			m_config.yf -= m_block.j;
+
+			m_config.r	= std::sqrt(m_block.i*m_block.i + m_block.j*m_block.j);
+
+			m_config.dir	= !(m_block.numberCode % 2);
+			m_config.f		= m_block.f;
+		
+			m_axes.x->esp_circle_move(m_config.xi, m_config.yi, m_config.xf, m_config.yf, m_config.r, m_config.f, m_config.dir);
 			m_axes.x->spiWaitForReady();
 			
-			m_axes.y->esp_circle_move(m_config.xi, m_config.yi, m_config.xf, m_config.yf, m_config.f, m_config.r, m_config.dir);
+			m_axes.y->esp_circle_move(m_config.xi, m_config.yi, m_config.xf, m_config.yf, m_config.r, m_config.f, m_config.dir);
 			m_axes.y->spiWaitForReady();
 
 			//Trigger sync pin

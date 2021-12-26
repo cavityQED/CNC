@@ -1,7 +1,6 @@
 #include "axis.h"
 
 /*	Initialize static variables	*/
-int				axis::m_jog_steps			= 0;	
 int				axis::m_cur_pulse			= 0;		
 int				axis::m_accel_pulse			= 0;		
 int				axis::m_decel_pulse			= 0;		
@@ -11,6 +10,7 @@ int				axis::m_radius				= 0;
 int				axis::m_jog_period_us		= 100;
 int				axis::m_rapid_period_us		= 100;
 int				axis::m_spmm				= 200;			
+int				axis::m_jog_steps			= 200;	
 int				axis::m_max_mm				= 300;			
 int				axis::m_init_period_us		= 2500;	
 int				axis::m_accel				= 40000;			
@@ -275,8 +275,8 @@ void axis::vector_move(	const position_t& vec,
 
 void axis::circle_move(	const position_t& start,
 						const position_t& end,
-						int final_period_us,
 						int r,
+						int final_period_us,
 						bool cw,
 						int start_period_us,
 						int accel)
@@ -466,7 +466,7 @@ void axis::circular_interpolation_2D()
 	}
 
 	gpio_set_level(DIR_PIN, m_direction);
-	ets_delay_us(10);
+	ets_delay_us(8);
 }
 
 void axis::update_divider(timer_group_t TIMER_GROUP)

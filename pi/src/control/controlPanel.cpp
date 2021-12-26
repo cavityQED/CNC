@@ -32,7 +32,7 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent)
 						"border-width: 3px;"
 						"border-color: #408DA0;"
 						"border-radius: 4px;"
-						"font: bold 10pt;"
+						"font: bold 16pt;"
 						"outline: 0;"
 						"min-width: 40px;"
 						"max-width: 40px;"
@@ -109,6 +109,27 @@ void ControlPanel::setupModeGroup()
 	//Create the mode group box and set the layout
 	m_mode_group = new QGroupBox();
 	m_mode_group->setLayout(mode_layout);
+
+	m_mode_group->setStyleSheet("QPushButton{"	
+									"background-color: #75B8C8;"
+									"border-style: outset;"
+									"border-width: 3px;"
+									"border-color: #408DA0;"
+									"border-radius: 4px;"
+									"font: bold 10pt;"
+									"outline: 0;"
+									"min-width: 40px;"
+									"max-width: 40px;"
+									"min-height: 40px;"
+									"max-height: 40px;}"
+					
+								"QPushButton:pressed{"
+									"background-color: #408DA0;"
+									"border-style: inset;}"
+					
+								"QPushButton:checked{"
+									"background-color: #0EFF5E;"
+									"border-color: #049434;}");
 }
 
 void ControlPanel::setupArrowGroup()
@@ -129,19 +150,6 @@ void ControlPanel::setupArrowGroup()
 	//Create the arrow group and set the layout
 	m_arrow_group = new QGroupBox();
 	m_arrow_group->setLayout(arrow_layout);
-
-	m_arrow_group->setStyleSheet(	"QPushButton{"	
-										"background-color: #75B8C8;"
-										"border-style: outset;"
-										"border-width: 3px;"
-										"border-color: #408DA0;"
-										"border-radius: 4px;"
-										"font: bold 16pt;"
-										"outline: 0;"
-										"min-width: 40px;"
-										"max-width: 40px;"
-										"min-height: 40px;"
-										"max-height: 40px;}");
 }
 
 void ControlPanel::setupJogGroup()
@@ -201,19 +209,6 @@ void ControlPanel::setupJogGroup()
 	//Create the jog group and set the layout
 	m_jog_group = new QGroupBox();
 	m_jog_group->setLayout(jog_layout);
-
-	m_jog_group->setStyleSheet(	"QPushButton{"	
-									"background-color: #75B8C8;"
-									"border-style: outset;"
-									"border-width: 3px;"
-									"border-color: #408DA0;"
-									"border-radius: 4px;"
-									"font: bold 16pt;"
-									"outline: 0;"
-									"min-width: 40px;"
-									"max-width: 40px;"
-									"min-height: 40px;"
-									"max-height: 40px;}");
 }
 
 void ControlPanel::setupControlGroup()
@@ -233,6 +228,27 @@ void ControlPanel::setupControlGroup()
 
 	m_control_group = new QGroupBox();
 	m_control_group->setLayout(control_layout);
+
+	m_control_group->setStyleSheet("QPushButton{"	
+										"background-color: #75B8C8;"
+										"border-style: outset;"
+										"border-width: 3px;"
+										"border-color: #408DA0;"
+										"border-radius: 4px;"
+										"font: bold 10pt;"
+										"outline: 0;"
+										"min-width: 40px;"
+										"max-width: 40px;"
+										"min-height: 40px;"
+										"max-height: 40px;}"
+						
+									"QPushButton:pressed{"
+										"background-color: #408DA0;"
+										"border-style: inset;}"
+						
+									"QPushButton:checked{"
+										"background-color: #0EFF5E;"
+										"border-color: #049434;}");
 }
 
 void ControlPanel::setupTextBox()

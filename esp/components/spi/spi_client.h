@@ -99,6 +99,7 @@ private:
 	gpio_config_t					ready_pin_config;
 	
 	spi_slave_transaction_t			spi_transaction;
+	esp_err_t						err;
 	
 	std::vector<int> sendbuf;
 };

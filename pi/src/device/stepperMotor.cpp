@@ -22,29 +22,6 @@ void stepperMotor::configureStepper(params_t &p)
 	esp_set_max_steps		(p.max_mm * p.spmm);
 }
 
-void stepperMotor::vectorMove(	double xi,
-								double yi,
-								double zi,
-								double xf,
-								double yf,
-								double zf,
-								double f,
-								double r,
-								bool dir)
-{
-	sendBuffer[0] = ESP::VECTOR_MOVE;
-	sendBuffer[1] = xi * m_params.spmm;
-	sendBuffer[2] = yi * m_params.spmm;
-	sendBuffer[3] = zi * m_params.spmm;
-	sendBuffer[4] = xf * m_params.spmm;
-	sendBuffer[5] = yf * m_params.spmm;
-	sendBuffer[6] = zf * m_params.spmm;
-	sendBuffer[7] = 1000000 / (int)(f * m_params.spmm);
-	sendBuffer[8] = (int)(r * m_params.spmm);
-	sendBuffer[9] = (int)dir;
-	spiSend(m_params.device_pin);
-}
-
 void stepperMotor::esp_set_axis(ESP::AXIS a)
 {
 	sendBuffer[0] = ESP::SET_AXIS;
@@ -132,18 +109,18 @@ void stepperMotor::esp_vector_move(double dx, double dy, double dz, double f)
 	spiSend(m_params.device_pin);
 }
 
-void stepperMotor::esp_circle_move(double xi, double yi, double xf, double yf, double f, double r, bool cw)
+void stepperMotor::esp_circle_move(double xi, double yi, double xf, double yf, double r, double f, bool cw)
 {
 	if(!f)
 		f = 5;
-	
+
 	sendBuffer[0] = ESP::CIRCLE_MOVE;
 	sendBuffer[1] = std::round(xi * (double)m_params.spmm);
 	sendBuffer[2] = std::round(yi * (double)m_params.spmm);
 	sendBuffer[3] = std::round(xf * (double)m_params.spmm);
 	sendBuffer[4] = std::round(yf * (double)m_params.spmm);
-	sendBuffer[5] = 1000000 / (int)(f * m_params.spmm);
-	sendBuffer[6] = std::round(r * (double)m_params.spmm);
+	sendBuffer[5] = std::round(r * (double)m_params.spmm);
+	sendBuffer[6] = 1000000 / (int)(f * m_params.spmm);
 	sendBuffer[7] = (int)cw;
 	spiSend(m_params.device_pin);
 }

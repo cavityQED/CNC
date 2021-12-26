@@ -46,6 +46,7 @@ public:
 	void spiWaitForReady()
 	{
 		spi_waiting = true;
+		std::cout << "SPI Semaphore Waiting\n";
 		sem_wait(spi_ready_semaphore);
 		spi_waiting = false;
 	}

@@ -255,15 +255,12 @@ public slots:
 
 			case CNC::MODE::MDI:
 			{
-				if(m_reset)
+				if(m_reset || mdi_program->eop())
 				{
 					loadProgramFromTextBox();
 					mdi_program->start();
 					m_reset = false;
 				}
-
-				else if(!m_reset && mdi_program->eop())
-					mdi_program->start();
 
 				else
 					mdi_program->resume();
@@ -334,8 +331,8 @@ private:
 	CNC::DEVICE::Laser*						laser;
 	CNC::DEVICE::stepperMotor*				x_axis;
 	CNC::DEVICE::stepperMotor*				y_axis;
-	CNC::DEVICE::stepperMotor::params_t 	xparams {13, 200, 200, CNC::DEVICE::ESP::AXIS::x_axis};
-	CNC::DEVICE::stepperMotor::params_t 	yparams {19, 200, 200, CNC::DEVICE::ESP::AXIS::y_axis};
+	CNC::DEVICE::stepperMotor::params_t 	xparams {13, 200, 175, CNC::DEVICE::ESP::AXIS::x_axis};
+	CNC::DEVICE::stepperMotor::params_t 	yparams {19, 200, 300, CNC::DEVICE::ESP::AXIS::y_axis};
 };
 
 #endif

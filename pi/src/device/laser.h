@@ -14,7 +14,8 @@
 #include <QAction>
 
 
-#define LASER_PIN 21
+#define LASER_PIN 		21
+#define LASER_OVERRIDE	
 
 namespace CNC
 {
