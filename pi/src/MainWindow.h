@@ -176,7 +176,7 @@ public slots:
 
 			case CNC::MODE::MDI:
 			{
-				panel->textBox()->setText("");
+				panel->textBox()->setText(mdi_program->contents());
 				panel->textBox()->setReadOnly(false);
 				std::cout << "MDI mode set\n";
 				break;
@@ -304,7 +304,7 @@ public slots:
 			case CNC::MODE::MDI:
 			{
 				mdi_program->reset();
-				panel->textBox()->setText("");
+				panel->textBox()->setText(mdi_program->contents());
 				m_reset = true;
 				break;
 			}
@@ -331,8 +331,8 @@ private:
 	CNC::DEVICE::Laser*						laser;
 	CNC::DEVICE::stepperMotor*				x_axis;
 	CNC::DEVICE::stepperMotor*				y_axis;
-	CNC::DEVICE::stepperMotor::params_t 	xparams {13, 200, 175, CNC::DEVICE::ESP::AXIS::x_axis};
-	CNC::DEVICE::stepperMotor::params_t 	yparams {19, 200, 300, CNC::DEVICE::ESP::AXIS::y_axis};
+	CNC::DEVICE::stepperMotor::params_t 	xparams {13, 400, 175, CNC::DEVICE::ESP::AXIS::x_axis};
+	CNC::DEVICE::stepperMotor::params_t 	yparams {19, 400, 300, CNC::DEVICE::ESP::AXIS::y_axis};
 };
 
 #endif

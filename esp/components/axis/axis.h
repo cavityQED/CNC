@@ -97,7 +97,7 @@ public:
 	/*	Setters	*/
 
 	void	set_axis		(AXIS a)		{m_axis = a;}
-	void	set_spmm		(int spmm)		{m_spmm = spmm;}
+	void	set_spmm		(int spmm)		{m_spmm = spmm; m_jog_period_us = 20000/m_spmm; set_rapid_speed(m_jog_period_us);}
 	void	set_max_steps	(int max)		{m_max_steps = max; m_max_mm = m_max_steps / m_spmm;}
 	void	set_max_mm		(double mm)		{m_max_mm = mm; m_max_steps = m_max_mm * m_spmm;}
 	void	set_direction	(bool dir)		{m_direction = dir; gpio_set_level(DIR_PIN, dir);}

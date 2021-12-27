@@ -11,7 +11,6 @@
 
 #include "action/laserAction.h"
 #include "action/stepperAction.h"
-#include "action/syncAction.h"
 
 #include <QTimer>
 #include <QTimerEvent>

@@ -1,7 +1,6 @@
 set(LIBRARY_SOURCE_FILES	action.cpp
 							stepperAction.cpp
-							laserAction.cpp
-							syncAction.cpp)
+							laserAction.cpp)
 
 set(LINKED_LIBRARIES		Qt5::Core
 							Qt5::Widgets)
