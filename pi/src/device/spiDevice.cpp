@@ -9,7 +9,7 @@ namespace DEVICE
 bool		spiDevice::spi_waiting = false;
 sem_t*		spiDevice::spi_ready_semaphore = sem_open("spi_ready_semaphore", O_CREAT, 0, 0);
 
-spiDevice::spiDevice(QWidget* parent) : QWidget(parent)
+spiDevice::spiDevice(QWidget* parent) : Device(parent)
 {
 	spi_cs_fd = open("/dev/spidev0.0", O_RDWR);
 

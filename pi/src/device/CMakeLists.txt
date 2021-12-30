@@ -1,4 +1,5 @@
-set(LIBRARY_SOURCE_FILES	spiDevice.cpp
+set(LIBRARY_SOURCE_FILES	device.cpp
+							spiDevice.cpp
 							laser.cpp
 							stepperMotor.cpp)
 

@@ -4,6 +4,7 @@
 #include "spiDevice.h"
 #include "common.h"
 
+#include <QTimer>
 #include <QTimerEvent>
 
 namespace CNC
@@ -80,6 +81,10 @@ public:
 	void configureStepper(params_t &p);
 
 	void setStepOffset(int steps)	{m_stepOffset = steps;}
+
+public:
+
+	virtual bool isReady() {esp_receive(); return m_inMotion;}
 
 public:
 

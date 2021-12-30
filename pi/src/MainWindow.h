@@ -1,9 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "JogController.h"
 #include "PositionReadout.h"
-#include "Program.h"
+#include "program/program.h"
 
 #include "device/laser.h"
 #include "device/stepperMotor.h"
@@ -74,17 +73,13 @@ public:
 		x_axis->esp_receive();
 		y_axis->esp_receive();
 
-		CNC::Program::devicePointers devices;
-		devices.x_axis = x_axis;
-		devices.y_axis = y_axis;
-		devices.laser = laser;
-
 		mdi_program = new CNC::Program();
-		mdi_program->setDevices(devices);
 		program = new CNC::Program("cnc.nc", this);
-		program->setDevices(devices);
 		program->load();
-		program->printBlocks();
+
+		for(auto b : program->blocks())
+			std::cout << b << '\n';
+
 		panel->textBox()->setPlainText(program->contents());
 
 		QAction* run = new QAction;
@@ -313,9 +308,7 @@ public slots:
 
 	void loadProgramFromTextBox()
 	{
-		mdi_program->loadBlocks(panel->textBox()->document()->toPlainText().toStdString());
-		mdi_program->printBlocks();
-		mdi_program->loadActions();
+		mdi_program->load(panel->textBox()->document()->toPlainText().toStdString());
 	}
 
 private:

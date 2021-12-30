@@ -18,6 +18,8 @@
 #include <cmath>
 #include <iostream>
 
+#include "program/codeBlock.h"
+
 namespace CNC
 {
 
@@ -36,6 +38,13 @@ namespace CNC
 		X,
 		Y,
 		Z,
+	};
+
+	struct position_t
+	{
+		double x;
+		double y;
+		double z;
 	};
 
 }//CNC namespace

@@ -15,13 +15,16 @@
 
 #include <QWidget>
 
+#include "device.h"
+#include "common.h"
+
 namespace CNC
 {
 
 namespace DEVICE
 {
 
-class spiDevice : public QWidget
+class spiDevice : public Device
 {
 	Q_OBJECT
 
@@ -50,6 +53,10 @@ public:
 		sem_wait(spi_ready_semaphore);
 		spi_waiting = false;
 	}
+
+public:
+
+	virtual bool isReady() = 0;
 
 protected:
 

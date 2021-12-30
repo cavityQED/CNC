@@ -11,23 +11,20 @@ if(Qt5Core_FOUND)
 	message(STATUS "${Qt5Widgets_INCLUDE_DIRS}")
 endif()
 
-add_subdirectory(action)
 add_subdirectory(control)
 add_subdirectory(device)
+add_subdirectory(program)
 
 include_directories(${CMAKE_SOURCE_DIR})
 
 set(libdocs	MainWindow.h
-			JogController.cpp
-			PositionReadout.cpp
-			Laser.cpp
-			Program.cpp)
+			PositionReadout.cpp)
 
 set(LINKED_LIBRARIES	Qt5::Core
 						Qt5::Widgets
-						actionLib
 						controlLib
-						deviceLib)
+						deviceLib
+						programLib)
 
 add_library(cncLib ${libdocs})
 target_link_libraries(cncLib Qt5::Core Qt5::Widgets wiringPi pthread rt pigpio ${LINKED_LIBRARIES})

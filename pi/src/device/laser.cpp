@@ -6,8 +6,10 @@ namespace CNC
 namespace DEVICE
 {
 
-Laser::Laser(QWidget* parent) : QGroupBox(parent)
+Laser::Laser(QWidget* parent) : Device(parent)
 {
+	m_deviceType = CNC::DEVICE_TYPE::LASER;
+	
 	gpioInitialise();
 	
 	gpioSetPWMfrequency(LASER_PIN, 5000);

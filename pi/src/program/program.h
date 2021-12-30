@@ -13,6 +13,8 @@
 #include <QTimerEvent>
 
 #include "common.h"
+#include "device/stepperMotor.h"
+#include "device/laser.h"
 
 namespace CNC
 {
@@ -27,6 +29,12 @@ public:
 	~Program() {}
 
 	virtual void timerEvent(QTimerEvent* e) override;
+
+public:
+
+	void set_x_axis(CNC::DEVICE::stepperMotor*	x_axis)		{m_x_axis = x_axis;}
+	void set_y_axis(CNC::DEVICE::stepperMotor*	y_axis)		{m_y_axis = y_axis;}
+	void set_laser(CNC::DEVICE::Laser* laser)				{m_laser = laser;}
 
 public slots:
 
@@ -49,6 +57,8 @@ public:
 	const std::string	filename()	const {return m_filename;				}
 	const QString&		contents()	const {return m_fileContents;			}
 
+	const std::vector<CNC::codeBlock*>& blocks() const {return m_programBlocks;} 
+
 protected:
 	//Helper functions for parsing code text file
 	double	get_double(std::string::iterator &s); 		//Returns the first double found starting at position s
@@ -61,11 +71,15 @@ protected:
 	QString							m_fileContents;		//Contents of the code file - for use with Qt objects like QTextEdit
 	std::fstream					m_codeFile;			//File stream for i/o on code text file
 	std::string						m_filename;			//Location of the text code to run
-	std::vector<CNC::codeBlock>		m_programBlocks;	//List of individual code blocks in order of execution
+	std::vector<CNC::codeBlock*>	m_programBlocks;	//List of individual code blocks in order of execution
 
 	int		m_timer;
 	int		m_programTimerPeriod = 50;	//Period in ms of the program timer
 	size_t 	m_programStep = 0;			//Current program step
+
+	CNC::DEVICE::stepperMotor*		m_x_axis;
+	CNC::DEVICE::stepperMotor*		m_y_axis;
+	CNC::DEVICE::Laser*				m_laser;
 
 };
 

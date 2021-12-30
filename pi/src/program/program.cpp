@@ -61,6 +61,15 @@ void Program::execute_next()
 	if(m_programStep < m_programBlocks.size())
 	{
 		//execute next code block
+		CNC::codeBlock* tmpBlock = m_programBlocks[m_programStep];
+
+		switch(tmpBlock->m_letterCode)
+		{
+			case G:
+			{
+				
+			}
+		}
 	}
 
 	else
@@ -83,7 +92,7 @@ void Program::load()
 
 	std::stringstream	buf;
 	buf << m_codeFile.rdbuf();
-	loadBlocks(buf.str());
+	load(buf.str());
 
 }
 
@@ -95,7 +104,7 @@ void Program::load(const std::string& codeFileContents)
 	//If file opened successfully, clear the program to load fresh
 	m_programBlocks.clear();
 
-	CNC::codeBlock					tmpBlock {};	//Temporary code block
+	CNC::codeBlock*					tmpBlock;	//Temporary code block
 	std::string::const_iterator		code_iterator;	//Iterator
 
 	//Previous absolute positions of the axes
@@ -112,41 +121,27 @@ void Program::load(const std::string& codeFileContents)
 		//Check if we're at the start of a supported letter code
 		if(is_supported_letter_code(*code_iterator))
 		{
-			//If so, reset the temp block
-			memset(&tmpBlock, 0, sizeof(CNC::codeBlock));
+			tmpBlock = new CNC::codeBlock(this);
 
 			//Set capital letter code
-			tmpBlock.letterCode = (*code_iterator >= 97)? *code_iterator - 32 : *code_iterator;
+			tmpBlock->m_letterCode = (*code_iterator >= 97)? *code_iterator - 32 : *code_iterator;
+			
 			//Set the number code
-			tmpBlock.numberCode = get_double(++code_iterator);
-
-			//Set the previous positions
-			tmpBlock.prev_x = prev_x;
-			tmpBlock.prev_y = prev_y;
-			tmpBlock.prev_z = prev_z;
+			tmpBlock->m_numberCode = get_double(++code_iterator);
 
 			//Populate codeBlock variables until another supported code letter or the end of the line is reached
 			while(!(is_supported_letter_code(*code_iterator)) && code_iterator != codeFileContents.end())
 			{
-				switch(*code_iterator)
-				{
-					case 'x': case 'X': tmpBlock.x = get_double(++code_iterator); tmpBlock.abs_x = true; prev_x = tmpBlock.x; break;
-					case 'y': case 'Y': tmpBlock.y = get_double(++code_iterator); tmpBlock.abs_y = true; prev_y = tmpBlock.y; break;
-					case 'z': case 'Z': tmpBlock.z = get_double(++code_iterator); tmpBlock.abs_z = true; prev_z = tmpBlock.z; break;
+				//For each letter after a supported code signifier, add a new argument to the block
 				
-					case 'u': case 'U': tmpBlock.u = get_double(++code_iterator); tmpBlock.abs_x = false; prev_x += tmpBlock.u; break;
-					case 'v': case 'V': tmpBlock.v = get_double(++code_iterator); tmpBlock.abs_y = false; prev_y += tmpBlock.v; break;
-					case 'w': case 'W': tmpBlock.w = get_double(++code_iterator); tmpBlock.abs_z = false; prev_z += tmpBlock.w; break;
+				if(*code_iterator >= 65 && *code_iterator <= 90)
+					tmpBlock->addArg((char)*code_iterator, get_double(++code_iterator));
 				
-					case 'i': case 'I': tmpBlock.i = get_double(++code_iterator); break;
-					case 'j': case 'J': tmpBlock.j = get_double(++code_iterator); break;
-					case 'k': case 'K': tmpBlock.k = get_double(++code_iterator); break;
-					case 'r': case 'R': tmpBlock.r = get_double(++code_iterator); break;
+				else if(*code_iterator >=97 && *code_iterator <= 122)
+					tmpBlock->addArg((char)(*code_iterator - 32), get_double(++code_iterator));
 
-					case 'p': case 'P': tmpBlock.p = get_double(++code_iterator); break;
-					case 'f': case 'F': tmpBlock.f = get_double(++code_iterator); break;
-					default: code_iterator++;				
-				}
+				else
+					++code_iterator;
 			}
 
 			//Add the block to the program

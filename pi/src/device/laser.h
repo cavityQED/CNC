@@ -13,6 +13,7 @@
 #include <QGroupBox>
 #include <QAction>
 
+#include "device.h"
 
 #define LASER_PIN 		21
 #define LASER_OVERRIDE	
@@ -23,7 +24,7 @@ namespace CNC
 namespace DEVICE
 {
 
-class Laser : public QGroupBox
+class Laser : public Device
 {
 	Q_OBJECT
 
@@ -32,6 +33,10 @@ public:
 
 	void on();
 	void off();
+
+public:
+
+	virtual bool isReady()	{return true;}
 	
 public slots:
 	void increase_power()

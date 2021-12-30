@@ -8,4 +8,4 @@ Device::Device(QWidget* parent) : QWidget(parent)
 
 }
 
-}
+}//CNC namespace

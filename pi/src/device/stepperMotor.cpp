@@ -8,6 +8,8 @@ namespace DEVICE
 
 stepperMotor::stepperMotor(params_t &params, QWidget* parent) : spiDevice(parent), m_params(std::move(params))
 {
+	m_deviceType = CNC::DEVICE_TYPE::STEPPER_MOTOR;
+	
 	//Setup the device pin
 	gpioSetMode(m_params.device_pin, PI_OUTPUT);
 	gpioWrite(m_params.device_pin, 0);
