@@ -12,7 +12,7 @@ int				axis::m_rapid_period_us		= 100;
 int				axis::m_spmm				= 200;			
 int				axis::m_jog_steps			= 200;	
 int				axis::m_max_mm				= 300;			
-int				axis::m_init_period_us		= 2500;	
+int				axis::m_init_period_us		= 1000;	
 int				axis::m_accel				= 80000;			
 int				axis::m_max_steps			= 60000;	
 

@@ -17,6 +17,7 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
+#include <map>
 
 #include "program/codeBlock.h"
 
@@ -42,9 +43,11 @@ namespace CNC
 
 	struct position_t
 	{
-		double x;
-		double y;
-		double z;
+		double x = 0;
+		double y = 0;
+		double z = 0;
+
+		double length() {return std::sqrt(x*x + y*y + z*z);}
 	};
 
 }//CNC namespace

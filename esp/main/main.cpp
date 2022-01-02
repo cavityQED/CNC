@@ -145,7 +145,7 @@ void get_message()
 									{msg[3], msg[4], 0},	//end position
 									msg[5],					//radius
 									msg[6],					//feed rate (microseconds)
-									(bool)msg[7]);				//direction (CW or CCW)
+									(bool)msg[7]);			//direction (CW or CCW)
 			break;
 		}
 

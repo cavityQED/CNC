@@ -6,68 +6,97 @@ namespace CNC
 Program::Program(QWidget* parent)
 	: QWidget(parent)
 {
-
+	m_timer = new QTimer(this);
+	connect(m_timer, &QTimer::timeout, this, &CNC::Program::timerEvent);
+	connect(this, &CNC::Program::triggered, this, &CNC::Program::execute_next);
 }
 
 Program::Program(const std::string filename, QWidget* parent)
 	: QWidget(parent), m_filename(filename)
 {
-
+	m_timer = new QTimer(this);
+	connect(m_timer, &QTimer::timeout, this, &CNC::Program::timerEvent);
+	connect(this, &CNC::Program::triggered, this, &CNC::Program::execute_next);
 }
 
-void Program::timerEvent(QTimerEvent* e)
+void Program::timerEvent(/*QTimerEvent* e*/)
 {
-	m_programMotion = false;
+	std::cout << "Program Timer Event\n";
+	
+	m_axes->update();
 
-
-
-	if(!m_programMotion)
-	{
-		killTimer(e->timerId());
-		execute_next();
-	}
+	if(!m_axes->inMotion())
+		m_timer->stop();
+		//killTimer(e->timerId());
 }
 
 void Program::start()
 {
 	reset();
-	m_timer = startTimer(m_programTimerPeriod);
-
+	gpioSetISRFuncEx(22, FALLING_EDGE, 0, triggerISR, this);
+	execute_next();
 }
 
 void Program::stop()
 {
-
+	m_timer->stop();
+	gpioSetISRFuncEx(22, FALLING_EDGE, 0, NULL, this);
+	m_axes->stop();
+	m_axes->update();
+	m_laser->off();
 }
 
 void Program::pause()
 {
-	killTimer(m_timer);
+	m_axes->pause();
+	m_laser->off();
+	m_timer->stop();
 }
 
 void Program::resume()
 {
-	m_timer = startTimer(m_programTimerPeriod);
+	m_axes->resume();
+	m_laser->on();
+	m_timer->start(m_programTimerPeriod);
 }
 
 void Program::reset()
 {
-	stop();
 	m_programStep = 0;
+	m_timer->stop();
 }
 
 void Program::execute_next()
 {
 	if(m_programStep < m_programBlocks.size())
 	{
-		//execute next code block
 		CNC::codeBlock* tmpBlock = m_programBlocks[m_programStep];
 
 		switch(tmpBlock->m_letterCode)
 		{
-			case G:
+			case 'G':
 			{
-				
+				m_axes->executeBlock(tmpBlock);
+				m_programMotion = true;
+				m_timer->start(m_programTimerPeriod);
+				m_programStep++;
+				break;
+			}
+
+			case 'L':
+			{
+				m_laser->executeBlock(tmpBlock);
+				m_programStep++;
+				execute_next();
+				break;
+			}
+
+			default:
+			{
+				//check for motion?
+				m_programStep++;
+				execute_next();
+				break;
 			}
 		}
 	}
@@ -104,18 +133,13 @@ void Program::load(const std::string& codeFileContents)
 	//If file opened successfully, clear the program to load fresh
 	m_programBlocks.clear();
 
-	CNC::codeBlock*					tmpBlock;	//Temporary code block
+	CNC::codeBlock*					tmpBlock;		//Temporary code block
 	std::string::const_iterator		code_iterator;	//Iterator
 
-	//Previous absolute positions of the axes
-	double prev_x = 0;
-	double prev_y = 0;
-	double prev_z = 0;
-
-		//Reset the iterator to the beginning of the line
+	//Reset the iterator to the beginning of the line
 	code_iterator = codeFileContents.begin();
 
-		//Iterate through the line, creating codeBlocks as necessary
+	//Iterate through the line, creating codeBlocks as necessary
 	while(code_iterator != codeFileContents.end())
 	{
 		//Check if we're at the start of a supported letter code
@@ -133,6 +157,7 @@ void Program::load(const std::string& codeFileContents)
 			while(!(is_supported_letter_code(*code_iterator)) && code_iterator != codeFileContents.end())
 			{
 				//For each letter after a supported code signifier, add a new argument to the block
+				//Capitalize letter
 				
 				if(*code_iterator >= 65 && *code_iterator <= 90)
 					tmpBlock->addArg((char)*code_iterator, get_double(++code_iterator));

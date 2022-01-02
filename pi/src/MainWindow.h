@@ -5,7 +5,7 @@
 #include "program/program.h"
 
 #include "device/laser.h"
-#include "device/stepperMotor.h"
+#include "device/stepperGroup.h"
 #include "control/knob.h"
 #include "control/controlPanel.h"
 
@@ -55,6 +55,9 @@ public:
 		gpioSetSignalFunc(SIGINT, shutdown);
 		x_axis = new CNC::DEVICE::stepperMotor(xparams);
 		y_axis = new CNC::DEVICE::stepperMotor(yparams);
+		axisGroup = new CNC::DEVICE::StepperGroup(this);
+		axisGroup->addStepper(CNC::AXIS::X, x_axis);
+		axisGroup->addStepper(CNC::AXIS::Y, y_axis);
 
 		connect(x_axis,			&CNC::DEVICE::stepperMotor::positionChange, 	pos,	&PositionReadout::setX);
 		connect(y_axis,			&CNC::DEVICE::stepperMotor::positionChange, 	pos,	&PositionReadout::setY);
@@ -76,6 +79,12 @@ public:
 		mdi_program = new CNC::Program();
 		program = new CNC::Program("cnc.nc", this);
 		program->load();
+
+		program->set_axes(axisGroup);
+		program->set_laser(laser);
+
+		mdi_program->set_axes(axisGroup);
+		mdi_program->set_laser(laser);
 
 		for(auto b : program->blocks())
 			std::cout << b << '\n';
@@ -322,6 +331,7 @@ private:
 	MotorController* 						controller;
 	CNC::ControlPanel* 						panel;
 	CNC::DEVICE::Laser*						laser;
+	CNC::DEVICE::StepperGroup*				axisGroup;
 	CNC::DEVICE::stepperMotor*				x_axis;
 	CNC::DEVICE::stepperMotor*				y_axis;
 	CNC::DEVICE::stepperMotor::params_t 	xparams {13, 400, 175, CNC::DEVICE::ESP::AXIS::x_axis};

@@ -124,6 +124,7 @@ public:
 
 public slots:
 
+	void setAxis(CNC::AXIS a)		{	m_axis = a;														}
 	void setMode(CNC::MODE m)		{	m_mode = m;														}
 	void setHome()					{	esp_receive(); m_stepOffset = m_stepPosition; esp_receive();	}
 	void jogMove(bool dir)			{	esp_jog_move(dir);												}
@@ -168,6 +169,7 @@ protected:
 	bool		m_syncMode = false;
 
 	CNC::MODE	m_mode 		= CNC::MODE::HOME;
+	CNC::AXIS	m_axis;
 
 
 	static const int m_timerPeriod = 10;

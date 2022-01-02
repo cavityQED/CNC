@@ -57,7 +57,7 @@ Laser::Laser(QWidget* parent) : Device(parent)
 	addAction(down);
 }
 
-void Laser::setPower(int pow, bool start)
+void Laser::setPower(const int pow, const bool start)
 {
 	m_power = pow;
 	power_edit->setText(QString::number(m_power, 'f', 1));
@@ -74,6 +74,29 @@ void Laser::on()
 void Laser::off()
 {
 	gpioPWM(LASER_PIN, 0);
+}
+
+void Laser::executeBlock(const CNC::codeBlock* b)
+{
+	std::cout << "Executing Laser Block:\n" << b << '\n';
+
+	switch(b->m_numberCode)
+	{
+		case 0:
+			off();
+			break;
+
+		case 1:
+			on();
+			break;
+
+		case 2:
+			setPower(b->args().at('P'), true);
+			break;
+
+		default:
+			break;
+	}
 }
 
 }//DEVICE namespace

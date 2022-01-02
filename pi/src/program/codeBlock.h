@@ -23,15 +23,12 @@ public:
 
 public:
 
-	const std::map<char, double>& args() const {return m_args;}
+	const std::map<char, double>&	args()		const {return m_args;}
 
 public:
 
 
 public:
-
-	char	letterCode; //G,M,etc.
-	int		numberCode;
 
 	char	m_letterCode; //G,M,etc.
 	int		m_numberCode;

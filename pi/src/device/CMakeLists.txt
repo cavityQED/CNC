@@ -1,7 +1,8 @@
 set(LIBRARY_SOURCE_FILES	device.cpp
 							spiDevice.cpp
 							laser.cpp
-							stepperMotor.cpp)
+							stepperMotor.cpp
+							stepperGroup.cpp)
 
 set(LINKED_LIBRARIES		Qt5::Core
 							Qt5::Widgets)

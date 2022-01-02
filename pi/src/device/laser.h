@@ -13,6 +13,7 @@
 #include <QGroupBox>
 #include <QAction>
 
+#include "common.h"
 #include "device.h"
 
 #define LASER_PIN 		21
@@ -39,6 +40,9 @@ public:
 	virtual bool isReady()	{return true;}
 	
 public slots:
+
+	void executeBlock(const CNC::codeBlock* b);
+	
 	void increase_power()
 	{
 		if(m_power < 5)
@@ -63,7 +67,7 @@ public slots:
 		power_edit->setText(QString::number(m_power, 'f', 1));
 	}
 	
-	void setPower(int pow, bool start = false);
+	void setPower(const int pow, const bool start = false);
 	
 protected:
 	QPushButton*	increase_button;

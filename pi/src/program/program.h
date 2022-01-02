@@ -13,7 +13,7 @@
 #include <QTimerEvent>
 
 #include "common.h"
-#include "device/stepperMotor.h"
+#include "device/stepperGroup.h"
 #include "device/laser.h"
 
 namespace CNC
@@ -22,19 +22,31 @@ namespace CNC
 class Program : public QWidget
 {
 	Q_OBJECT
+
 public:
+
+	static void triggerISR(int gpio, int level, uint32_t tick, void* arg)
+	{
+		((CNC::Program*)arg)->triggered();
+	}
 
 	Program(QWidget* parent = nullptr);
 	Program(const std::string filename, QWidget* parent = nullptr);
-	~Program() {}
+	~Program() {sem_unlink("program_semaphore");}
 
-	virtual void timerEvent(QTimerEvent* e) override;
+	virtual void timerEvent(/*QTimerEvent* e*/);// override;
 
 public:
 
-	void set_x_axis(CNC::DEVICE::stepperMotor*	x_axis)		{m_x_axis = x_axis;}
-	void set_y_axis(CNC::DEVICE::stepperMotor*	y_axis)		{m_y_axis = y_axis;}
-	void set_laser(CNC::DEVICE::Laser* laser)				{m_laser = laser;}
+	void set_axes(CNC::DEVICE::StepperGroup* group)		{m_axes = group;}
+	void set_laser(CNC::DEVICE::Laser* laser)			{m_laser = laser;}
+	void set_motion(bool motion)						{m_programMotion = motion;}
+
+signals:
+
+	void stepperBlock(const CNC::codeBlock* b);
+	void laserBlock(const CNC::codeBlock* b);
+	void triggered();
 
 public slots:
 
@@ -68,19 +80,17 @@ protected:
 protected:
 
 	bool							m_programMotion;	//True if the current program action is not yet completed
+	int								m_programTimerPeriod = 50;	//Period in ms of the program timer
+	size_t 							m_programStep = 0;			//Current program step
+	QTimer*							m_timer;
+
 	QString							m_fileContents;		//Contents of the code file - for use with Qt objects like QTextEdit
 	std::fstream					m_codeFile;			//File stream for i/o on code text file
 	std::string						m_filename;			//Location of the text code to run
 	std::vector<CNC::codeBlock*>	m_programBlocks;	//List of individual code blocks in order of execution
 
-	int		m_timer;
-	int		m_programTimerPeriod = 50;	//Period in ms of the program timer
-	size_t 	m_programStep = 0;			//Current program step
-
-	CNC::DEVICE::stepperMotor*		m_x_axis;
-	CNC::DEVICE::stepperMotor*		m_y_axis;
+	CNC::DEVICE::StepperGroup*		m_axes;
 	CNC::DEVICE::Laser*				m_laser;
-
 };
 
 }//CNC namespace
