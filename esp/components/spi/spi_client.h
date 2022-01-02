@@ -13,7 +13,7 @@
 #define MISO	(gpio_num_t) 19
 #define SCLK	(gpio_num_t) 18
 #define CS		(gpio_num_t) 5
-#define READY	(gpio_num_t) 13	//Signal host we're ready to receive message
+#define READY	(gpio_num_t) 25	//Signal host we're ready to receive message
 #define SIGNAL	(gpio_num_t) 32
 
 #define SPI_MODE				2
@@ -72,7 +72,7 @@ public:
 	* 		by setting the READY pin high
 	*/
 	static void spi_post_setup_callback(spi_slave_transaction_t *t) {
-		WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1 << READY));
+		WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1ULL << READY));
 	}	
 
 	/*	SPI Post Transaction Callback
@@ -80,7 +80,7 @@ public:
 	* 		Sets READY pin low again
 	*/
 	static void spi_post_trans_callback(spi_slave_transaction_t *t) {
-		WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1 << READY));	
+		WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1ULL << READY));	
 	}
 	
 	void toggle_ready() {

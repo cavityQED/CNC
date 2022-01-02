@@ -9,6 +9,8 @@ Program::Program(QWidget* parent)
 	m_timer = new QTimer(this);
 	connect(m_timer, &QTimer::timeout, this, &CNC::Program::timerEvent);
 	connect(this, &CNC::Program::triggered, this, &CNC::Program::execute_next);
+	gpioSetMode(MOTION_PIN, PI_INPUT);
+	gpioSetPullUpDown(MOTION_PIN, PI_PUD_DOWN);
 }
 
 Program::Program(const std::string filename, QWidget* parent)
@@ -17,30 +19,34 @@ Program::Program(const std::string filename, QWidget* parent)
 	m_timer = new QTimer(this);
 	connect(m_timer, &QTimer::timeout, this, &CNC::Program::timerEvent);
 	connect(this, &CNC::Program::triggered, this, &CNC::Program::execute_next);
+	gpioSetMode(MOTION_PIN, PI_INPUT);
+	gpioSetPullUpDown(MOTION_PIN, PI_PUD_DOWN);
 }
 
-void Program::timerEvent(/*QTimerEvent* e*/)
+void Program::timerEvent()
 {
 	std::cout << "Program Timer Event\n";
 	
 	m_axes->update();
 
 	if(!m_axes->inMotion())
+	{
 		m_timer->stop();
-		//killTimer(e->timerId());
+		execute_next();
+	}
 }
 
 void Program::start()
 {
 	reset();
-	gpioSetISRFuncEx(22, FALLING_EDGE, 0, triggerISR, this);
+	//gpioSetISRFuncEx(MOTION_PIN, FALLING_EDGE, 0, triggerISR, this);
 	execute_next();
 }
 
 void Program::stop()
 {
+	//gpioSetISRFuncEx(MOTION_PIN, FALLING_EDGE, 0, NULL, this);
 	m_timer->stop();
-	gpioSetISRFuncEx(22, FALLING_EDGE, 0, NULL, this);
 	m_axes->stop();
 	m_axes->update();
 	m_laser->off();
@@ -48,6 +54,7 @@ void Program::stop()
 
 void Program::pause()
 {
+	//gpioSetISRFuncEx(MOTION_PIN, FALLING_EDGE, 0, NULL, this);
 	m_axes->pause();
 	m_laser->off();
 	m_timer->stop();
@@ -55,6 +62,7 @@ void Program::pause()
 
 void Program::resume()
 {
+	//gpioSetISRFuncEx(MOTION_PIN, FALLING_EDGE, 0, triggerISR, this);
 	m_axes->resume();
 	m_laser->on();
 	m_timer->start(m_programTimerPeriod);
@@ -68,37 +76,36 @@ void Program::reset()
 
 void Program::execute_next()
 {
+	m_axes->update();
+
 	if(m_programStep < m_programBlocks.size())
 	{
 		CNC::codeBlock* tmpBlock = m_programBlocks[m_programStep];
+
+		std::cout << "Executing Code Block " << tmpBlock << '\n';
 
 		switch(tmpBlock->m_letterCode)
 		{
 			case 'G':
 			{
 				m_axes->executeBlock(tmpBlock);
-				m_programMotion = true;
-				m_timer->start(m_programTimerPeriod);
-				m_programStep++;
 				break;
 			}
 
 			case 'L':
 			{
 				m_laser->executeBlock(tmpBlock);
-				m_programStep++;
-				execute_next();
 				break;
 			}
 
 			default:
 			{
-				//check for motion?
-				m_programStep++;
-				execute_next();
 				break;
 			}
 		}
+
+		m_programStep++;
+		m_timer->start(m_programTimerPeriod);
 	}
 
 	else

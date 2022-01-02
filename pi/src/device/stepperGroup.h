@@ -5,6 +5,8 @@
 
 #include <map>
 
+#define SYNC_PIN	6
+
 namespace CNC
 {
 

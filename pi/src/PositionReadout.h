@@ -13,8 +13,6 @@
 
 #include <iostream>
 
-#include "MotorController.h"
-
 class PositionReadout : public QWidget {
 	Q_OBJECT
 public:

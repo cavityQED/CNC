@@ -223,6 +223,8 @@ void ControlPanel::setupControlGroup()
 
 	QGridLayout* control_layout = new QGridLayout();
 	control_layout->addWidget(m_reset_button, 0, 0);
+	control_layout->addItem(new QSpacerItem(40,40), 1, 0);
+	control_layout->addItem(new QSpacerItem(40,40), 2, 0);
 	control_layout->addWidget(m_run_button, 3, 0);
 	control_layout->addWidget(m_hold_button, 3, 1);
 

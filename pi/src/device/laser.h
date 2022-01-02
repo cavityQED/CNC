@@ -16,8 +16,8 @@
 #include "common.h"
 #include "device.h"
 
-#define LASER_PIN 		21
-#define LASER_OVERRIDE	
+#define LASER_PIN 		20
+#define LASER_OVERRIDE	21
 
 namespace CNC
 {

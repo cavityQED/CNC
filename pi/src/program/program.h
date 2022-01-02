@@ -16,6 +16,8 @@
 #include "device/stepperGroup.h"
 #include "device/laser.h"
 
+#define MOTION_PIN	17
+
 namespace CNC
 {
 
@@ -27,7 +29,11 @@ public:
 
 	static void triggerISR(int gpio, int level, uint32_t tick, void* arg)
 	{
-		((CNC::Program*)arg)->triggered();
+		if(!level)
+		{
+			std::cout << "\n*****Triggering Next Move*****\n";
+			((CNC::Program*)arg)->triggered();
+		}
 	}
 
 	Program(QWidget* parent = nullptr);
@@ -79,8 +85,8 @@ protected:
 
 protected:
 
-	bool							m_programMotion;	//True if the current program action is not yet completed
-	int								m_programTimerPeriod = 50;	//Period in ms of the program timer
+	bool							m_programMotion;			//True if the current program action is not yet completed
+	int								m_programTimerPeriod = 10;	//Period in ms of the program timer
 	size_t 							m_programStep = 0;			//Current program step
 	QTimer*							m_timer;
 

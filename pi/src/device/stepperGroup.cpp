@@ -8,7 +8,7 @@ namespace DEVICE
 
 StepperGroup::StepperGroup(QWidget* parent) : QWidget(parent)
 {
-
+	gpioSetMode(SYNC_PIN, PI_OUTPUT);
 }
 
 bool StepperGroup::addStepper(CNC::AXIS axis, CNC::DEVICE::stepperMotor* stepper)
@@ -26,8 +26,6 @@ void StepperGroup::update()
 		s.second->esp_receive();
 		m_motion = m_motion || s.second->isMoving();
 	}
-
-	//emit motorMotion(m_motion);
 }
 
 void StepperGroup::pause()
@@ -65,10 +63,12 @@ void StepperGroup::executeBlock(const CNC::codeBlock* b)
 	if(args.count('F'))
 		m_feedRate = args.at('F');
 
+	double feedRate = m_feedRate;
+
 	switch(b->m_numberCode)
 	{
 		case 0:
-			m_feedRate = -1;
+			feedRate = -1;
 
 		case 1:		//Linear Interpolation
 		{
@@ -89,15 +89,15 @@ void StepperGroup::executeBlock(const CNC::codeBlock* b)
 				s.second->esp_vector_move(	m_endPosition.x,
 											m_endPosition.y,
 											m_endPosition.z,
-											m_feedRate);
+											feedRate);
 
 				s.second->spiWaitForReady();
 			}
 
-			gpioWrite(18, 1);
-			gpioWrite(18, 0);
+			gpioWrite(SYNC_PIN, 1);
+			gpioWrite(SYNC_PIN, 0);
 
-			update();
+			//update();
 
 			break;
 		}
@@ -128,15 +128,15 @@ void StepperGroup::executeBlock(const CNC::codeBlock* b)
 											m_endPosition.x,
 											m_endPosition.y,
 											m_startPosition.length(),
-											m_feedRate,
+											feedRate,
 											!(b->m_numberCode % 2));
 				s.second->spiWaitForReady();
 			}
 
-			gpioWrite(18, 1);
-			gpioWrite(18, 0);
+			gpioWrite(SYNC_PIN, 1);
+			gpioWrite(SYNC_PIN, 0);
 
-			update();
+			//update();
 
 			break;
 		}

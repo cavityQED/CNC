@@ -12,6 +12,7 @@ Laser::Laser(QWidget* parent) : Device(parent)
 	
 	gpioInitialise();
 	
+	gpioSetMode(LASER_PIN, PI_OUTPUT);
 	gpioSetPWMfrequency(LASER_PIN, 5000);
 	
 	increase_button = new QPushButton(QChar(0x25B2));
@@ -78,8 +79,6 @@ void Laser::off()
 
 void Laser::executeBlock(const CNC::codeBlock* b)
 {
-	std::cout << "Executing Laser Block:\n" << b << '\n';
-
 	switch(b->m_numberCode)
 	{
 		case 0:

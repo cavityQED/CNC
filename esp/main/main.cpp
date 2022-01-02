@@ -3,8 +3,8 @@
 
 #include "freertos/queue.h"
 
-#define DEVICE_SELECT	(gpio_num_t) 25
-#define ZERO_INTERLOCK	(gpio_num_t) 22
+#define DEVICE_SELECT	(gpio_num_t) 33
+#define ZERO_INTERLOCK	(gpio_num_t) 21
 
 static xQueueHandle evt_queue;
 static std::vector<int> msg;
@@ -43,8 +43,13 @@ void get_message()
 	spi.set_sendbuffer_value(1, gen_axis.step_position());
 	spi.set_sendbuffer_value(2, gen_axis.in_motion());
 	
-	while(gpio_get_level(DEVICE_SELECT) && spi.get_message(msg) != ESP_OK)
-		continue;
+	if(spi.get_message(msg) != ESP_OK)
+	{
+		if(gpio_get_level(DEVICE_SELECT))
+			spi.toggle_ready();
+	
+		return;
+	}
 
 	spi.printFunction((AXIS_FUNCTION_CODE)msg[0]);
 
@@ -236,7 +241,7 @@ extern "C" void app_main(void) {
 	io_conf.intr_type		= GPIO_INTR_POSEDGE;
 	io_conf.mode			= GPIO_MODE_INPUT;
 	io_conf.pull_down_en	= GPIO_PULLDOWN_ENABLE;
-	io_conf.pin_bit_mask	= (1 << ZERO_INTERLOCK) | (1 << DEVICE_SELECT);
+	io_conf.pin_bit_mask	= (1 << ZERO_INTERLOCK) | (1ULL << DEVICE_SELECT);
 
 	gpio_config(&io_conf);
 	gpio_install_isr_service(0);

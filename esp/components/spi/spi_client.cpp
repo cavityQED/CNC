@@ -35,7 +35,7 @@ SpiClient::SpiClient() {
 	ready_pin_config.mode 			= GPIO_MODE_OUTPUT;
 	ready_pin_config.pull_down_en	= GPIO_PULLDOWN_ENABLE;
 	ready_pin_config.pull_up_en		= GPIO_PULLUP_DISABLE;
-	ready_pin_config.pin_bit_mask	= (1 << READY);
+	ready_pin_config.pin_bit_mask	= (1ULL << READY);
 	gpio_config(&ready_pin_config);
 	
 	//Configure the Signal GPIO. Used to signal the pi that a move has ocurred

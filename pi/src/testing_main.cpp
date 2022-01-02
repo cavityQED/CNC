@@ -1,10 +1,4 @@
-#include "JogController.h"
-#include "PositionReadout.h"
 #include "MainWindow.h"
-#include "Laser.h"
-#include "Program.h"
-
-#include "control/modeSelect.h"
 
 #include <QApplication>
 

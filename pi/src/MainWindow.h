@@ -19,8 +19,6 @@
 #include <iostream>
 #include <signal.h>
 
-#define ESP_MOVED_SIGNAL 25
-
 class MainWindow : public QMainWindow {
 	Q_OBJECT
 public:
@@ -175,8 +173,12 @@ public slots:
 			}
 
 			case CNC::MODE::EDIT:
+			{	
+				panel->textBox()->setText(program->contents());
+				panel->textBox()->setReadOnly(false);
 				std::cout << "EDIT mode set\n";
 				break;
+			}
 
 			case CNC::MODE::MDI:
 			{
@@ -328,14 +330,13 @@ private:
 	CNC::Program*							mdi_program;
 	CNC::MODE								m_mode {CNC::MODE::NOP};
 	PositionReadout* 						pos;
-	MotorController* 						controller;
 	CNC::ControlPanel* 						panel;
 	CNC::DEVICE::Laser*						laser;
 	CNC::DEVICE::StepperGroup*				axisGroup;
 	CNC::DEVICE::stepperMotor*				x_axis;
 	CNC::DEVICE::stepperMotor*				y_axis;
-	CNC::DEVICE::stepperMotor::params_t 	xparams {13, 400, 175, CNC::DEVICE::ESP::AXIS::x_axis};
-	CNC::DEVICE::stepperMotor::params_t 	yparams {19, 400, 300, CNC::DEVICE::ESP::AXIS::y_axis};
+	CNC::DEVICE::stepperMotor::params_t 	xparams {19, 400, 175, CNC::DEVICE::ESP::AXIS::x_axis};
+	CNC::DEVICE::stepperMotor::params_t 	yparams {26, 400, 300, CNC::DEVICE::ESP::AXIS::y_axis};
 };
 
 #endif

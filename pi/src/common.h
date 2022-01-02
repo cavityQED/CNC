@@ -12,6 +12,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QGridLayout>
+#include <QSpacerItem>
 #include <QTextEdit>
 
 #include <vector>

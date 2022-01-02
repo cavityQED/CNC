@@ -63,7 +63,7 @@ protected:
 	//Spi Stuff
 	int							spi_cs_fd;
 	int							spi_transaction_length = 12;	//Transaction length in bytes
-	int							spi_ready_pin = 24;
+	int							spi_ready_pin = 5;
 	struct	spi_ioc_transfer 	spi;
 	std::vector<int>			sendBuffer;
 	std::vector<int>			recvBuffer;

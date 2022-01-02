@@ -12,8 +12,8 @@ int				axis::m_rapid_period_us		= 100;
 int				axis::m_spmm				= 200;			
 int				axis::m_jog_steps			= 200;	
 int				axis::m_max_mm				= 300;			
-int				axis::m_init_period_us		= 1000;	
-int				axis::m_accel				= 80000;			
+int				axis::m_init_period_us		= 500;	
+int				axis::m_accel				= 160000;			
 int				axis::m_max_steps			= 60000;	
 
 bool			axis::m_direction			= false;		
@@ -58,7 +58,7 @@ void axis::setup_gpio()
 	io_conf.intr_type		= GPIO_INTR_POSEDGE;
 	io_conf.mode 			= GPIO_MODE_INPUT;
 	io_conf.pull_down_en	= GPIO_PULLDOWN_ENABLE;
-	io_conf.pin_bit_mask	= (1 << SYNC_PIN);
+	io_conf.pin_bit_mask	= (1ULL << SYNC_PIN);
 	
 	gpio_config(&io_conf);	
 	gpio_set_intr_type(SYNC_PIN, GPIO_INTR_POSEDGE);
@@ -264,13 +264,17 @@ void axis::vector_move(	const position_t& vec,
 		m_spi->toggle_ready();
 		xSemaphoreTake(m_syncSem, portMAX_DELAY);
 		if(!m_final_pulse)
+		{
+			gpio_set_level(MOTION_PIN, 1);
+			gpio_set_level(MOTION_PIN, 0);
 			return;
+		}
 	}
 
+	gpio_set_level(MOTION_PIN, 1);
 	timer_start(VECTOR_GROUP, PULSE_TIMER);
 	timer_start(VECTOR_GROUP, SECONDS_TIMER);
 	m_motion = true;
-	gpio_set_level(MOTION_PIN, 1);
 }
 
 void axis::circle_move(	const position_t& start,
@@ -320,10 +324,10 @@ void axis::circle_move(	const position_t& start,
 			return;
 	}
 
+	gpio_set_level(MOTION_PIN, 1);
 	timer_start(VECTOR_GROUP, PULSE_TIMER);
 	timer_start(VECTOR_GROUP, SECONDS_TIMER);
 	m_motion = true;	
-	gpio_set_level(MOTION_PIN, 1);
 }
 
 void axis::scalar_move(	int steps_to_move,
@@ -358,10 +362,10 @@ void axis::scalar_move(	int steps_to_move,
 	timer_set_divider(SCALAR_GROUP, PULSE_TIMER, m_divider_max);
 	timer_set_alarm_value(SCALAR_GROUP, PULSE_TIMER, final_period_us);
 
+	gpio_set_level(MOTION_PIN, 1);
 	timer_start(SCALAR_GROUP, PULSE_TIMER);
 	timer_start(SCALAR_GROUP, SECONDS_TIMER);
 	m_motion = true;
-	gpio_set_level(MOTION_PIN, 1);
 }
 
 void axis::jog_move(bool dir)

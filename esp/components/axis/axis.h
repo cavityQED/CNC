@@ -24,8 +24,8 @@
 #define PULSE_PIN	(gpio_num_t) 15
 #define DIR_PIN		(gpio_num_t) 2
 #define EN_PIN		(gpio_num_t) 4
-#define SYNC_PIN	(gpio_num_t) 26
-#define MOTION_PIN	(gpio_num_t) 21
+#define SYNC_PIN	(gpio_num_t) 35
+#define MOTION_PIN	(gpio_num_t) 22
 
 //Timers
 #define VECTOR_GROUP	TIMER_GROUP_0
@@ -87,9 +87,9 @@ public:
 
 	void print_info() const
 	{
-		std::cout << "\tPosition (steps):\t"	<< m_step_position << '\n';
-		std::cout << "\tCurrent Divider:\t"		<< m_divider << '\n';
-		std::cout << "\tCurrent Step:\t\t"		<< m_cur_pulse << '\n';
+		std::cout << "\tPosition (steps):\t"	<< m_step_position				<< '\n';
+		std::cout << "\tCurrent Divider:\t"		<< m_divider					<< '\n';
+		std::cout << "\tCurrent Step:\t\t"		<< m_cur_pulse					<< '\n';
 		std::cout << "\tMove Position:\t\t"		<< m_cur_pos;
 	}
 	
